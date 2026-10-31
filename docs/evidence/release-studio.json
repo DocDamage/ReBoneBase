@@ -1,0 +1,37 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase-studio.exe",
+  "sha256": "5a44180508625e639f9190522b936a972d838c9246e44806021ed0115fb9cb01",
+  "bytes": 8652288,
+  "testsPassedIncludingOptionalFFmpeg": 130,
+  "defaultTests": 128,
+  "optionalFFmpegTests": 2,
+  "sourceLineCoverage": 87.62012436404748,
+  "verification": [
+    "cargo llvm-cov --all-targets --ignore-filename-regex tests|examples --json --summary-only --output-path docs/evidence/coverage.json -- --include-ignored",
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo build --release --locked"
+  ],
+  "nativeSmoke": [
+    "Studio tabs and foot pin controls",
+    "curve key creation and undo",
+    "autosave snapshot and startup recovery panel",
+    "packaged release launches and shows source/target mannequin motion previews",
+    "final release left at a clean canvas"
+  ],
+  "reviewFixes": [
+    "transparent indexed pixels",
+    "atomic temporary-file ownership",
+    "constrained and grounded pins",
+    "stale asynchronous motion import",
+    "fast timeline/curve drag starts",
+    "continuous empty timeline scrubbing",
+    "incoming tangent segment activation",
+    "pin pruning after hierarchy edits",
+    "captured-pose thumbnails",
+    "stale key selection after undo/redo"
+  ],
+  "all20Features": "docs/FEATURE_IDEAS.md",
+  "guide": "docs/STUDIO_GUIDE.md",
+  "olderExecutablesPreserved": true
+}

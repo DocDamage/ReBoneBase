@@ -1,0 +1,593 @@
+{
+  "version": 1,
+  "rig": {
+    "name": "Hello Bonebase",
+    "width": 64,
+    "height": 64,
+    "bones": [
+      {
+        "id": 7,
+        "name": "hips",
+        "parent": null,
+        "connected": false,
+        "x": 32.0,
+        "y": 37.0,
+        "length": 6.0,
+        "angle": -90.0,
+        "radius_head": 5.5,
+        "radius_tail": 5.5,
+        "part": 3,
+        "twin": null,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 8,
+        "name": "chest",
+        "parent": 7,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 11.0,
+        "angle": 0.0,
+        "radius_head": 5.5,
+        "radius_tail": 6.5,
+        "part": 3,
+        "twin": null,
+        "bulges_left": [
+          {
+            "t": 0.75,
+            "d": 0.5
+          }
+        ],
+        "bulges_right": [
+          {
+            "t": 0.75,
+            "d": 0.5
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "name": "neck",
+        "parent": 8,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 4.0,
+        "angle": 0.0,
+        "radius_head": 2.5,
+        "radius_tail": 2.5,
+        "part": 3,
+        "twin": null,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 10,
+        "name": "head",
+        "parent": 9,
+        "connected": false,
+        "x": 8.0,
+        "y": -4.8985874e-16,
+        "length": 1.0,
+        "angle": 0.0,
+        "radius_head": 5.4,
+        "radius_tail": 5.3,
+        "part": 4,
+        "twin": null,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 11,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "connected": false,
+        "x": 10.0,
+        "y": 6.5,
+        "length": 10.307764,
+        "angle": 165.96376,
+        "radius_head": 2.5,
+        "radius_tail": 2.0,
+        "part": 5,
+        "twin": 12,
+        "bulges_left": [
+          {
+            "t": 0.35,
+            "d": 0.5
+          }
+        ],
+        "bulges_right": []
+      },
+      {
+        "id": 12,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "connected": false,
+        "x": 10.0,
+        "y": -6.5,
+        "length": 10.307764,
+        "angle": -165.96376,
+        "radius_head": 2.5,
+        "radius_tail": 2.0,
+        "part": 6,
+        "twin": 11,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "t": 0.35,
+            "d": 0.5
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "name": "forearm_L",
+        "parent": 11,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 9.219544,
+        "angle": 1.5074358,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "part": 5,
+        "twin": 14,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 14,
+        "name": "forearm_R",
+        "parent": 12,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 9.219544,
+        "angle": -1.5074358,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "part": 6,
+        "twin": 13,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 15,
+        "name": "hand_L",
+        "parent": 13,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 4.1231055,
+        "angle": -1.5074358,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "part": 5,
+        "twin": 16,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 16,
+        "name": "hand_R",
+        "parent": 14,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 4.1231055,
+        "angle": 1.5074358,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "part": 6,
+        "twin": 15,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 17,
+        "name": "thigh_L",
+        "parent": 7,
+        "connected": false,
+        "x": 1.8369701e-16,
+        "y": 3.0,
+        "length": 11.045361,
+        "angle": 174.80557,
+        "radius_head": 3.5,
+        "radius_tail": 2.6,
+        "part": 1,
+        "twin": 18,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "t": 0.3,
+            "d": 0.6
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "name": "thigh_R",
+        "parent": 7,
+        "connected": false,
+        "x": -1.8369701e-16,
+        "y": -3.0,
+        "length": 11.045361,
+        "angle": -174.80557,
+        "radius_head": 3.5,
+        "radius_tail": 2.6,
+        "part": 2,
+        "twin": 17,
+        "bulges_left": [
+          {
+            "t": 0.3,
+            "d": 0.6
+          }
+        ],
+        "bulges_right": []
+      },
+      {
+        "id": 19,
+        "name": "shin_L",
+        "parent": 17,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 10.0,
+        "angle": 5.194429,
+        "radius_head": 2.6,
+        "radius_tail": 2.0,
+        "part": 1,
+        "twin": 20,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "t": 0.3,
+            "d": 0.6
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "name": "shin_R",
+        "parent": 18,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 10.0,
+        "angle": -5.194429,
+        "radius_head": 2.6,
+        "radius_tail": 2.0,
+        "part": 2,
+        "twin": 19,
+        "bulges_left": [
+          {
+            "t": 0.3,
+            "d": 0.6
+          }
+        ],
+        "bulges_right": []
+      },
+      {
+        "id": 21,
+        "name": "foot_L",
+        "parent": 19,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 3.6055512,
+        "angle": -56.309933,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "part": 1,
+        "twin": 22,
+        "bulges_left": [],
+        "bulges_right": []
+      },
+      {
+        "id": 22,
+        "name": "foot_R",
+        "parent": 20,
+        "connected": true,
+        "x": 0.0,
+        "y": 0.0,
+        "length": 3.6055512,
+        "angle": 56.309933,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "part": 2,
+        "twin": 21,
+        "bulges_left": [],
+        "bulges_right": []
+      }
+    ],
+    "parts": [
+      {
+        "id": 1,
+        "name": "leg_L",
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "z": -1,
+        "blend": 2.0
+      },
+      {
+        "id": 2,
+        "name": "leg_R",
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "z": -1,
+        "blend": 2.0
+      },
+      {
+        "id": 3,
+        "name": "torso",
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "z": 0,
+        "blend": 2.0
+      },
+      {
+        "id": 4,
+        "name": "head",
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "z": 1,
+        "blend": 2.0
+      },
+      {
+        "id": 5,
+        "name": "arm_L",
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "z": 2,
+        "blend": 2.0
+      },
+      {
+        "id": 6,
+        "name": "arm_R",
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "z": 2,
+        "blend": 2.0
+      }
+    ],
+    "clips": [
+      {
+        "name": "Wave",
+        "fps": 10.0,
+        "length": 24,
+        "loop": true,
+        "tracks": [
+          {
+            "bone": 11,
+            "channel": "Rotation",
+            "keys": [
+              {
+                "frame": 1.0,
+                "value": 0.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 7.0,
+                "value": -100.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 13.0,
+                "value": -85.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 19.0,
+                "value": -100.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 24.0,
+                "value": 0.0,
+                "easing": "Ease"
+              }
+            ]
+          },
+          {
+            "bone": 13,
+            "channel": "Rotation",
+            "keys": [
+              {
+                "frame": 1.0,
+                "value": 0.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 7.0,
+                "value": -35.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 13.0,
+                "value": -35.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 19.0,
+                "value": -35.0,
+                "easing": "Ease"
+              },
+              {
+                "frame": 24.0,
+                "value": 0.0,
+                "easing": "Ease"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "active_clip": 0,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    }
+  },
+  "reference": null,
+  "poses": [
+    {
+      "name": "Wave",
+      "pose": {
+        "7": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "8": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "9": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "10": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "11": {
+          "rotation": -100.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "12": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "13": {
+          "rotation": -35.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "14": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "15": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "16": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "17": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "18": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "19": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "20": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "21": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        },
+        "22": {
+          "rotation": 0.0,
+          "x": 0.0,
+          "y": 0.0,
+          "scale": 1.0,
+          "z": null,
+          "visibility": null
+        }
+      }
+    }
+  ]
+}

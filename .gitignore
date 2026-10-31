@@ -1,0 +1,7 @@
+/target/
+/dist/
+*.tmp
+__pycache__/
+*.py[cod]
+.godot/
+/docs/evidence/native-*/

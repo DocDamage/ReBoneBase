@@ -1,0 +1,45 @@
+# Canvas, attached joints, 3D characters and animation templates
+
+Run `ReBoneBase-motion.exe` for the latest version. This release includes the earlier Studio and Production tools.
+
+## A canvas that follows the character
+
+The canvas grows automatically when the character reaches its edges. It grows left/up as well as right/down, and includes skin radii, bulges, outlines, attached artwork, meshes, scene actors and 3D characters. Growth changes the image bounds, leaving the skeleton's world positions and existing pixel corrections in place. The camera stays steady during a drag.
+
+After an edit, the canvas also considers the other animation frames so a later pose is not cropped in an export. Sprite sheets, GIF, Aseprite and game packages use one common envelope across clips. Collision metadata is converted into the exported image's coordinates.
+
+Use **Fit (F)** to see the enlarged canvas. The canvas does not automatically shrink. Growth preserves the export pivot's world anchor; an explicit crop that excludes it clamps the pivot to the crop edge. In Inspector → **Canvas & symmetry**, turn off **Grow canvas with character** to use a fixed crop and edit its dimensions. The maximum canvas is 4096 by 4096; rendering/export budgets may impose a smaller practical limit for complex scenes. Rejected growth reports the reason.
+
+## Permanently attached extremities
+
+Dragging an arm, head or other limb now rotates it around its existing attachment point. It cannot be moved onto a different part of the body. This also applies to Rig mode, mirrored edits and multi-selection. Drag a bone's terminal endpoint to change its length; its head remains anchored.
+
+Connected joints remain at their parent's tail. Loose joints such as shoulders retain their original local offsets on the parent; they are not collapsed into the center of the torso. Existing non-root translation keys are preserved in the file but no longer detach joints during playback or export. Studio's detach/rest-translation controls and the inspector's head-position fields cannot relocate attached limbs. An unattached root created with the Bone tool may still be connected to start a new chain.
+
+**Move Rig (M)** remains the tool for moving the whole character. Middle/right dragging pans the view.
+
+## Animation templates
+
+Click **Animation templates…** beside the dope sheet, or open Production → **Motion** / Studio → **Animation**.
+
+Choose **Idle, Walk, Run, Jump, Wave, Punch, Crouch, Sit, Celebrate** or **Hit reaction**, set Strength, then click **Add animation template**. Each adds a named clip with ordinary editable keys. It keeps the character and existing clips intact and supports undo. Repeated additions receive distinct names. These humanoid templates expect named chest/arm/leg bones; Humanoid is a suitable starting rig. Walk/run settings remain available for more detailed gait generation.
+
+The supplied extension contains 20 rig templates but no bundled reusable motion library. These ten animation templates are newly authored for this standalone app. `AnimationTemplates.rebone` contains examples.
+
+## Adding a 3D character
+
+Use **File → Import 3D character…** or Production → **3D characters**. This imports the model itself; **Import 3D motion** remains the separate tool for retargeting motion onto the 2D mannequin.
+
+Supported input families are **GLB/glTF, FBX and OBJ**. Imports run in the background, then add an embedded character to the project. Keep sidecar buffers, textures and materials inside the selected model's directory. Remote resources and paths escaping that directory are rejected. Save the resulting `.rebone` project to keep the imported model and textures with it.
+
+The first imported 3D character hides the 2D mannequin. Use **Show 2D mannequin in the scene** to show both. Choose a character, adjust its pixel scale, depth, camera yaw and camera pitch, and use **Move Rig** to place it. The 3D panel selects the active Move Rig target. The model renders into the same pixel canvas and participates in PNG, GIF, Aseprite and game-package exports.
+
+Choose an included animation or **Rest pose** for the active timeline clip. Play/scrub the main timeline to preview it; loop and speed control the imported motion. **Create timeline for 3D animation** creates a matching timeline, within the application's 240-frame limit. To pose a rigged model, select one of its nodes and adjust the joint's X/Y/Z rotation. These are additive pose overrides with fixed attachment positions; reset one or all overrides using the buttons. Overrides apply throughout the clip, rather than being separate 3D keyframe tracks.
+
+Rendering uses an orthographic camera, nearest texture sampling, material colors and depth testing. Materials use base color and alpha; metallic/roughness and normal-map lighting are omitted. Skinning uses four vertex influences, with warnings when additional influences are omitted. Transparent overlapping surfaces have the usual limitations of triangle sorting. OBJ generally supplies static geometry/materials; a file must contain a skeleton/animation to offer those editing options. Unsupported material/deformation features are reported by the importer. This is a character-to-pixel workflow, not a general 3D modeling package.
+
+Use the supplied `CharactersDemo.rebone` or import `Mannequin.obj` together with its `.mtl` for a local example. Import budgets and the canvas-dependent rendering budget prevent excessively heavy scenes; reduce the canvas resolution or simplify a model when an import reports a work limit.
+
+## Import separate animations
+
+The latest build also imports external FBX, BVH, GLB/glTF and text Unity .anim skeletal clips onto existing 3D characters or 2D rigs. The [Animation import guide](ANIMATION_IMPORT_GUIDE.md) covers joint mapping, simultaneous 2D/3D clips and Unity/Unreal export steps. Unreal .uasset and binary/Humanoid-only Unity clips require baking/export in the owning engine project.

@@ -1,0 +1,8 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase.exe",
+  "bytes": 7477760,
+  "sha256": "73de444f36b8bed1837d1cb83c6471ce89e92d480d16d1c9b4985b8b904560e8",
+  "tests": 62,
+  "coverage": 86.28793064111339,
+  "sampleProject": "D:\\dev\\ReBoneBase\\dist\\Wave.rebone"
+}

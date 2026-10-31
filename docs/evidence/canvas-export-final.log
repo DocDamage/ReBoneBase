@@ -1,0 +1,26 @@
+   Compiling rebonebase v0.1.0 (D:\dev\ReBoneBase)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.30s
+     Running tests\canvas_growth.rs (target\debug\deps\canvas_growth-1e6f3751d536bba4.exe)
+
+running 7 tests
+test one_sided_growth_keeps_the_game_export_pivot_at_its_original_world_anchor ... ok
+test unbounded_growth_fails_atomically_and_old_documents_default_to_automatic_canvas ... ok
+test imported_actors_grow_their_own_raster_before_the_parent_scene_composites_them ... ok
+test actor_pixel_corrections_outside_its_skeleton_are_part_of_the_parent_envelope ... ok
+test animation_envelope_grows_once_for_all_frames_and_stays_fixed_during_export ... ok
+test canvas_grows_in_every_direction_without_relocating_joints_or_existing_pixels ... ok
+test exported_sheets_grow_to_include_the_full_animation_without_mutating_the_document ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\production_aseprite.rs (target\debug\deps\production_aseprite-5b3647afa04b4f2e.exe)
+
+running 6 tests
+test batch_all_clips_checks_the_aggregate_budget_before_writing_files ... ok
+test aseprite_scene_layer_preserves_every_rendered_feature_and_frame_hold ... ok
+test scene_export_does_not_require_a_skin_group_and_rejects_aggregate_work ... ok
+test aseprite_scene_all_clips_preserve_tags_directions_and_canonical_frame_pixels ... ok
+test projects_without_art_keep_editable_group_layers_and_baked_motion ... ok
+test batch_raster_formats_and_metadata_use_the_rendered_project ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s

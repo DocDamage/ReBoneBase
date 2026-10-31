@@ -1,0 +1,13 @@
+{
+  "name": "Bonebase",
+  "displayName": "Bonebase",
+  "description": "2D skeleton with an editable skin, animated with live IK, clips and a dope sheet, exported as one layer per part to draw over.",
+  "version": "2.2.2",
+  "author": { "name": "Extensiones Aseprite" },
+  "publisher": "extensiones-aseprite",
+  "license": "Proprietary - see LICENSE.txt",
+  "categories": ["Scripts"],
+  "contributes": {
+    "scripts": [{ "path": "./plugin.lua" }]
+  }
+}

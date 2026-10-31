@@ -1,0 +1,1 @@
+Read package.json: clips contain ordered frame rectangles, duration_ms, events and image-space boxes. PNG coordinates start at top-left; pivot is normalized in the same coordinate system. Reverse/ping-pong playback is already expanded into frame order. WAV references, when present, have audio_start_ms and audio_volume.

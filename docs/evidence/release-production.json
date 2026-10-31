@@ -1,0 +1,58 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase-production.exe",
+  "sha256": "ec5e219fd809623058003d5561b4879f0267f2977b80be9999167a9cda5d2f50",
+  "bytes": 10011136,
+  "testsPassedIncludingOptionalFFmpeg": 211,
+  "defaultTests": 209,
+  "optionalFFmpegTests": 2,
+  "sourceLineCoverage": 87.29819879919947,
+  "verification": [
+    "cargo llvm-cov --all-targets --ignore-filename-regex tests|examples --json --summary-only --output-path docs/evidence/coverage-production.json -- --include-ignored",
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo build --release --locked"
+  ],
+  "godotSmoke": {
+    "version": "4.7.1.stable.official.a13da4feb",
+    "exitCode": 0,
+    "marker": "REBONE_GODOT_SMOKE_OK",
+    "script": "examples/output/production/godot/verify.gd",
+    "checks": [
+      "Loads both exported clips",
+      "Plays Walk frame 5",
+      "Dispatches footstep marker",
+      "Creates collision region children"
+    ]
+  },
+  "nativeSmoke": [
+    "Packaged executable opens ProductionDemo.rebone",
+    "F3 opens Production; Motion, Props, Meshes, Audio & events and Workspace panels inspected",
+    "Gait generator creates editable clip; Ctrl+Z restores clean document",
+    "WinMM WAV audition returns without error; physical speaker output not measured",
+    "Ctrl+P palette filters Move Rig and Enter activates it",
+    "Move Rig pose gestures translate main character while companion stays independent; each undo restores prior placement",
+    "Pixel stroke appears and one undo restores the clean frame",
+    "Left open in Select mode with unmodified demo"
+  ],
+  "reviewFixes": [
+    "Root-safe controller pruning and empty layer masks",
+    "Full evaluated FK bake resets released contact channels",
+    "Project-aware mirror and transition endpoints",
+    "Clip-specific sparse prop/mesh authoring",
+    "Continuous held-frame and reverse audio cursor",
+    "Aggregate actor render and embedded byte budgets",
+    "Unique engine animation identifiers",
+    "Pending prop parent chooser preserves live transform until Switch",
+    "Rejected canvas edits do not corrupt history"
+  ],
+  "limitations": [
+    "Unity Editor integration not run in this environment",
+    "Engine packages use baked sprites, not editable runtime skeletons",
+    "PCM16 WAV mono/stereo audio only"
+  ],
+  "all20Features": "docs/PRODUCTION_FEATURES.md",
+  "guide": "docs/PRODUCTION_GUIDE.md",
+  "demo": "dist/ProductionDemo.rebone",
+  "olderExecutablesPreserved": true,
+  "published": false
+}

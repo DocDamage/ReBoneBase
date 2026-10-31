@@ -1,0 +1,65 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase-motion.exe",
+  "sha256": "5c70029dcf942ae707d13d5628efaa1afe0e623897c6d08e19b35924dbc8da26",
+  "bytes": 11238400,
+  "rustTestsPassedIncludingOptionalFFmpeg": 270,
+  "defaultRustTests": 268,
+  "optionalFFmpegTests": 2,
+  "pythonHelperMockTests": 2,
+  "sourceLineCoverage": 87.7922898672846,
+  "sourceLinesCovered": 16670,
+  "sourceLinesTotal": 18988,
+  "checks": [
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets --locked -- -D warnings",
+    "cargo llvm-cov --all-targets --locked --ignore-filename-regex tests|examples --json --summary-only --output-path docs/evidence/coverage-motion.json -- --include-ignored",
+    "cargo build --release --locked",
+    "python -m unittest discover -s tests -p test_unreal_export.py"
+  ],
+  "features": [
+    "Animation-only native FBX, BVH, GLB/glTF and Unity text transform .anim sources",
+    "Rest-relative 3D retargeting preserves mesh, textures, joint anchors and target proportions",
+    "Per-project-clip 3D playback with persisted speed, loop and source-time trim offsets",
+    "Joint mapping and preview, batch selection, simultaneous 2D/3D import, background preparation and stale-document protection",
+    "Project-aware duplicate/delete/reorder/trim/split/resize preserves 3D assignments and authored frame durations",
+    "Actionable engine-export guidance and local Unreal Animation Sequence FBX batch helper",
+    "Bounded canvas-envelope work across clips and actors"
+  ],
+  "regressionFixes": [
+    "Unity empty-path root correctly parents relative bone paths",
+    "Unity rotation-only clips pose the 2D skeleton even without source bone offsets",
+    "Final source sample retained without premature 3D looping, with distributed millisecond timing",
+    "Trim uses authored frame durations and its starting pose survives speed changes",
+    "Simultaneous import shows the 2D rig",
+    "Existing Spine2-to-chest mapping restored alongside new Unreal aliases"
+  ],
+  "nativeSmoke": [
+    "Final packaged executable opened MotionImportDemo.rebone",
+    "File > Import animation for 3D character opened Windows animation picker",
+    "SharedSway.bvh loaded with hips/chest mapping, 2/3 model nodes matched and Mesh unmapped",
+    "Also animate my 2D rig enabled; preview frame 3.3 displayed both posed targets",
+    "Import selected animation clips created SharedSway timeline; frame3 moved both targets",
+    "Ctrl+Z restored original BVH motion clip and clean document; final app left open"
+  ],
+  "nativeScreenshots": [
+    "native-motion-preview.png",
+    "native-motion-imported.png",
+    "native-motion-final.png"
+  ],
+  "guide": "docs/ANIMATION_IMPORT_GUIDE.md",
+  "examples": [
+    "dist/MotionImportDemo.rebone",
+    "dist/SharedSway.bvh"
+  ],
+  "limitations": [
+    "Unreal .uasset requires exporting an Animation Sequence as FBX from the owning Unreal project",
+    "Binary/compressed/Humanoid-only Unity .anim requires skeleton baking/export with the matching avatar",
+    "Direct text .anim lacks a bind skeleton and infers rest transforms from the first sample with a warning",
+    "A static unskinned model or unrigged painted sprite needs rigging before articulated motion can drive it",
+    "Actual Unity/Unreal Editor execution not run; Unreal helper tested with local mocked API"
+  ],
+  "previousBuildsPreserved": {
+    "ReBoneBase-characters.exe": "4a24a03022765bbf9d283fd80018efc69ad28adbca19c15ac502bd67623498ec",
+    "ReBoneBase-production.exe": "ec5e219fd809623058003d5561b4879f0267f2977b80be9999167a9cda5d2f50"
+  }
+}

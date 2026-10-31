@@ -1,0 +1,84 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase-characters.exe",
+  "sha256": "4a24a03022765bbf9d283fd80018efc69ad28adbca19c15ac502bd67623498ec",
+  "bytes": 10957312,
+  "testsPassedIncludingOptionalFFmpeg": 245,
+  "defaultTests": 243,
+  "optionalFFmpegTests": 2,
+  "sourceLineCoverage": 87.53045153249107,
+  "sourceLinesCovered": 15450,
+  "sourceLinesTotal": 17651,
+  "verification": [
+    "cargo llvm-cov --all-targets --ignore-filename-regex tests|examples --json --summary-only --output-path docs/evidence/coverage-characters.json -- --include-ignored",
+    "cargo fmt --all -- --check",
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo build --release --locked"
+  ],
+  "features": [
+    "Canvas grows in all directions, across clips and scene actors",
+    "Joint heads stay anchored in Rest and Animate; only Move Rig translates the whole character",
+    "Native GLB/glTF, FBX and OBJ/MTL textured character import, skinning, authored animations, manual joint rotations and camera controls",
+    "Ten editable humanoid motion templates accessible beside the dope sheet"
+  ],
+  "reviewFixes": [
+    "Mesh origin is subtracted once after weighted world deformation",
+    "Canvas resizing preserves the export pivot world anchor",
+    "Actor canvases normalize before compositing, including corrected pixels",
+    "Non-root translation keys cannot detach limbs during Project evaluation or FK baking",
+    "Camera remains stable through undo/redo of bounds changes",
+    "Native importer blocks filesystem callbacks and resolves bounded local sidecars safely",
+    "Quaternion/composed-animation overflow is rejected",
+    "Percent-encoded local glTF filenames work; encoded traversal is rejected"
+  ],
+  "nativeFeatureSmoke": [
+    "Arm body drag keeps local head X=10,Y=-6.5 and length10.308; angle changes and canvas grows75x84 to76x94",
+    "Dope-sheet Animation templates opens Motion; Wave adds editable Wave2 clip; undo restores clean document",
+    "OBJ mannequin loads with material colors; camera yaw changes rendered view and undo restores it"
+  ],
+  "finalExecutableNativeSmoke": [
+    "Final executable opens CharactersDemo.rebone",
+    "Move Rig expands canvas96x96 to167x96 without clipping 3D model",
+    "Undo restores placement, canvas96x96 and original camera without a jump",
+    "Final app left open in Select mode with clean demo"
+  ],
+  "nativeScreenshots": [
+    "native-attachments-growth.png",
+    "native-animation-template.png",
+    "native-3d-camera.png",
+    "native-3d-canvas-growth.png",
+    "native-characters-final.png"
+  ],
+  "guide": "docs/CHARACTERS_GUIDE.md",
+  "demos": [
+    "dist/CharactersDemo.rebone",
+    "dist/AnimationTemplates.rebone",
+    "dist/Mannequin.obj",
+    "dist/Mannequin.mtl"
+  ],
+  "limitations": [
+    "3D materials use base color/alpha, not full PBR/normal-map lighting",
+    "Skinning uses four influences per vertex with warnings for omissions",
+    "3D pose overrides apply across the clip; imported animations are resampled to at most240 poses",
+    "Canvas/geometry/file and render-work budgets apply"
+  ],
+  "nativeFbxDependency": "ufbx0.11.5",
+  "nativeFbxLicense": "docs/UFBX_LICENSE.txt",
+  "olderExecutablesPreserved": true,
+  "published": false,
+  "godotSmoke": {
+    "version": "4.7.1",
+    "importExitCode": 0,
+    "runtimeExitCode": 0,
+    "marker": "REBONE_GODOT_SMOKE_OK",
+    "checks": [
+      "Refreshed enlarged-canvas package imports",
+      "Both clips load",
+      "Footstep marker and collision regions work"
+    ],
+    "logs": [
+      "godot-characters-import.log",
+      "godot-characters-runtime.log"
+    ]
+  },
+  "finalPackagingVerified": true
+}

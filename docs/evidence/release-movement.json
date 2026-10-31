@@ -1,0 +1,8 @@
+{
+  "executable": "D:\\dev\\ReBoneBase\\dist\\ReBoneBase-updated.exe",
+  "sha256": "753d88ec562ad1a88597cad128f1a078b4101c6a09603d03f3d48049d186ff0c",
+  "tests": 70,
+  "coverage": 86.63677130044843,
+  "nativeSmoke": "root anchored; Move Rig M; whole body translation; one-step undo",
+  "originalSessionPreserved": true
+}

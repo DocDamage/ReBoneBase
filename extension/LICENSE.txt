@@ -1,0 +1,34 @@
+Bonebase - End User License
+Copyright (c) 2026 icemaan (icemaan.itch.io). All rights reserved.
+
+Bonebase is sold, not given away. One purchase, one person, every machine
+that person owns. In plain words:
+
+YOU MAY
+  - use Bonebase in any project: personal, commercial, client work, games
+    and assets you sell;
+  - keep everything you draw and export with it as yours, with no
+    attribution required;
+  - install it on every computer you own or use yourself;
+  - read and modify the Lua source for your own use.
+
+YOU MAY NOT
+  - resell, sublicense, rent or redistribute Bonebase, whole or in part,
+    original or modified, free or paid, including inside another
+    extension, pack or bundle;
+  - share your copy with people who did not buy it;
+  - remove this notice.
+
+TEAMS
+  Each person who uses Bonebase needs a purchase. A studio buys one per
+  artist.
+
+UPDATES
+  One purchase covers every update in the 0.x and 1.x lines.
+
+WARRANTY
+  Bonebase is provided "as is", without warranty of any kind. The author
+  is not liable for any damage arising from its use. If it breaks
+  something, say so and it gets fixed.
+
+Questions: through the itch.io page.

@@ -1,0 +1,35 @@
+newmtl gold
+Kd 0.94 0.7 0.24
+Ka 0.1 0.1 0.1
+d 1
+illum 2
+
+newmtl green
+Kd 0.3 0.7 0.42
+Ka 0.1 0.1 0.1
+d 1
+illum 2
+
+newmtl purple
+Kd 0.65 0.36 0.84
+Ka 0.1 0.1 0.1
+d 1
+illum 2
+
+newmtl teal
+Kd 0.2 0.72 0.75
+Ka 0.1 0.1 0.1
+d 1
+illum 2
+
+newmtl red
+Kd 0.88 0.3 0.3
+Ka 0.1 0.1 0.1
+d 1
+illum 2
+
+newmtl blue
+Kd 0.25 0.48 0.9
+Ka 0.1 0.1 0.1
+d 1
+illum 2

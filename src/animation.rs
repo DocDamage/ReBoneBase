@@ -1,0 +1,501 @@
+//! Keyframe channels and easing derived from Bonebase's anim.lua.
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashSet};
+
+pub type Pose = BTreeMap<u32, BonePose>;
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct BonePose {
+    pub rotation: f32,
+    pub x: f32,
+    pub y: f32,
+    pub scale: f32,
+    pub z: Option<f32>,
+    pub visibility: Option<f32>,
+}
+impl Default for BonePose {
+    fn default() -> Self {
+        Self {
+            rotation: 0.,
+            x: 0.,
+            y: 0.,
+            scale: 1.,
+            z: None,
+            visibility: None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Channel {
+    #[serde(alias = "rot")]
+    Rotation,
+    #[serde(alias = "x")]
+    X,
+    #[serde(alias = "y")]
+    Y,
+    #[serde(alias = "s")]
+    Scale,
+    #[serde(alias = "z")]
+    Z,
+    #[serde(alias = "vis")]
+    Visibility,
+}
+impl Channel {
+    fn neutral(self) -> f32 {
+        if matches!(self, Self::Scale | Self::Visibility) {
+            1.
+        } else {
+            0.
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub enum Ease {
+    Linear,
+    #[default]
+    Ease,
+    #[serde(alias = "Ease in")]
+    EaseIn,
+    #[serde(alias = "Ease out")]
+    EaseOut,
+    Back,
+    Bounce,
+    Step,
+    Cubic,
+}
+impl Ease {
+    pub fn sample(self, u: f32) -> f32 {
+        let u = u.clamp(0., 1.);
+        match self {
+            Self::Linear | Self::Cubic => u,
+            Self::Step => 0.,
+            Self::Ease => (1. - (std::f32::consts::PI * u).cos()) * 0.5,
+            Self::EaseIn => u * u * u,
+            Self::EaseOut => 1. - (1. - u).powi(3),
+            Self::Back => {
+                let v = u - 1.;
+                1. + 2.70158 * v * v * v + 1.70158 * v * v
+            }
+            Self::Bounce => {
+                let n = 7.5625;
+                let d = 2.75;
+                if u < 1. / d {
+                    n * u * u
+                } else if u < 2. / d {
+                    n * (u - 1.5 / d).powi(2) + 0.75
+                } else if u < 2.5 / d {
+                    n * (u - 2.25 / d).powi(2) + 0.9375
+                } else {
+                    n * (u - 2.625 / d).powi(2) + 0.984375
+                }
+            }
+        }
+    }
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Keyframe {
+    pub frame: f32,
+    pub value: f32,
+    #[serde(default)]
+    pub easing: Ease,
+    #[serde(default)]
+    pub tangent_in: f32,
+    #[serde(default)]
+    pub tangent_out: f32,
+}
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub enum Playback {
+    #[default]
+    Forward,
+    Reverse,
+    PingPong,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Track {
+    pub bone: u32,
+    pub channel: Channel,
+    #[serde(default)]
+    pub keys: Vec<Keyframe>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Clip {
+    pub name: String,
+    pub fps: f32,
+    pub length: u32,
+    #[serde(rename = "loop", alias = "looped")]
+    pub looped: bool,
+    pub tracks: Vec<Track>,
+    pub playback: Playback,
+    pub durations: BTreeMap<u32, u32>,
+}
+impl Default for Clip {
+    fn default() -> Self {
+        Self {
+            name: "Animation".into(),
+            fps: 10.,
+            length: 12,
+            looped: true,
+            tracks: vec![],
+            playback: Playback::Forward,
+            durations: BTreeMap::new(),
+        }
+    }
+}
+pub fn wrap_degrees(a: f32) -> f32 {
+    let a = a.rem_euclid(360.);
+    if a > 180. { a - 360. } else { a }
+}
+impl Clip {
+    pub fn duration_ms(&self, frame: u32) -> u32 {
+        self.durations
+            .get(&frame)
+            .copied()
+            .unwrap_or_else(|| (1000. / self.fps).round().clamp(1., 60000.) as u32)
+    }
+    pub fn frame_sequence(&self) -> Vec<u32> {
+        match self.playback {
+            Playback::Forward => (1..=self.length).collect(),
+            Playback::Reverse => (1..=self.length).rev().collect(),
+            Playback::PingPong => (1..=self.length).chain((2..self.length).rev()).collect(),
+        }
+    }
+    pub fn total_duration_ms(&self) -> u64 {
+        self.frame_sequence()
+            .into_iter()
+            .map(|f| u64::from(self.duration_ms(f)))
+            .sum()
+    }
+    pub fn frame_at_ms(&self, elapsed: f64) -> (u32, bool) {
+        let sequence = self.frame_sequence();
+        let Some(first) = sequence.first().copied() else {
+            return (1, true);
+        };
+        let total = self.total_duration_ms() as f64;
+        let mut time = if elapsed.is_finite() {
+            elapsed.max(0.)
+        } else {
+            0.
+        };
+        if !self.looped && time >= total {
+            return (
+                if self.playback == Playback::PingPong {
+                    1
+                } else {
+                    *sequence.last().unwrap()
+                },
+                true,
+            );
+        }
+        if total > 0. {
+            time = time.rem_euclid(total);
+        }
+        for frame in sequence {
+            let duration = f64::from(self.duration_ms(frame));
+            if time < duration {
+                return (frame, false);
+            }
+            time -= duration;
+        }
+        (first, false)
+    }
+    pub fn set_key(
+        &mut self,
+        bone: u32,
+        channel: Channel,
+        frame: f32,
+        value: f32,
+    ) -> Result<(), String> {
+        if !frame.is_finite()
+            || frame < 1.
+            || frame > self.length as f32
+            || !value.is_finite()
+            || value.abs() > 100_000.
+            || (channel == Channel::Scale && !(0.1..=4.).contains(&value))
+        {
+            return Err("Invalid keyframe time or value".into());
+        }
+        let index = match self
+            .tracks
+            .iter()
+            .position(|t| t.bone == bone && t.channel == channel)
+        {
+            Some(i) => i,
+            None => {
+                self.tracks.push(Track {
+                    bone,
+                    channel,
+                    keys: vec![],
+                });
+                self.tracks.len() - 1
+            }
+        };
+        let keys = &mut self.tracks[index].keys;
+        if let Some(key) = keys.iter_mut().find(|k| k.frame == frame) {
+            key.value = value;
+        } else {
+            keys.push(Keyframe {
+                frame,
+                value,
+                easing: Ease::default(),
+                tangent_in: 0.,
+                tangent_out: 0.,
+            });
+            keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+        }
+        Ok(())
+    }
+    pub fn remove_key(&mut self, bone: u32, channel: Channel, frame: f32) -> bool {
+        let mut removed = false;
+        for t in &mut self.tracks {
+            if t.bone == bone && t.channel == channel {
+                let before = t.keys.len();
+                t.keys.retain(|k| k.frame != frame);
+                removed |= before != t.keys.len();
+            }
+        }
+        self.tracks.retain(|t| !t.keys.is_empty());
+        removed
+    }
+    pub fn value(&self, track: &Track, frame: f32) -> f32 {
+        let keys = &track.keys;
+        let Some(first) = keys.first() else {
+            return track.channel.neutral();
+        };
+        let last = &keys[keys.len() - 1];
+        if keys.len() == 1 {
+            return first.value;
+        }
+        let frame = if !frame.is_finite() {
+            1.
+        } else if self.looped && self.length > 0 {
+            (frame - 1.).rem_euclid(self.length as f32) + 1.
+        } else {
+            frame
+        };
+        let at_seam = frame < first.frame || frame > last.frame;
+        let (a, b, f, end_frame) = if at_seam {
+            if !self.looped {
+                return if frame < first.frame {
+                    first.value
+                } else {
+                    last.value
+                };
+            }
+            (
+                last,
+                first,
+                if frame < first.frame {
+                    frame + self.length as f32
+                } else {
+                    frame
+                },
+                first.frame + self.length as f32,
+            )
+        } else {
+            if let Some(k) = keys.iter().find(|k| k.frame == frame) {
+                return k.value;
+            }
+            let pair = keys
+                .windows(2)
+                .find(|p| frame > p[0].frame && frame < p[1].frame)
+                .unwrap_or(&keys[0..2]);
+            (&pair[0], &pair[1], frame, pair[1].frame)
+        };
+        let ease = if matches!(track.channel, Channel::Z | Channel::Visibility) {
+            Ease::Step
+        } else {
+            a.easing
+        };
+        let delta = if track.channel == Channel::Rotation && at_seam {
+            wrap_degrees(b.value - a.value)
+        } else {
+            b.value - a.value
+        };
+        let span = (end_frame - a.frame).max(0.0001);
+        let u = ((f - a.frame) / span).clamp(0., 1.);
+        let value = if ease == Ease::Cubic {
+            let u2 = u * u;
+            let u3 = u2 * u;
+            (2. * u3 - 3. * u2 + 1.) * a.value
+                + (u3 - 2. * u2 + u) * span * a.tangent_out
+                + (-2. * u3 + 3. * u2) * (a.value + delta)
+                + (u3 - u2) * span * b.tangent_in
+        } else {
+            a.value + delta * ease.sample(u)
+        };
+        if track.channel == Channel::Scale {
+            value.clamp(0.1, 4.)
+        } else {
+            value
+        }
+    }
+    pub fn sample(&self, frame: f32) -> Pose {
+        let mut pose = Pose::new();
+        for t in &self.tracks {
+            let value = self.value(t, frame);
+            let p = pose.entry(t.bone).or_default();
+            match t.channel {
+                Channel::Rotation => p.rotation = value,
+                Channel::X => p.x = value,
+                Channel::Y => p.y = value,
+                Channel::Scale => p.scale = value,
+                Channel::Z => p.z = Some(value),
+                Channel::Visibility => p.visibility = Some(value),
+            }
+        }
+        pose
+    }
+    pub fn validate(&self, owners: &HashSet<u32>) -> Result<(), String> {
+        if self
+            .durations
+            .iter()
+            .any(|(frame, ms)| *frame == 0 || *frame > self.length || !(1..=60000).contains(ms))
+        {
+            return Err("Invalid per-frame duration".into());
+        }
+        if self.name.len() > 1024
+            || !self.fps.is_finite()
+            || !(1. / 60. ..=240.).contains(&self.fps)
+            || self.length == 0
+            || self.length > 240
+            || self.tracks.len() > 16384
+        {
+            return Err("Invalid animation limits".into());
+        }
+        let mut seen = HashSet::new();
+        let mut total = 0;
+        for t in &self.tracks {
+            if !owners.contains(&t.bone) || !seen.insert((t.bone, t.channel)) || t.keys.len() > 240
+            {
+                return Err("Invalid or duplicate animation track".into());
+            }
+            let mut previous = 0.;
+            for k in &t.keys {
+                if !k.tangent_in.is_finite()
+                    || !k.tangent_out.is_finite()
+                    || k.tangent_in.abs() > 100_000.
+                    || k.tangent_out.abs() > 100_000.
+                {
+                    return Err("Invalid keyframe tangent".into());
+                }
+                if !k.frame.is_finite()
+                    || k.frame <= previous
+                    || k.frame < 1.
+                    || k.frame > self.length as f32
+                    || !k.value.is_finite()
+                    || k.value.abs() > 100_000.
+                    || (t.channel == Channel::Scale && !(0.1..=4.).contains(&k.value))
+                {
+                    return Err("Invalid keyframe".into());
+                }
+                previous = k.frame;
+                total += 1;
+            }
+        }
+        if total > 100_000 {
+            return Err("Too many animation keys".into());
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn samples_source_rotation_and_updates_existing_key() {
+        let mut c = Clip {
+            looped: false,
+            ..Default::default()
+        };
+        c.set_key(1, Channel::Rotation, 1., 170.).unwrap();
+        c.set_key(1, Channel::Rotation, 11., -170.).unwrap();
+        // Original anim.lua keeps explicit turns between keys; only the loop seam wraps.
+        assert!(c.sample(6.)[&1].rotation.abs() < 0.001);
+        c.set_key(1, Channel::Rotation, 11., -160.).unwrap();
+        assert_eq!(c.tracks[0].keys.len(), 2);
+        assert_eq!(c.sample(12.)[&1].rotation, -160.);
+    }
+    #[test]
+    fn loop_seam_and_step_and_scale() {
+        let mut c = Clip::default();
+        c.set_key(1, Channel::X, 3., 0.).unwrap();
+        c.set_key(1, Channel::X, 9., 12.).unwrap();
+        assert!((c.sample(12.)[&1].x - 6.).abs() < 0.001);
+        c.set_key(2, Channel::Visibility, 1., 1.).unwrap();
+        c.set_key(2, Channel::Visibility, 7., 0.).unwrap();
+        assert_eq!(c.sample(6.)[&2].visibility, Some(1.));
+        assert_eq!(c.sample(7.)[&2].visibility, Some(0.));
+        assert!(c.set_key(1, Channel::Scale, 1., -1.).is_err());
+        assert!(c.set_key(1, Channel::X, 0., 0.).is_err());
+    }
+
+    #[test]
+    fn all_eases_have_expected_endpoints_and_step_holds() {
+        for ease in [
+            Ease::Linear,
+            Ease::Ease,
+            Ease::EaseIn,
+            Ease::EaseOut,
+            Ease::Back,
+            Ease::Bounce,
+        ] {
+            assert!(ease.sample(0.).abs() < 0.00001);
+            assert!((ease.sample(1.) - 1.).abs() < 0.00001);
+            assert!(ease.sample(0.5).is_finite());
+        }
+        assert_eq!(Ease::Step.sample(0.99), 0.);
+        assert!(Ease::EaseIn.sample(0.5) < Ease::EaseOut.sample(0.5));
+    }
+
+    #[test]
+    fn channels_defaults_clamping_and_remove_key() {
+        let mut c = Clip {
+            looped: false,
+            ..Default::default()
+        };
+        for channel in [
+            Channel::X,
+            Channel::Y,
+            Channel::Rotation,
+            Channel::Scale,
+            Channel::Z,
+            Channel::Visibility,
+        ] {
+            assert_eq!(
+                c.value(
+                    &Track {
+                        bone: 1,
+                        channel,
+                        keys: vec![]
+                    },
+                    1.
+                ),
+                channel.neutral()
+            );
+        }
+        c.set_key(1, Channel::Y, 1., 2.).unwrap();
+        c.set_key(1, Channel::Y, 12., 8.).unwrap();
+        c.tracks[0].keys[0].easing = Ease::Linear;
+        assert_eq!(c.sample(6.5)[&1].y, 5.);
+        assert_eq!(c.sample(-12.)[&1].y, 2.);
+        assert_eq!(c.sample(100.)[&1].y, 8.);
+        assert!(c.remove_key(1, Channel::Y, 12.));
+        assert!(!c.remove_key(1, Channel::X, 12.));
+        assert_eq!(c.sample(6.)[&1].y, 2.);
+        assert!(c.remove_key(1, Channel::Y, 1.));
+        assert!(c.tracks.is_empty());
+        assert!(c.set_key(1, Channel::X, f32::NAN, 0.).is_err());
+        assert!(c.set_key(1, Channel::X, 1., f32::INFINITY).is_err());
+    }
+
+    #[test]
+    fn supports_original_sixty_second_frames() {
+        let clip = Clip {
+            fps: 1. / 60.,
+            ..Default::default()
+        };
+        assert!(clip.validate(&HashSet::new()).is_ok());
+    }
+}

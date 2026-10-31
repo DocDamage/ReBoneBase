@@ -1,0 +1,491 @@
+info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage
+   Compiling rebonebase v0.1.0 (D:\dev\ReBoneBase)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 23s
+     Running unittests src\lib.rs (target\llvm-cov-target\debug\deps\rebonebase-19ee8fe52891cd53.exe)
+
+running 23 tests
+test animation::tests::all_eases_have_expected_endpoints_and_step_holds ... ok
+test animation::tests::supports_original_sixty_second_frames ... ok
+test animation::tests::samples_source_rotation_and_updates_existing_key ... ok
+test animation::tests::channels_defaults_clamping_and_remove_key ... ok
+test ik::tests::extreme_and_invalid_lengths_never_panic ... ok
+test ik::tests::unreachable_and_coincident_targets_are_finite ... ok
+test animation::tests::loop_seam_and_step_and_scale ... ok
+test ik::tests::reaches_target_with_both_bend_directions ... ok
+test model::tests::hierarchy_respects_local_parent_frames ... ok
+test model::tests::invalid_edit_is_atomic_and_missing_delete_is_noop ... ok
+test model::tests::loose_children_and_pose_offsets_use_parent_axes ... ok
+test model::tests::rejects_non_documents_and_excessive_raster_work ... ok
+test model::tests::validation_rejects_dangerous_or_broken_documents ... ok
+test model::tests::rejects_bad_ids_bulges_tracks_and_duplicate_parts ... ok
+test motion::tests::curve_interpolation_respects_linear_step_and_cubic_gltf_rules ... ok
+test motion::tests::canonical_joint_aliases_cover_both_side_conventions ... ok
+test skin::tests::bulges_and_taper_distance_follow_original_field ... ok
+test skin::tests::tapered_capsule_end_discs_and_degenerate_length_are_finite ... ok
+test model::tests::serialization_clone_undo_and_cascade ... ok
+test skin::tests::renders_transparent_background_and_part_z_order ... ok
+test skin::tests::animated_visibility_and_alpha_are_composited ... ok
+test motion::tests::bvh_downsampling_preserves_duration_and_projection ... ok
+test motion::tests::gltf_static_hierarchies_and_local_buffers_are_bounded ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (target\llvm-cov-target\debug\deps\rebonebase-7e3cfbbd6da3d7d4.exe)
+
+running 60 tests
+test app::canvas_ui::tests::growth_preserves_screen_joint_positions_and_gesture_bases_and_corrected_pixels ... ok
+test app::import_ui::tests::completed_background_import_cannot_overwrite_newer_rig_edits ... ok
+test app::canvas_ui::tests::undo_and_redo_of_canvas_growth_keep_the_world_camera_steady ... ok
+test app::import_ui::tests::prepared_motion_import_is_atomic_and_an_imported_clip_is_undoable ... ok
+test app::import_ui::tests::synthetic_import_setup_previews_the_actual_rig_and_applies_a_profile ... ok
+test app::picking::tests::endpoint_priority_locks_and_marquee ... ok
+test app::studio_animation::interaction_tests::changing_incoming_tangent_enables_its_preceding_segment ... ok
+test app::picking::tests::onion_respects_both_sides ... ok
+test app::animation_import_ui::tests::animation_import_rejects_changed_document_and_stale_source ... ok
+test app::studio_animation::interaction_tests::empty_timeline_drag_continuously_scrubs ... ok
+test app::import_ui::tests::background_import_is_discarded_after_switching_to_an_identical_rig_project ... ok
+test app::studio_animation::interaction_tests::curve_drag_uses_the_pressed_point_and_is_one_undo ... ok
+test app::studio_rig::hierarchy_controller_regressions::rejected_studio_changes_preserve_document_and_undo_history ... ok
+test app::studio_animation::interaction_tests::key_drag_uses_press_origin_after_a_large_first_pointer_move ... ok
+test app::studio_animation::interaction_tests::incoming_and_outgoing_curve_handles_change_the_displayed_segment ... ok
+test app::studio_rig::hierarchy_controller_regressions::ordinary_detach_is_blocked_and_preserves_the_controller_graph ... ok
+test app::studio_rig::hierarchy_controller_regressions::rest_translation_is_blocked_and_preserves_the_controller_graph ... ok
+test app::studio_rig::tests::moving_pinned_rest_joints_is_blocked_and_preserves_the_pin ... ok
+test app::tests::rest_edit_gesture_and_pending_discard_are_transactional ... ok
+test app::studio_rig::tests::authored_roots_can_connect_but_existing_joints_cannot_detach_and_rotations_stay_anchored ... ok
+test app::studio_rig::tests::reparenting_an_attached_lower_bone_is_blocked_without_losing_its_pin ... ok
+test app::tests_more::radius_bulge_and_fk_pose_gestures_remain_undoable ... ok
+test app::studio_rig::tests::lock_selection_constraints_and_preferred_bend_follow_actual_widget_clicks ... ok
+test app::studio_rig::tests::pins_ground_contact_bend_flip_and_removal_are_editable_from_rig_tools ... ok
+test app::tests_movement::a_joint_pivot_press_selects_without_an_arbitrary_fk_jump ... ok
+test app::animation_import_ui::tests::animation_source_preview_batch_import_and_undo_work_in_ui ... ok
+test app::tests_movement::history_navigation_finishes_an_active_move_rig_gesture ... ok
+test app::tests_movement::move_rig_in_pose_mode_keys_only_root_offsets_and_keeps_rest_geometry ... ok
+test app::tests::ik_pointer_gesture_uses_original_press_and_undo_restores_keys ... ok
+test app::tests_movement::loose_limb_drags_rotate_at_the_shoulder_without_detaching_it ... ok
+test app::tests_more::saved_project_reopens_and_failed_open_keeps_current_work ... ok
+test app::tests_movement::move_rig_translates_every_root_and_mirror_axis_with_one_undo ... ok
+test app::tests_movement::multi_selection_rest_drag_rotates_each_subtree_about_its_anchored_head ... ok
+test app::tests_more::selecting_a_bone_keeps_the_canvas_position_stable ... ok
+test app::tests_movement::rest_connected_body_drags_rotate_without_shortening_and_tail_drags_still_resize ... ok
+test app::tests_movement::rest_joint_pivot_press_does_not_relocate_the_joint_or_create_undo ... ok
+test app::tests_movement::torso_ik_cannot_rotate_or_translate_the_root ... ok
+test app::tests_more::native_panels_render_reference_poses_and_motion_mapping ... ok
+test app::tests_movement::rest_loose_limb_and_head_body_drags_keep_their_authored_joint_offsets ... ok
+test app::tests_movement::move_rig_shortcut_and_canvas_gesture_work_from_empty_space ... ok
+test app::tests_movement::ordinary_root_drags_never_transform_the_whole_mannequin ... ok
+test app::tests_movement::real_pointer_rest_drag_rotates_upper_arm_while_shoulder_stays_attached ... ok
+test app::tests_production::pixel_strokes_are_undoable_and_collisions_export_as_metadata ... ok
+test app::tests_production::choosing_a_prop_parent_waits_for_the_preserving_switch_action ... ok
+test app::tests_production::rejected_canvas_edits_leave_the_project_and_history_unchanged ... ok
+test app::tests_production::imported_3d_character_controls_and_move_rig_preserve_pose_and_undo ... ok
+test app::tests_production::audio_markers_workspaces_and_custom_shortcuts_are_persistent_and_editable ... ok
+test app::tests_production::docking_layouts_and_command_palette_preserve_the_document ... ok
+test app::tests_production::remapped_move_rig_command_and_palette_keep_root_protection ... ok
+test app::tests_production::production_panels_render_with_backward_compatible_defaults ... ok
+test app::tests_production::visible_animation_templates_add_an_editable_clip_in_one_undo ... ok
+test app::tests_studio::key_clipboard_and_group_rotation_have_transactional_undo ... ok
+test app::tests_studio::persistent_pin_drag_and_move_rig_keep_targets_consistent ... ok
+test app::tests_studio::autosave_startup_recovery_and_background_generation_are_safe ... ok
+test app::tests_production::artwork_outfit_face_scene_and_regions_work_together_and_undo_pixel_edits ... ok
+test app::tests_more::shortcuts_edit_scrub_key_and_restore_a_document ... ok
+test app::tests_studio::animation_buttons_complete_a_clip_and_key_editing_workflow ... ok
+test app::tests_production::motion_tools_complete_a_controller_gait_and_transition_workflow ... ok
+test app::tests_studio::appearance_library_and_presets_are_usable_across_projects ... ok
+test app::tests_studio::studio_tabs_render_full_project_without_spurious_edits ... ok
+
+test result: ok. 60 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.49s
+
+     Running tests\advanced_motion.rs (target\llvm-cov-target\debug\deps\advanced_motion-ddf46f0234b9e8fa.exe)
+
+running 22 tests
+test baking_rejects_missing_owners_nonfinite_values_and_out_of_range_times_atomically ... ok
+test all_layer_channels_have_neutral_additive_values_and_disabled_layers_do_nothing ... ok
+test contacts_blend_into_ik_then_release_to_original_fk ... ok
+test contact_bend_switches_on_its_key_and_chain_capture_preserves_exact_fk ... ok
+test contact_timing_and_clip_ownership_survive_remapping ... ok
+test clip_authoring_failures_preserve_the_entire_document ... ok
+test contacts_remain_authoritative_over_secondary_springs ... ok
+test controller_metadata_is_bounded_and_backward_compatible ... ok
+test empty_pose_bakes_still_validate_time_and_active_clip_without_panicking ... ok
+test controller_documents_reject_bad_channels_keys_and_references ... ok
+test ccd_reaches_with_three_bones_and_never_moves_the_root_or_lengths ... ok
+test masks_and_channel_specific_layers_preserve_unanimated_offsets ... ok
+test metadata_limits_reject_hostile_controller_documents ... ok
+test chain_handles_unreachable_folded_targets_and_length_locks ... ok
+test spring_damping_regimes_are_finite_under_long_holds_and_joint_limits ... ok
+test spring_simulation_is_deterministic_for_scrubbing_and_can_be_baked ... ok
+test transitions_blend_angles_short_way_and_create_valid_transactional_clips ... ok
+test loop_cleanup_matches_pose_and_velocity_and_mirroring_swaps_both_sides ... ok
+test run_generator_supports_in_place_and_rejects_locked_or_invalid_limbs ... ok
+test mirroring_reflects_animated_root_loose_joints_and_part_visibility_with_timing ... ok
+test layer_and_spring_aggregate_work_is_bounded_before_evaluation ... ok
+test generated_walk_has_a_full_gait_and_ground_contacts_and_optional_travel ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\animation_templates.rs (target\llvm-cov-target\debug\deps\animation_templates-850153265a0febee.exe)
+
+running 2 tests
+test templates_keep_existing_clips_and_create_unique_names_and_reject_invalid_settings_atomically ... ok
+test every_template_adds_a_named_editable_clip_without_replacing_the_character ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests\aseprite.rs (target\llvm-cov-target\debug\deps\aseprite-bf2436d3237d175b.exe)
+
+running 6 tests
+test slow_original_timing_and_translucent_layer_roundtrip ... ok
+test empty_groups_remain_editable_layers_without_ink_cels ... ok
+test animated_z_and_visibility_keep_independent_part_cels ... ok
+test independently_decodes_layers_frames_timings_and_rgba_pixels ... ok
+test static_layers_follow_z_order_and_keep_equal_z_stable ... ok
+test bad_rigs_and_excessive_work_are_rejected_before_rendering ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\canvas_budget.rs (target\llvm-cov-target\debug\deps\canvas_budget-e520ffa404b7bb70.exe)
+
+running 3 tests
+test envelope_budget_accepts_near_limit_and_rejects_before_any_scan_or_mutation ... ok
+test visible_actor_envelopes_are_charged_once_alongside_parent_placement_passes ... ok
+test disabled_models_and_manual_canvas_skip_geometry_envelope_work ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests\canvas_growth.rs (target\llvm-cov-target\debug\deps\canvas_growth-1e6f3751d536bba4.exe)
+
+running 7 tests
+test one_sided_growth_keeps_the_game_export_pivot_at_its_original_world_anchor ... ok
+test unbounded_growth_fails_atomically_and_old_documents_default_to_automatic_canvas ... ok
+test animation_envelope_grows_once_for_all_frames_and_stays_fixed_during_export ... ok
+test imported_actors_grow_their_own_raster_before_the_parent_scene_composites_them ... ok
+test actor_pixel_corrections_outside_its_skeleton_are_part_of_the_parent_envelope ... ok
+test canvas_grows_in_every_direction_without_relocating_joints_or_existing_pixels ... ok
+test exported_sheets_grow_to_include_the_full_animation_without_mutating_the_document ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\character3d.rs (target\llvm-cov-target\debug\deps\character3d-da36c03eec16ecb7.exe)
+
+running 12 tests
+test normalized_model_rejects_overflowing_quaternions_and_interpolated_scale_chains ... ok
+test native_obj_mtl_keeps_texture_coordinates_and_materials ... ok
+test extra_gltf_skin_influences_are_reported_once ... ok
+test malformed_assets_and_external_resource_escapes_are_rejected ... ok
+test hidden_models_have_no_render_work_and_large_finite_timeline_values_stay_safe ... ok
+test native_fbx_skin_and_authored_animation_are_imported_and_evaluated ... ok
+test gltf_percent_encoded_local_names_work_but_encoded_traversal_does_not ... ok
+test origin_camera_and_bounds_use_canvas_world_coordinates ... ok
+test animated_and_manual_joint_rotations_keep_joint_heads_in_the_hierarchy ... ok
+test z_buffer_keeps_front_triangles_independent_of_mesh_order ... ok
+test transparent_shared_edges_composite_once_and_alpha_mask_uses_cutoff ... ok
+test textured_gltf_and_glb_render_and_embed_without_external_runtime_dependencies ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\characters_project.rs (target\llvm-cov-target\debug\deps\characters_project-d190ba7ce8724241.exe)
+
+running 2 tests
+test invalid_3d_instances_and_scene_work_are_rejected_before_rendering ... ok
+test imported_3d_characters_render_animate_roundtrip_and_export_in_the_existing_project ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\editor_features.rs (target\llvm-cov-target\debug\deps\editor_features-dfdcf81f133eb4c5.exe)
+
+running 12 tests
+test cubic_tangents_control_channel_curves_without_affecting_old_eases ... ok
+test locked_bones_and_length_and_rotation_constraints_are_enforced ... ok
+test key_clipboard_retime_and_snap_replace_collisions_and_fail_atomically ... ok
+test constrained_ik_obeys_joint_limits_and_does_not_key_the_root ... ok
+test an_ik_chain_with_one_locked_joint_uses_the_remaining_joint ... ok
+test group_transform_does_not_double_transform_selected_descendants ... ok
+test clip_management_keeps_active_identity_and_boundary_frames ... ok
+test playback_timing_handles_holds_reverse_pingpong_and_completion ... ok
+test old_json_keeps_default_constraints_and_new_settings_roundtrip ... ok
+test reparent_detach_and_connect_preserve_world_rest_and_reject_cycles_atomically ... ok
+test root_motion_path_and_in_place_conversion_keep_initial_placement ... ok
+test pixel_outlines_and_per_group_settings_preserve_original_fill ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\exports_references.rs (target\llvm-cov-target\debug\deps\exports_references-b23e110fbe09355a.exe)
+
+running 3 tests
+test indexed_png_has_palette_and_preserves_transparency ... ok
+test image_sequences_sort_frames_and_obey_memory_limits ... ok
+test batch_exports_all_clips_with_metadata_and_rejects_overwrite ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\external_animation.rs (target\llvm-cov-target\debug\deps\external_animation-6fd98a9ec8ba58a0.exe)
+
+running 3 tests
+test imported_open_motion_keeps_its_final_sample_on_the_timeline ... ok
+test one_import_drives_3d_and_attached_2d_skeleton_and_rolls_back_on_unmapped_2d ... ok
+test external_motion_import_is_atomic_keeps_mesh_and_creates_independent_clips ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\joint_anchors.rs (target\llvm-cov-target\debug\deps\joint_anchors-5535e568fad6073e.exe)
+
+running 1 test
+test authored_limb_translation_tracks_and_layers_cannot_move_attachment_points ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\legacy.rs (target\llvm-cov-target\debug\deps\legacy-079d7b155d1019d8.exe)
+
+running 12 tests
+test accepts_data_only_lua_format_variants_and_escaped_names ... ok
+test predecessor_anim_without_clips_keeps_all_supported_tracks_and_easing ... ok
+test rejects_malformed_strings_comments_numbers_and_table_keys ... ok
+test rejects_wrong_schema_types_invalid_geometry_and_unknown_easing ... ok
+test selects_active_clip_and_reports_every_unsupported_feature_once ... ok
+test rejects_code_expressions_deep_or_oversized_inputs ... ok
+test rejects_duplicate_keys_sparse_arrays_and_non_finite_geometry ... ok
+test preserves_original_slow_clip_timing ... ok
+test imports_actual_original_rig_and_animation_without_execution ... ok
+test warns_for_unsupported_motion_and_reference_features ... ok
+test imports_every_original_template_file ... ok
+test enforces_structural_budgets_before_converting_or_applying_values ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+     Running tests\mesh_binding.rs (target\llvm-cov-target\debug\deps\mesh_binding-1b95b051bfc24616.exe)
+
+running 11 tests
+test changing_the_rest_root_translates_bound_artwork_and_preserves_the_pose_pivot ... ok
+test grid_binding_deduplicates_input_bones_and_is_repeatable ... ok
+test deformation_keys_interpolate_after_skinning_and_disable_for_other_clips ... ok
+test independent_translucent_meshes_still_composite_over_each_other ... ok
+test grown_canvas_subtracts_its_origin_once_after_near_normalized_mesh_weights ... ok
+test binding_snapshots_reject_missing_references_partial_maps_and_nonfinite_data ... ok
+test malformed_grid_inputs_are_rejected_before_creating_an_invalid_mesh ... ok
+test checkerboard_uvs_are_continuous_across_grid_seams_and_reversed_winding ... ok
+test two_bone_weights_use_original_bind_transforms_after_rest_length_and_position_edits ... ok
+test grid_triangle_edges_composite_translucent_pixels_exactly_once ... ok
+test old_projects_without_bind_snapshots_load_and_keep_legacy_rest_fallback ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\motion.rs (target\llvm-cov-target\debug\deps\motion-aad242603b8765af.exe)
+
+running 8 tests
+test malformed_truncated_and_hostile_bvh_fail_without_panicking ... ok
+test bvh_projection_and_retarget_keys_are_visible_and_valid ... ok
+test saved_profiles_do_not_remap_ambiguous_or_missing_target_names ... ok
+test gltf_embedded_animation_is_sampled_and_external_paths_are_rejected ... ok
+test retarget_profiles_resolve_names_after_source_nodes_are_reordered ... ok
+test bvh_and_static_gltf_expose_one_selectable_motion ... ok
+test actual_mannequin_preview_matches_accepted_import_without_mutating_project ... ok
+test named_gltf_animations_select_distinct_motion_and_reject_bad_indices ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\motion_bindings.rs (target\llvm-cov-target\debug\deps\motion_bindings-b1a621592b3843f6.exe)
+
+running 5 tests
+test invalid_bindings_reject_before_render ... ok
+test split_and_trim_use_authored_frame_durations ... ok
+test retiming_trimmed_motion_does_not_change_its_first_pose ... ok
+test each_timeline_owns_its_3d_motion_and_survives_persistence ... ok
+test temporal_clip_edits_preserve_3d_frames_and_remap_bindings ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\motion_formats.rs (target\llvm-cov-target\debug\deps\motion_formats-aaad6f7401ec8567.exe)
+
+running 12 tests
+test manny_spine_and_clavicle_map_to_unity_humanoid_roles ... ok
+test humanoid_names_match_unity_mixamo_and_manny ... ok
+test bvh_bind_pose_is_offsets_not_first_animated_pose_and_unmapped_parents_are_kept ... ok
+test unity_empty_path_is_the_parent_of_all_relative_joint_paths ... ok
+test unity_position_tangents_sample_cubic_and_stepped_curves ... ok
+test unity_invalid_data_and_unreal_binary_have_actionable_errors ... ok
+test unity_rotation_only_child_paths_drive_2d_fk ... ok
+test unity_transform_curves_retarget_without_detaching_target_joints ... ok
+test unity_euler_and_long_clip_resampling_preserve_duration ... ok
+test native_fbx_motion_does_not_need_a_mesh ... ok
+test gltf_motion_small_duration_and_percent_encoded_local_buffers_work ... ok
+test unity_file_dispatch_and_invalid_key_structure_are_bounded ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\oracle.rs (target\llvm-cov-target\debug\deps\oracle-23c3848375d1818c.exe)
+
+running 4 tests
+test analytic_ik_matches_original_reach_and_bend ... ok
+test animation_matches_original_easing_and_rotation_seam ... ok
+test every_original_template_validates_and_matches_rest_and_posed_fk ... ok
+test every_original_template_matches_solid_rgba_raster_with_float_boundary_tolerance ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running tests\production_aseprite.rs (target\llvm-cov-target\debug\deps\production_aseprite-5b3647afa04b4f2e.exe)
+
+running 6 tests
+test batch_all_clips_checks_the_aggregate_budget_before_writing_files ... ok
+test aseprite_scene_layer_preserves_every_rendered_feature_and_frame_hold ... ok
+test scene_export_does_not_require_a_skin_group_and_rejects_aggregate_work ... ok
+test aseprite_scene_all_clips_preserve_tags_directions_and_canonical_frame_pixels ... ok
+test projects_without_art_keep_editable_group_layers_and_baked_motion ... ok
+test batch_raster_formats_and_metadata_use_the_rendered_project ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\production_assets.rs (target\llvm-cov-target\debug\deps\production_assets-339536d4216c3fff.exe)
+
+running 6 tests
+test collision_shapes_are_timed_and_bone_attached_and_invalid_external_data_is_rejected ... ok
+test attachment_parent_switch_and_face_keys_render_at_their_keyed_positions ... ok
+test scene_actor_placement_and_prop_animation_are_clip_specific ... ok
+test weighted_mesh_follows_bones_and_pixel_corrections_override_only_their_frame ... ok
+test looks_and_scene_actors_preserve_independent_visibility_timing_and_project_roundtrip ... ok
+test baked_project_releases_ik_back_to_neutral_fk ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\production_audio.rs (target\llvm-cov-target\debug\deps\production_audio-858179d37d0b5776.exe)
+
+running 2 tests
+test continuous_audio_cursor_advances_through_holds_and_reverses_without_restarting ... ok
+test pcm_wav_decode_waveform_seek_and_volume_are_bounded ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\production_clip_edit.rs (target\llvm-cov-target\debug\deps\production_clip_edit-81adc87417cc4810.exe)
+
+running 17 tests
+test mesh_override_helpers_preserve_future_interpolation_at_the_clip_boundary ... ok
+test deleting_last_masked_bone_never_turns_a_layer_into_global_animation ... ok
+test controller_pruning_removes_broken_chains_contacts_and_root_springs ... ok
+test malformed_clip_overrides_are_rejected_at_the_project_boundary ... ok
+test pruning_deleted_bones_also_checks_prop_override_timelines ... ok
+test delete_and_move_remap_every_reference_and_keep_globally_visible_artwork ... ok
+test newly_initialized_prop_overrides_keep_sparse_keys_and_hold_new_states ... ok
+test invalid_operations_are_atomic_including_metadata_capacity_failures ... ok
+test single_frame_trim_drops_out_of_range_events_corrections_and_regions ... ok
+test project_transition_uses_displayed_playback_endpoints_without_reapplying_controllers ... ok
+test resize_shrinks_all_owned_keys_then_extends_with_held_displayed_pose ... ok
+test global_contacts_and_props_remain_unchanged_in_other_clips_after_a_trim ... ok
+test duplicate_copies_owned_state_with_fresh_ids_without_duplicating_shared_artwork ... ok
+test temporal_edits_bake_layers_and_spring_history_without_double_application ... ok
+test trim_keeps_rendered_integer_frames_boundary_holds_durations_and_metadata_aligned ... ok
+test split_preserves_both_ranges_and_creates_independent_prop_and_mesh_key_sets ... ok
+test mirrored_project_clip_reflects_evaluated_fk_and_keeps_shared_art_and_metadata ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests\production_export.rs (target\llvm-cov-target\debug\deps\production_export-0f29124b16266aff.exe)
+
+running 2 tests
+test engine_animation_names_are_unique_even_for_duplicate_or_empty_clip_labels ... ok
+test game_packages_include_timing_events_collision_and_engine_loaders ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\production_limits.rs (target\llvm-cov-target\debug\deps\production_limits-89a4abe1cf47dfd0.exe)
+
+running 3 tests
+test embedded_actor_images_share_a_total_serialization_budget ... ok
+test per_frame_artwork_work_is_bounded_before_rendering ... ok
+test package_preflight_uses_actor_canvas_dimensions_across_all_clips ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests\project.rs (target\llvm-cov-target\debug\deps\project-026cedeae4ab0775.exe)
+
+running 7 tests
+test history_undo_redo_and_branching ... ok
+test oversized_export_is_rejected_before_allocating ... ok
+test pose_library_roundtrips_and_invalid_application_is_atomic ... ok
+test animation_exports_have_expected_dimensions_and_gif_frames ... ok
+test reference_buffers_share_history_storage_and_save_compactly ... ok
+test project_roundtrip_and_failed_open_preserves_existing_file ... ok
+test mirrored_pose_keeps_loose_children_at_their_authored_anchors ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\references_errors.rs (target\llvm-cov-target\debug\deps\references_errors-ced47e60cfe75a09.exe)
+
+running 5 tests
+test extraction_settings_and_missing_inputs_fail_before_starting_a_decoder ... ok
+test sequence_loading_uses_natural_order_with_zero_padding_and_case ... ok
+test unavailable_ffmpeg_reports_an_actionable_error_and_keeps_the_source ... ok
+test a_real_decoder_failure_returns_bounded_diagnostics_without_touching_input ... ok
+test sequence_decoder_enforces_aggregate_pixels_even_when_reusing_a_source_image ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s
+
+     Running tests\studio_edge_cases.rs (target\llvm-cov-target\debug\deps\studio_edge_cases-3f9ba7745c6ea0d6.exe)
+
+running 7 tests
+test sequence_validation_counts_shared_image_buffers_for_every_frame ... ok
+test visible_pixels_do_not_disappear_into_a_transparent_swatches_hidden_rgb ... ok
+test transparent_pixels_do_not_turn_opaque_when_transparent_swatch_has_hidden_rgb ... ok
+test atomic_write_never_removes_a_temp_file_owned_by_another_writer ... ok
+test persistent_pins_preserve_locked_joint_pose_and_respect_angle_limits ... ok
+test grounded_leg_targets_the_visible_sole_instead_of_sinking_the_ankle ... ok
+test aseprite_all_clips_roundtrip_names_directions_holds_and_frame_pixels ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests\studio_services.rs (target\llvm-cov-target\debug\deps\studio_services-20aa7aaa931caca5.exe)
+
+running 5 tests
+test extras_reject_invalid_pins_and_image_budgets ... ok
+test reference_sequence_selects_frames_by_timeline_time_and_roundtrips ... ok
+test pinned_leg_stays_at_target_when_root_motion_changes ... ok
+test pose_library_thumbnail_uses_captured_pose_instead_of_first_frame ... ok
+test recovery_and_library_store_preserve_files_and_search_metadata ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests\video_smoke.rs (target\llvm-cov-target\debug\deps\video_smoke-5ee938e53c61c219.exe)
+
+running 1 test
+test real_ffmpeg_extracts_a_generated_animated_reference ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running tests\workspace.rs (target\llvm-cov-target\debug\deps\workspace-fb0be44a0fcd4157.exe)
+
+running 1 test
+test saved_layouts_and_shortcuts_roundtrip_and_reject_collisions ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\create_characters_demo.rs (target\llvm-cov-target\debug\examples\create_characters_demo-330e17e9012b3d93.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\create_demo.rs (target\llvm-cov-target\debug\examples\create_demo-8be543f4d02e627c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\create_external_motion_demo.rs (target\llvm-cov-target\debug\examples\create_external_motion_demo-394cdc1469bfd06b.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\create_production_demo.rs (target\llvm-cov-target\debug\examples\create_production_demo-183b1c178d717bc5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples\extract_templates.rs (target\llvm-cov-target\debug\examples\extract_templates-efd459870e5551ae.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+    Finished report saved to docs/evidence/coverage-motion.json

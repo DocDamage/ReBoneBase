@@ -1,0 +1,6905 @@
+[
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 5.5,
+        "x": 32.0,
+        "y": 37.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [
+          {
+            "d": 0.5,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 0.5,
+            "t": 0.75
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 11.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 6.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.5,
+        "radius_tail": 2.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 5.4,
+        "radius_tail": 5.3,
+        "x": 8.0,
+        "y": -4.898587196589413e-16
+      },
+      {
+        "angle": 165.96375653207355,
+        "bulges_left": [
+          {
+            "d": 0.5,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 10.307764064044152,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.5,
+        "radius_tail": 2.0,
+        "twin": 12,
+        "x": 10.0,
+        "y": 6.499999999999999
+      },
+      {
+        "angle": -165.96375653207352,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.5,
+            "t": 0.35
+          }
+        ],
+        "connected": false,
+        "id": 12,
+        "length": 10.307764064044152,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 2.5,
+        "radius_tail": 2.0,
+        "twin": 11,
+        "x": 10.0,
+        "y": -6.500000000000001
+      },
+      {
+        "angle": 1.507435758774946,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 9.219544457292887,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -1.5074357587749887,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 9.219544457292887,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -1.5074357587749319,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 4.123105625617661,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 1.5074357587750455,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.1231056256176615,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 174.8055710922652,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "connected": false,
+        "id": 17,
+        "length": 11.045361017187261,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.5,
+        "radius_tail": 2.6,
+        "twin": 18,
+        "x": 1.8369701987210297e-16,
+        "y": 3.0
+      },
+      {
+        "angle": -174.8055710922652,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 11.045361017187261,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.5,
+        "radius_tail": 2.6,
+        "twin": 17,
+        "x": -1.8369701987210297e-16,
+        "y": -3.0
+      },
+      {
+        "angle": 5.194428907734746,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "connected": true,
+        "id": 19,
+        "length": 10.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.0,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.194428907734732,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 10.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.0,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -56.30993247402017,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.605551275463989,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 56.309932474020115,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.6055512754639834,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 7.0,
+        "radius_tail": 7.0,
+        "x": 32.0,
+        "y": 44.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.7
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.7
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 10.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 7.5,
+        "radius_tail": 8.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 3.2,
+        "radius_tail": 3.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 5.6,
+        "radius_tail": 5.5,
+        "x": 9.5,
+        "y": -5.817072295949927e-16
+      },
+      {
+        "angle": 161.56505117707798,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 9.486832980505138,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 12,
+        "x": 9.0,
+        "y": 7.999999999999999
+      },
+      {
+        "angle": -161.56505117707798,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.35
+          }
+        ],
+        "connected": false,
+        "id": 12,
+        "length": 9.486832980505138,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 11,
+        "x": 9.0,
+        "y": -8.0
+      },
+      {
+        "angle": 2.489552921999177,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 7.280109889280518,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 2.8,
+        "radius_tail": 2.4,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -2.489552921999177,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 7.280109889280518,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 2.8,
+        "radius_tail": 2.4,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 3.640054944640259,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 2.4,
+        "radius_tail": 2.1,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 3.640054944640259,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 2.4,
+        "radius_tail": 2.1,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 176.42366562500266,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "connected": false,
+        "id": 17,
+        "length": 8.0156097709407,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 4.0,
+        "radius_tail": 3.4,
+        "twin": 18,
+        "x": 2.4492935982947064e-16,
+        "y": 4.0
+      },
+      {
+        "angle": -176.42366562500263,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 8.0156097709407,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 4.0,
+        "radius_tail": 3.4,
+        "twin": 17,
+        "x": -2.4492935982947064e-16,
+        "y": -4.0
+      },
+      {
+        "angle": 3.5763343749973444,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 6.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 3.4,
+        "radius_tail": 2.8,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -3.576334374997373,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 6.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 3.4,
+        "radius_tail": 2.8,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -56.30993247402023,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.605551275463989,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.0,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 56.30993247402023,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.6055512754639865,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.4,
+        "radius_tail": 2.0,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid 2",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 5.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.5,
+        "x": 32.0,
+        "y": 34.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [
+          {
+            "d": 0.5,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 0.5,
+            "t": 0.75
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 12.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 5.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.0,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.4,
+        "radius_tail": 4.3,
+        "x": 7.5,
+        "y": -4.592425496802575e-16
+      },
+      {
+        "angle": 168.69006752597977,
+        "bulges_left": [
+          {
+            "d": 0.4,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 10.198039027185569,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 12,
+        "x": 11.0,
+        "y": 5.499999999999999
+      },
+      {
+        "angle": -168.69006752597977,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.4,
+            "t": 0.35
+          }
+        ],
+        "connected": false,
+        "id": 12,
+        "length": 10.198039027185569,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 11,
+        "x": 11.0,
+        "y": -5.500000000000001
+      },
+      {
+        "angle": 1.8476102659946605,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 9.124143795447328,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -1.8476102659946605,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 9.124143795447328,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -1.8476102659946037,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 4.079215610874227,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 1.8476102659946037,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.079215610874227,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 177.70938995736148,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.5,
+            "t": 0.3
+          }
+        ],
+        "connected": false,
+        "id": 17,
+        "length": 12.509996003196804,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.0,
+        "radius_tail": 2.2,
+        "twin": 18,
+        "x": 1.5308084989341916e-16,
+        "y": 2.5
+      },
+      {
+        "angle": -177.70938995736145,
+        "bulges_left": [
+          {
+            "d": 0.5,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 12.509996003196804,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.0,
+        "radius_tail": 2.2,
+        "twin": 17,
+        "x": -1.5308084989341916e-16,
+        "y": -2.5
+      },
+      {
+        "angle": 2.2906100426385194,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.5,
+            "t": 0.3
+          }
+        ],
+        "connected": true,
+        "id": 19,
+        "length": 11.5,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.2,
+        "radius_tail": 1.6,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -2.2906100426386047,
+        "bulges_left": [
+          {
+            "d": 0.5,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 11.5,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.2,
+        "radius_tail": 1.6,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -56.30993247402023,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.605551275463989,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 56.309932474020286,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.605551275463989,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid 3",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 6.5,
+        "radius_tail": 4.2,
+        "x": 32.0,
+        "y": 38.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [
+          {
+            "d": 0.8,
+            "t": 0.6
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 0.8,
+            "t": 0.6
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 12.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.2,
+        "radius_tail": 5.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.0,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 5.0,
+        "radius_tail": 4.9,
+        "x": 8.0,
+        "y": -4.898587196589413e-16
+      },
+      {
+        "angle": 168.11134196037202,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 9.7082439194738,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 12,
+        "x": 11.0,
+        "y": 4.999999999999999
+      },
+      {
+        "angle": -168.11134196037202,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 9.7082439194738,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "twin": 11,
+        "x": 11.0,
+        "y": -5.000000000000001
+      },
+      {
+        "angle": 1.2690027634728551,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 8.139410298049853,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -1.2690027634728835,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 8.139410298049853,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.6934097695033898,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 4.060788100849392,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -0.6934097695034325,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.060788100849391,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 180.0,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.8,
+            "t": 0.25
+          }
+        ],
+        "connected": false,
+        "id": 17,
+        "length": 10.5,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.6,
+        "radius_tail": 2.4,
+        "twin": 18,
+        "x": 2.143131898507868e-16,
+        "y": 3.5
+      },
+      {
+        "angle": 180.0,
+        "bulges_left": [
+          {
+            "d": 0.8,
+            "t": 0.25
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 10.5,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.6,
+        "radius_tail": 2.4,
+        "twin": 17,
+        "x": -2.143131898507868e-16,
+        "y": -3.5
+      },
+      {
+        "angle": 3.0127875041833363,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "connected": true,
+        "id": 19,
+        "length": 9.513148795220223,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.3,
+        "radius_tail": 1.6,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -3.0127875041833363,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 9.513148795220223,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.3,
+        "radius_tail": 1.6,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -54.352979250093256,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.2015621187164243,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 54.352979250093256,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.2015621187164243,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid 4",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 6.0,
+        "x": 32.0,
+        "y": 40.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.7
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.7
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 13.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 7.0,
+        "radius_tail": 9.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 3.5,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 3.5,
+        "radius_tail": 3.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0009999999999994,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.2,
+        "radius_tail": 4.2,
+        "x": 7.0,
+        "y": -4.286263797015736e-16
+      },
+      {
+        "angle": 158.19859051364818,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 10.770329614269007,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 4.0,
+        "radius_tail": 3.6,
+        "twin": 12,
+        "x": 13.0,
+        "y": 9.0
+      },
+      {
+        "angle": -158.19859051364818,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "connected": false,
+        "id": 12,
+        "length": 10.770329614269007,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 4.0,
+        "radius_tail": 3.6,
+        "twin": 11,
+        "x": 13.0,
+        "y": -9.0
+      },
+      {
+        "angle": 9.272601777200308,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 9.219544457292887,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 3.8,
+        "radius_tail": 3.4,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -9.272601777200293,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 9.219544457292887,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 3.8,
+        "radius_tail": 3.4,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 6.818214571651879,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 5.024937810560445,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -6.818214571651879,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 5.024937810560445,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 174.28940686250036,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "connected": false,
+        "id": 17,
+        "length": 10.04987562112089,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 4.2,
+        "radius_tail": 3.4,
+        "twin": 18,
+        "x": 2.143131898507868e-16,
+        "y": 3.5
+      },
+      {
+        "angle": -174.28940686250036,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.3
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 10.04987562112089,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 4.2,
+        "radius_tail": 3.4,
+        "twin": 17,
+        "x": -2.143131898507868e-16,
+        "y": -3.5
+      },
+      {
+        "angle": 5.710593137499643,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 7.5,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 3.4,
+        "radius_tail": 3.0,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.710593137499643,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 7.5,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 3.4,
+        "radius_tail": 3.0,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -50.19442890773479,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.905124837953327,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 50.194428907734846,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.905124837953327,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid 5",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 4.5,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.5,
+        "x": 32.0,
+        "y": 45.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 8.5,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 5.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.5,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.0,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.0,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 7.0,
+        "radius_tail": 6.9,
+        "x": 9.0,
+        "y": -5.51091059616309e-16
+      },
+      {
+        "angle": 164.05460409907715,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 7.280109889280518,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.7,
+        "twin": 12,
+        "x": 7.5,
+        "y": 4.499999999999999
+      },
+      {
+        "angle": -164.05460409907715,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 7.280109889280518,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 1.9,
+        "radius_tail": 1.7,
+        "twin": 11,
+        "x": 7.5,
+        "y": -4.500000000000001
+      },
+      {
+        "angle": 6.483073692897236,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 6.082762530298219,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 5,
+        "radius_head": 1.7,
+        "radius_tail": 1.5,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -6.4830736928972215,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 6.082762530298219,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 6,
+        "radius_head": 1.7,
+        "radius_tail": 1.5,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 3.0413812651491097,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 5,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 3.0413812651491097,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 176.18592516570965,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 7.516648189186454,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 18,
+        "x": 1.5308084989341916e-16,
+        "y": 2.5
+      },
+      {
+        "angle": -176.18592516570965,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 7.516648189186454,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 17,
+        "x": -1.5308084989341916e-16,
+        "y": -2.5
+      },
+      {
+        "angle": 3.814074834290352,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 6.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.2,
+        "radius_tail": 1.8,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -3.8140748342902953,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 6.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.2,
+        "radius_tail": 1.8,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -59.03624346792651,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 2.9154759474226504,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 59.0362434679264,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 2.9154759474226473,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Humanoid 6",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_L",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -84.28940686250036,
+        "bulges_left": [
+          {
+            "d": 1.2,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 5.024937810560445,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.0,
+        "radius_tail": 2.9,
+        "x": 31.0,
+        "y": 33.0
+      },
+      {
+        "angle": 0.999243670257286,
+        "bulges_left": [
+          {
+            "d": 0.4,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 1.2,
+            "t": 0.65
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 8.558621384311845,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 2.9,
+        "radius_tail": 4.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 5.818970901394579,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.6097722286464435,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 1.6,
+        "radius_tail": 1.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 4.996760664571397,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.9924858845171283,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.5,
+        "radius_tail": 4.4,
+        "x": 8.134892168199606,
+        "y": -0.2711630722733205
+      },
+      {
+        "angle": 169.7138288172457,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 8.0156097709407,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 1.6,
+        "radius_tail": 1.25,
+        "x": 7.951046896961379,
+        "y": 3.394238241832886
+      },
+      {
+        "angle": -9.418282416919169,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 6.670832032063167,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 1.25,
+        "radius_tail": 0.95,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.440332031005482,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.1622776601683795,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 1.05,
+        "radius_tail": 0.85,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.31966613439005,
+        "bulges_left": [
+          {
+            "d": 0.7,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 11.543396380615196,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.5,
+        "radius_tail": 1.7,
+        "x": -0.7960297521679911,
+        "y": 2.089578099440977
+      },
+      {
+        "angle": 4.96974072811031,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.8,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 11.5,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 1.6,
+        "radius_tail": 1.05,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -63.434948822922024,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.47213595499958,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 1.15,
+        "radius_tail": 0.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 176.86649756724043,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 8.0156097709407,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 1.8,
+        "radius_tail": 1.4,
+        "x": 7.133158163989599,
+        "y": -3.5578159884272433
+      },
+      {
+        "angle": -15.671091452009478,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 7.158910531638177,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 6,
+        "radius_head": 1.4,
+        "radius_tail": 1.05,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -6.340191745909806,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 3.162277660168378,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 6,
+        "radius_head": 1.15,
+        "radius_tail": 0.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.31966613439005,
+        "bulges_left": [
+          {
+            "d": 0.9,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 11.543396380615196,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 5,
+        "radius_head": 2.8,
+        "radius_tail": 1.9,
+        "x": -1.1442927687414877,
+        "y": -1.3930520662939847
+      },
+      {
+        "angle": 7.355684758499152,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 21,
+        "length": 12.010412149464313,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 1.8,
+        "radius_tail": 1.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -68.42345505581068,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 4.9244289008980555,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 5,
+        "radius_head": 1.3,
+        "radius_tail": 0.9,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Profile",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -85.23635830927384,
+        "bulges_left": [
+          {
+            "d": 1.5,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.020797289396148,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 4.5,
+        "x": 31.0,
+        "y": 39.0
+      },
+      {
+        "angle": 0.9469514467734967,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 2.0,
+            "t": 0.4
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 10.04987562112089,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 6.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 10.23480276342319,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 3.640054944640259,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 12.127091034930018,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.6999999999999986,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 5.0,
+        "radius_tail": 4.9,
+        "x": 7.142749325331829,
+        "y": -0.48076197382041097
+      },
+      {
+        "angle": 167.16439051359856,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 8.06225774829855,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.0,
+        "x": 9.452853306994898,
+        "y": 4.079652479860957
+      },
+      {
+        "angle": -5.869600443014747,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 6.670832032063167,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 2.0,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -2.950779109006305,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.640054944640259,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.79602627826833,
+        "bulges_left": [
+          {
+            "d": 0.9,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 10.547511554864494,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.3,
+        "radius_tail": 2.5,
+        "x": -0.29065917948809084,
+        "y": 2.532887135539069
+      },
+      {
+        "angle": 5.440332031005511,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.9,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 7.5,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 2.4,
+        "radius_tail": 1.7,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -66.03751102542185,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.924428900898052,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 1.7,
+        "radius_tail": 1.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 177.8657412374977,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 8.0156097709407,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "x": 8.656823554826905,
+        "y": -3.8806450418189575
+      },
+      {
+        "angle": -15.671091452009478,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 7.15891053163818,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 6,
+        "radius_head": 2.2,
+        "radius_tail": 1.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -3.8506388239106855,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 3.640054944640258,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 6,
+        "radius_head": 1.9,
+        "radius_tail": 1.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.5257651717742,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 10.04987562112089,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 5,
+        "radius_head": 3.6,
+        "radius_tail": 2.7,
+        "x": -1.121113978025489,
+        "y": -1.41177315751358
+      },
+      {
+        "angle": 9.52466797179001,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 21,
+        "length": 7.516648189186454,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 2.6,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -72.01266534793854,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 5.385164807134504,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Profile 2",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -83.65980825409008,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 4.527692569068709,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 3.5,
+        "radius_tail": 2.6,
+        "x": 31.0,
+        "y": 31.0
+      },
+      {
+        "angle": -0.6295986084102765,
+        "bulges_left": [
+          {
+            "d": 0.4,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.65
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 10.04987562112089,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 2.6,
+        "radius_tail": 4.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 8.325650330426825,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.123105625617661,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 1.4,
+        "radius_tail": 1.3,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 6.519801751657042,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.7088007490635064,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 3.9,
+        "radius_tail": 3.8,
+        "x": 7.4458436886154225,
+        "y": -0.31529631254723234
+      },
+      {
+        "angle": 171.10957674263614,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 9.013878188659973,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 1.4,
+        "radius_tail": 1.1,
+        "x": 9.353349587973899,
+        "y": 3.0846152896509653
+      },
+      {
+        "angle": -8.130102354156008,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 7.648529270389178,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 1.1,
+        "radius_tail": 0.85,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -4.635463426902618,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.640054944640259,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 0.95,
+        "radius_tail": 0.75,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.26110289909457,
+        "bulges_left": [
+          {
+            "d": 0.6,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 13.038404810405298,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.3,
+        "radius_tail": 1.5,
+        "x": -0.7730206825239252,
+        "y": 2.0981989954220848
+      },
+      {
+        "angle": 4.398705354995485,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.7,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 12.5,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 1.5,
+        "radius_tail": 0.95,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -63.43494882292197,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.47213595499958,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 1.05,
+        "radius_tail": 0.75,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 177.46923698236458,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 9.013878188659973,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 1.6,
+        "radius_tail": 1.3,
+        "x": 8.706575414337404,
+        "y": -3.3831264467139643
+      },
+      {
+        "angle": -13.79948539601935,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 8.139410298049857,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 6,
+        "radius_head": 1.3,
+        "radius_tail": 1.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.325740624767661,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 3.640054944640258,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 6,
+        "radius_head": 1.1,
+        "radius_tail": 0.85,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.26110289909457,
+        "bulges_left": [
+          {
+            "d": 0.8,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 13.038404810405298,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 5,
+        "radius_head": 2.6,
+        "radius_tail": 1.7,
+        "x": -1.1595310237858891,
+        "y": -1.3803940759355815
+      },
+      {
+        "angle": 6.6013035167613054,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.9,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 21,
+        "length": 13.009611831257688,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 1.7,
+        "radius_tail": 1.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -70.401188675414,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 4.846648326421052,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 5,
+        "radius_head": 1.2,
+        "radius_tail": 0.85,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Profile 3",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -80.53767779197437,
+        "bulges_left": [
+          {
+            "d": 1.2,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 6.082762530298219,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.0,
+        "x": 29.0,
+        "y": 37.0
+      },
+      {
+        "angle": 10.520784313874344,
+        "bulges_left": [
+          {
+            "d": 1.2,
+            "t": 0.8
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 2.0,
+            "t": 0.6
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 11.704699910719626,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 7.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 51.58194465517802,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.743416490252569,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.6,
+        "radius_tail": 2.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -15.255118703057747,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.8027756377319946,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.0,
+        "radius_tail": 3.9,
+        "x": 7.74758026741253,
+        "y": 0.474341649025257
+      },
+      {
+        "angle": 147.4880857689485,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 9.219544457292887,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 2.8,
+        "radius_tail": 2.4,
+        "x": 12.131878739578006,
+        "y": 4.100916757040453
+      },
+      {
+        "angle": -1.5074357587749319,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 8.246211251235321,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 1.507435758774946,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 4.6097722286464435,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 162.40757543781842,
+        "bulges_left": [
+          {
+            "d": 0.8,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 10.606601717798213,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.4,
+        "radius_tail": 2.6,
+        "x": -0.08219949365267831,
+        "y": 2.5481843032330382
+      },
+      {
+        "angle": 11.14288985833926,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.9,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 9.513148795220223,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -69.05029852960513,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.924428900898052,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 2.0,
+        "radius_tail": 1.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 154.0078875206055,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 9.5524865872714,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 3.2,
+        "radius_tail": 2.7,
+        "x": 9.739677297971076,
+        "y": -2.477637207378607
+      },
+      {
+        "angle": -7.231513957692641,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 8.73212459828649,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 6,
+        "radius_head": 2.9,
+        "radius_tail": 2.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 1.9305874411668924,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 5.099019513592786,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 6,
+        "radius_head": 2.7,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 164.82708465447473,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 10.04987562112089,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 5,
+        "radius_head": 3.7,
+        "radius_tail": 2.8,
+        "x": -1.1507929111375013,
+        "y": -0.8219949365267863
+      },
+      {
+        "angle": 8.72338064168298,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 21,
+        "length": 9.513148795220223,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 2.8,
+        "radius_tail": 2.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -69.05029852960513,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 4.924428900898052,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 5,
+        "radius_head": 2.2,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Profile 4",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -84.28940686250036,
+        "bulges_left": [
+          {
+            "d": 1.2,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 5.024937810560445,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.2,
+        "radius_tail": 3.2,
+        "x": 31.0,
+        "y": 34.0
+      },
+      {
+        "angle": -1.1366718775988147,
+        "bulges_left": [
+          {
+            "d": 0.4,
+            "t": 0.75
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 1.4,
+            "t": 0.65
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 10.031948963187562,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 3.2,
+        "radius_tail": 4.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 5.352324246750911,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 4.060788100849392,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 1.8,
+        "radius_tail": 1.7,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 18.146241429201126,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.6999999999999986,
+        "name": "head",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.7,
+        "radius_tail": 4.6,
+        "x": 7.59458490177048,
+        "y": -0.11081592755501957
+      },
+      {
+        "angle": 172.05961807666938,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 8.514693182963201,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 1.5,
+        "radius_tail": 1.2,
+        "x": 9.130827951390906,
+        "y": 1.2759235565262457
+      },
+      {
+        "angle": -8.728296413582314,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 7.158910531638177,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 1.2,
+        "radius_tail": 0.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -0.7802444826003239,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.5902646142032477,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 1.0,
+        "radius_tail": 0.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 169.31966613439005,
+        "bulges_left": [
+          {
+            "d": 0.7,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 11.543396380615196,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 1.8,
+        "x": -0.39801487608399555,
+        "y": 1.0447890497204886
+      },
+      {
+        "angle": 4.96974072811031,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.8,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 11.5,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 1.7,
+        "radius_tail": 1.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -66.03751102542185,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 4.924428900898052,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 1.2,
+        "radius_tail": 0.85,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 175.42607874009917,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 8.5,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 6,
+        "radius_head": 1.7,
+        "radius_tail": 1.4,
+        "x": 9.01121011796657,
+        "y": -0.21929936127794203
+      },
+      {
+        "angle": -12.094757077012105,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 7.158910531638178,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 6,
+        "radius_head": 1.4,
+        "radius_tail": 1.05,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -0.7802444826003239,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 3.5902646142032477,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 6,
+        "radius_head": 1.15,
+        "radius_tail": 0.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 171.7998539405012,
+        "bulges_left": [
+          {
+            "d": 0.9,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 11.510864433221338,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 5,
+        "radius_head": 2.8,
+        "radius_tail": 1.9,
+        "x": -0.4975185951049946,
+        "y": 0.04975185951049951
+      },
+      {
+        "angle": 2.489552921999149,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.25
+          }
+        ],
+        "connected": true,
+        "id": 21,
+        "length": 11.5,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 1.8,
+        "radius_tail": 1.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -66.03751102542185,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 4.924428900898052,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 5,
+        "radius_head": 1.3,
+        "radius_tail": 0.9,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Profile 5",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "arm_R",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 5.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 5.5,
+        "x": 32.0,
+        "y": 47.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 7.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 5.5,
+        "radius_tail": 5.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 3.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.5,
+        "radius_tail": 2.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 2.0,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 6.2,
+        "radius_tail": 6.15,
+        "x": 8.2,
+        "y": -5.021051876504147e-16
+      },
+      {
+        "angle": 153.43494882292202,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 6.708203932499369,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 12,
+        "x": 6.0,
+        "y": 4.5
+      },
+      {
+        "angle": -153.43494882292202,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 6.708203932499369,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 11,
+        "x": 6.0,
+        "y": -4.5
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.3541019662496847,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 4,
+        "radius_head": 2.2,
+        "radius_tail": 2.2,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 3.3541019662496847,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 5,
+        "radius_head": 2.2,
+        "radius_tail": 2.2,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 15.25511870305776,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 2.5495097567963922,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 4,
+        "radius_head": 2.4,
+        "radius_tail": 2.4,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -15.255118703057747,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 2.5495097567963922,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 5,
+        "radius_head": 2.4,
+        "radius_tail": 2.4,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 175.23635830927384,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 6.020797289396148,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 18,
+        "x": 1.8369701987210297e-16,
+        "y": 3.0
+      },
+      {
+        "angle": -175.23635830927384,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 6.020797289396148,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.2,
+        "radius_tail": 2.8,
+        "twin": 17,
+        "x": -1.8369701987210297e-16,
+        "y": -3.0
+      },
+      {
+        "angle": 4.7636416907261605,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 5.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.8,
+        "radius_tail": 2.6,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -4.7636416907261605,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 5.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.8,
+        "radius_tail": 2.6,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -45.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 2.8284271247461903,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 45.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 2.8284271247461903,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Chibi",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "arm_L",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 3.5,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.5,
+        "x": 32.0,
+        "y": 52.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 5.5,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.0,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.2,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 2.0,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 7.25,
+        "radius_tail": 7.2,
+        "x": 8.25,
+        "y": -5.051668046482832e-16
+      },
+      {
+        "angle": 147.99461679191648,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 4.716990566028302,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 2.0,
+        "radius_tail": 1.9,
+        "twin": 12,
+        "x": 4.5,
+        "y": 3.4999999999999996
+      },
+      {
+        "angle": -147.99461679191648,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 4.716990566028302,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.9,
+        "twin": 11,
+        "x": 4.5,
+        "y": -3.5000000000000004
+      },
+      {
+        "angle": 10.2039737217317,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 2.692582403567252,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 4,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -10.203973721731757,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 2.6925824035672505,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 7.765166018425347,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 2.0615528128088303,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 4,
+        "radius_head": 2.1,
+        "radius_tail": 2.1,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -7.765166018425248,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 2.0615528128088303,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 5,
+        "radius_head": 2.1,
+        "radius_tail": 2.1,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 175.71084667118103,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 4.011234224026316,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.4,
+        "twin": 18,
+        "x": 1.5308084989341916e-16,
+        "y": 2.5
+      },
+      {
+        "angle": -175.710846671181,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 4.011234224026316,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.4,
+        "twin": 17,
+        "x": -1.5308084989341916e-16,
+        "y": -2.5
+      },
+      {
+        "angle": 4.289153328818969,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 2.5,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -4.289153328819054,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 2.5,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.4,
+        "radius_tail": 2.2,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -48.57633437499737,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 2.267156809750929,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.1,
+        "radius_tail": 1.9,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 48.57633437499737,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 2.2671568097509263,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.1,
+        "radius_tail": 1.9,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Chibi 2",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "arm_L",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 4.5,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.5,
+        "radius_tail": 4.5,
+        "x": 32.0,
+        "y": 43.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 8.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 4.6,
+        "radius_tail": 4.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.5,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.2,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.5,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 5.25,
+        "radius_tail": 5.2,
+        "x": 6.75,
+        "y": -4.133182947122317e-16
+      },
+      {
+        "angle": 155.22485943116808,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 7.158910531638177,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 2.0,
+        "radius_tail": 1.8,
+        "twin": 12,
+        "x": 7.5,
+        "y": 3.9999999999999996
+      },
+      {
+        "angle": -155.22485943116806,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 7.158910531638177,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.8,
+        "twin": 11,
+        "x": 7.5,
+        "y": -4.000000000000001
+      },
+      {
+        "angle": 9.52002186577414,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 5.70087712549569,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 4,
+        "radius_head": 1.8,
+        "radius_tail": 1.7,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -9.520021865774197,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 5.700877125495689,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 5,
+        "radius_head": 1.8,
+        "radius_tail": 1.7,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 5.792796495032164,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 3.0413812651491097,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 4,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.792796495032121,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 3.0413812651491097,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 176.42366562500266,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 8.0156097709407,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 2.8,
+        "radius_tail": 2.4,
+        "twin": 18,
+        "x": 1.5308084989341916e-16,
+        "y": 2.5
+      },
+      {
+        "angle": -176.42366562500263,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 8.0156097709407,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.8,
+        "radius_tail": 2.4,
+        "twin": 17,
+        "x": -1.5308084989341916e-16,
+        "y": -2.5
+      },
+      {
+        "angle": 3.5763343749973444,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 7.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.4,
+        "radius_tail": 2.1,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -3.576334374997373,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 7.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 2.4,
+        "radius_tail": 2.1,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -51.34019174590992,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.2015621187164243,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.1,
+        "radius_tail": 1.8,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 51.34019174590986,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.2015621187164216,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.1,
+        "radius_tail": 1.8,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Chibi 3",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "arm_L",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 5.0,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 7.5,
+        "radius_tail": 7.5,
+        "x": 32.0,
+        "y": 49.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 7.0,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 7.5,
+        "radius_tail": 6.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.5,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 3.0,
+        "radius_tail": 3.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.5,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 6.0,
+        "radius_tail": 5.95,
+        "x": 7.5,
+        "y": -4.592425496802575e-16
+      },
+      {
+        "angle": 145.00797980144134,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 6.103277807866851,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 2.8,
+        "radius_tail": 2.6,
+        "twin": 12,
+        "x": 7.0,
+        "y": 6.5
+      },
+      {
+        "angle": -145.0079798014413,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 6.103277807866851,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.8,
+        "radius_tail": 2.6,
+        "twin": 11,
+        "x": 7.0,
+        "y": -6.5
+      },
+      {
+        "angle": 11.793429684910478,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 3.8078865529319543,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 4,
+        "radius_head": 2.6,
+        "radius_tail": 2.5,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -11.793429684910507,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 3.8078865529319543,
+        "name": "forearm_R",
+        "parent": 12,
+        "part": 5,
+        "radius_head": 2.6,
+        "radius_tail": 2.5,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 11.88865803962797,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 2.5495097567963922,
+        "name": "hand_L",
+        "parent": 13,
+        "part": 4,
+        "radius_head": 2.6,
+        "radius_tail": 2.6,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -11.888658039627956,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 2.5495097567963922,
+        "name": "hand_R",
+        "parent": 14,
+        "part": 5,
+        "radius_head": 2.6,
+        "radius_tail": 2.6,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 174.28940686250036,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 5.024937810560445,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.6,
+        "radius_tail": 3.3,
+        "twin": 18,
+        "x": 2.143131898507868e-16,
+        "y": 3.5
+      },
+      {
+        "angle": -174.28940686250036,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 5.024937810560445,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 3.6,
+        "radius_tail": 3.3,
+        "twin": 17,
+        "x": -2.143131898507868e-16,
+        "y": -3.5
+      },
+      {
+        "angle": 5.710593137499643,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 4.0,
+        "name": "shin_L",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 3.3,
+        "radius_tail": 3.0,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -5.710593137499643,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 4.0,
+        "name": "shin_R",
+        "parent": 18,
+        "part": 2,
+        "radius_head": 3.3,
+        "radius_tail": 3.0,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -51.34019174590992,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.2015621187164243,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 1,
+        "radius_head": 2.8,
+        "radius_tail": 2.5,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 51.34019174590992,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.2015621187164243,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 2,
+        "radius_head": 2.8,
+        "radius_tail": 2.5,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Chibi 4",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "arm_L",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -82.8749836510982,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 4.031128874149275,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 4.2,
+        "radius_tail": 3.8,
+        "x": 31.0,
+        "y": 48.0
+      },
+      {
+        "angle": -1.414423211402152,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.6
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 7.034912934784623,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 3.8,
+        "radius_tail": 4.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 7.785140143296047,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.5709920264364867,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.0,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 20.194334245184095,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 1.8027756377319946,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 6.0,
+        "radius_tail": 5.95,
+        "x": 7.596289603071803,
+        "y": -0.48619365099024536
+      },
+      {
+        "angle": 157.59016262850673,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 5.220153254455275,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 1.9,
+        "radius_tail": 1.7,
+        "x": 7.313523348043421,
+        "y": 2.786104132587969
+      },
+      {
+        "angle": 0.7538483330707777,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 3.640054944640259,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 1.7,
+        "radius_tail": 1.7,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 4.635463426902632,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 2.5495097567963922,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 163.7847067302759,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 5.0635955604688645,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.3,
+        "x": -0.24806946917841716,
+        "y": 2.0465731207219395
+      },
+      {
+        "angle": 9.090276920822305,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 4.0,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 2.3,
+        "radius_tail": 2.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -54.293308599397164,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 3.9408120990476068,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 180.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 5.024937810560445,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.1,
+        "radius_tail": 1.9,
+        "x": 6.766252893427926,
+        "y": -2.686600413566971
+      },
+      {
+        "angle": -21.655989038422433,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 3.640054944640258,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 4.635463426902575,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 2.5495097567963922,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 5,
+        "radius_head": 2.1,
+        "radius_tail": 2.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 167.16439051359856,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 5.024937810560445,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 4,
+        "radius_head": 2.8,
+        "radius_tail": 2.5,
+        "x": -0.6449806198638837,
+        "y": -1.128716084761796
+      },
+      {
+        "angle": 5.7105931374997,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 4.0,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 4,
+        "radius_head": 2.5,
+        "radius_tail": 2.3,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -56.68936917543925,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 4.18807831827438,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 4,
+        "radius_head": 2.2,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Chibi 5",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "leg_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -81.86989764584405,
+        "bulges_left": [
+          {
+            "d": 0.8,
+            "t": 0.2
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 7,
+        "length": 3.5355339059327378,
+        "name": "hips",
+        "part": 3,
+        "radius_head": 3.8,
+        "radius_tail": 3.6,
+        "x": 31.0,
+        "y": 52.5
+      },
+      {
+        "angle": -2.9356734464211627,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 0.8,
+            "t": 0.6
+          }
+        ],
+        "connected": true,
+        "id": 8,
+        "length": 5.522680508593631,
+        "name": "chest",
+        "parent": 7,
+        "part": 3,
+        "radius_head": 3.6,
+        "radius_tail": 3.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 8.841814560191779,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 2.061552812808831,
+        "name": "neck",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 1.8,
+        "radius_tail": 1.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 12.528807709151423,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 2.23606797749979,
+        "name": "head",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 7.0,
+        "radius_tail": 6.95,
+        "x": 8.61001468878982,
+        "y": -0.6063390625908416
+      },
+      {
+        "angle": 154.24952587268174,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 11,
+        "length": 4.272001872658765,
+        "name": "upper_arm_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 1.7,
+        "radius_tail": 1.6,
+        "x": 5.251073270466073,
+        "y": 2.5350008891905205
+      },
+      {
+        "angle": 2.8113735945266,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 12,
+        "length": 2.6248809496813363,
+        "name": "forearm_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 1.6,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 6.43473915103651,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 2.039607805437115,
+        "name": "hand_L",
+        "parent": 12,
+        "part": 1,
+        "radius_head": 1.8,
+        "radius_tail": 1.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 162.14231909444243,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 3.551056180912941,
+        "name": "thigh_L",
+        "parent": 7,
+        "part": 2,
+        "radius_head": 2.3,
+        "radius_tail": 2.1,
+        "x": 0.2545584412271558,
+        "y": 1.781909088590097
+      },
+      {
+        "angle": 9.72757855140162,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 2.5,
+        "name": "shin_L",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 2.1,
+        "radius_tail": 1.9,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -60.0183606311507,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 3.0016662039607285,
+        "name": "foot_L",
+        "parent": 15,
+        "part": 2,
+        "radius_head": 1.8,
+        "radius_tail": 1.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -178.069412558833,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 4.031128874149275,
+        "name": "upper_arm_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 1.9,
+        "radius_tail": 1.8,
+        "x": 4.798394540253483,
+        "y": -2.4444651431479985
+      },
+      {
+        "angle": -24.86968797395872,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 2.6248809496813377,
+        "name": "forearm_R",
+        "parent": 17,
+        "part": 5,
+        "radius_head": 1.8,
+        "radius_tail": 1.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 6.4347391510367515,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 2.0396078054371136,
+        "name": "hand_R",
+        "parent": 18,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 2.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 165.3500958941871,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 3.522782990761707,
+        "name": "thigh_R",
+        "parent": 7,
+        "part": 4,
+        "radius_head": 2.5,
+        "radius_tail": 2.3,
+        "x": -0.1697056274847707,
+        "y": -1.1879393923933992
+      },
+      {
+        "angle": 6.519801751656956,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 2.5,
+        "name": "shin_R",
+        "parent": 20,
+        "part": 4,
+        "radius_head": 2.3,
+        "radius_tail": 2.1,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -61.821409890040854,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.1764760348537187,
+        "name": "foot_R",
+        "parent": 21,
+        "part": 4,
+        "radius_head": 2.0,
+        "radius_tail": 1.7,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Chibi 6",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "arm_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "torso",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "leg_R",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "arm_R",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "head",
+        "z": 3
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -4.7636416907261605,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 8,
+        "length": 12.041594578792296,
+        "name": "hips",
+        "part": 4,
+        "radius_head": 6.0,
+        "radius_tail": 6.0,
+        "x": 20.0,
+        "y": 36.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.4
+          }
+        ],
+        "connected": true,
+        "id": 9,
+        "length": 12.041594578792296,
+        "name": "chest",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 6.0,
+        "radius_tail": 7.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -48.36646066342985,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 10,
+        "length": 10.0,
+        "name": "neck",
+        "parent": 9,
+        "part": 4,
+        "radius_head": 4.0,
+        "radius_tail": 3.5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 67.1663458220825,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 11,
+        "length": 8.246211251235321,
+        "name": "head",
+        "parent": 10,
+        "part": 5,
+        "radius_head": 4.5,
+        "radius_tail": 2.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -148.67130713219584,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 8.94427190999916,
+        "name": "tail",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 2.0,
+        "radius_tail": 1.4,
+        "x": -1.7439550769285403,
+        "y": -3.1557282344421185
+      },
+      {
+        "angle": -65.22485943116806,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 13,
+        "length": 6.4031242374328485,
+        "name": "tail_tip",
+        "parent": 12,
+        "part": 3,
+        "radius_head": 1.4,
+        "radius_tail": 0.8,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 88.42344994481626,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 14,
+        "length": 9.055385138137417,
+        "name": "upper_front_near",
+        "parent": 9,
+        "part": 6,
+        "radius_head": 3.0,
+        "radius_tail": 2.2,
+        "x": 10.629821421278718,
+        "y": 4.899683311370655
+      },
+      {
+        "angle": 6.340191745909962,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 15,
+        "length": 9.0,
+        "name": "lower_front_near",
+        "parent": 14,
+        "part": 6,
+        "radius_head": 2.0,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -45.00000000000006,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 2.8284271247461903,
+        "name": "paw_front_near",
+        "parent": 15,
+        "part": 6,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 88.42344994481626,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 9.055385138137417,
+        "name": "upper_front_far",
+        "parent": 9,
+        "part": 1,
+        "radius_head": 3.0,
+        "radius_tail": 2.2,
+        "x": 7.640184146544079,
+        "y": 4.650546871809436
+      },
+      {
+        "angle": 6.340191745909905,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 18,
+        "length": 9.0,
+        "name": "lower_front_far",
+        "parent": 17,
+        "part": 1,
+        "radius_head": 2.0,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -45.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 2.8284271247461903,
+        "name": "paw_front_far",
+        "parent": 18,
+        "part": 1,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 83.45370921670595,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 20,
+        "length": 10.198039027185569,
+        "name": "thigh_back_near",
+        "parent": 8,
+        "part": 7,
+        "radius_head": 3.8,
+        "radius_tail": 2.4,
+        "x": 2.82354631502716,
+        "y": 2.2422279560509786
+      },
+      {
+        "angle": 31.865977693603682,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 8.54400374531753,
+        "name": "hock_back_near",
+        "parent": 20,
+        "part": 7,
+        "radius_head": 2.2,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -54.246112745563266,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.605551275463989,
+        "name": "paw_back_near",
+        "parent": 21,
+        "part": 7,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 83.45370921670595,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 23,
+        "length": 10.198039027185569,
+        "name": "thigh_back_far",
+        "parent": 8,
+        "part": 2,
+        "radius_head": 3.8,
+        "radius_tail": 2.4,
+        "x": -0.16609095970747934,
+        "y": 1.9930915164897594
+      },
+      {
+        "angle": 31.865977693603682,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 24,
+        "length": 8.54400374531753,
+        "name": "hock_back_far",
+        "parent": 23,
+        "part": 2,
+        "radius_head": 2.2,
+        "radius_tail": 1.6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -54.246112745563266,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 25,
+        "length": 3.605551275463989,
+        "name": "paw_back_far",
+        "parent": 24,
+        "part": 2,
+        "radius_head": 1.6,
+        "radius_tail": 1.4,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Quadruped",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "leg_front_far",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "leg_back_far",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "tail",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "body",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "head",
+        "z": 1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "leg_front_near",
+        "z": 2
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          140,
+          70,
+          255
+        ],
+        "id": 7,
+        "name": "leg_back_near",
+        "z": 2
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": -90.0,
+        "bulges_left": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [
+          {
+            "d": 1.0,
+            "t": 0.35
+          }
+        ],
+        "connected": false,
+        "id": 8,
+        "length": 15.0,
+        "name": "body",
+        "part": 6,
+        "radius_head": 6.5,
+        "radius_tail": 5.5,
+        "x": 32.0,
+        "y": 42.0
+      },
+      {
+        "angle": 0.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 9,
+        "length": 1.0,
+        "name": "head",
+        "parent": 8,
+        "part": 7,
+        "radius_head": 4.4,
+        "radius_tail": 4.3,
+        "x": 18.0,
+        "y": -1.102182119232618e-15
+      },
+      {
+        "angle": 180.0,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 10,
+        "length": 9.0,
+        "name": "tail",
+        "parent": 8,
+        "part": 3,
+        "radius_head": 3.0,
+        "radius_tail": 1.5,
+        "x": -1.0,
+        "y": 6.123233995736766e-17
+      },
+      {
+        "angle": 54.78240703180729,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 2.0,
+            "t": 0.5
+          }
+        ],
+        "connected": false,
+        "id": 11,
+        "length": 10.404326023342406,
+        "name": "wing_upper_L",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 12,
+        "x": 13.0,
+        "y": 4.499999999999999
+      },
+      {
+        "angle": -54.78240703180728,
+        "bulges_left": [
+          {
+            "d": 2.0,
+            "t": 0.5
+          }
+        ],
+        "bulges_right": [],
+        "connected": false,
+        "id": 12,
+        "length": 10.404326023342406,
+        "name": "wing_upper_R",
+        "parent": 8,
+        "part": 2,
+        "radius_head": 2.6,
+        "radius_tail": 2.2,
+        "twin": 11,
+        "x": 13.0,
+        "y": -4.500000000000001
+      },
+      {
+        "angle": 47.746400677344226,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 3.0,
+            "t": 0.45
+          }
+        ],
+        "connected": true,
+        "id": 13,
+        "length": 9.219544457292887,
+        "name": "wing_fore_L",
+        "parent": 11,
+        "part": 1,
+        "radius_head": 2.2,
+        "radius_tail": 1.8,
+        "twin": 14,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -47.74640067734424,
+        "bulges_left": [
+          {
+            "d": 3.0,
+            "t": 0.45
+          }
+        ],
+        "bulges_right": [],
+        "connected": true,
+        "id": 14,
+        "length": 9.219544457292889,
+        "name": "wing_fore_R",
+        "parent": 12,
+        "part": 2,
+        "radius_head": 2.2,
+        "radius_tail": 1.8,
+        "twin": 13,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 28.072486935852957,
+        "bulges_left": [],
+        "bulges_right": [
+          {
+            "d": 2.0,
+            "t": 0.35
+          }
+        ],
+        "connected": true,
+        "id": 15,
+        "length": 9.219544457292887,
+        "name": "wing_tip_L",
+        "parent": 13,
+        "part": 1,
+        "radius_head": 1.8,
+        "radius_tail": 0.7,
+        "twin": 16,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -28.072486935852965,
+        "bulges_left": [
+          {
+            "d": 2.0,
+            "t": 0.35
+          }
+        ],
+        "bulges_right": [],
+        "connected": true,
+        "id": 16,
+        "length": 9.219544457292885,
+        "name": "wing_tip_R",
+        "parent": 14,
+        "part": 2,
+        "radius_head": 1.8,
+        "radius_tail": 0.7,
+        "twin": 15,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 176.42366562500266,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 17,
+        "length": 8.0156097709407,
+        "name": "thigh_L",
+        "parent": 8,
+        "part": 4,
+        "radius_head": 2.0,
+        "radius_tail": 1.4,
+        "twin": 18,
+        "x": -1.9999999999999998,
+        "y": 2.5
+      },
+      {
+        "angle": -176.42366562500263,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 18,
+        "length": 8.0156097709407,
+        "name": "thigh_R",
+        "parent": 8,
+        "part": 5,
+        "radius_head": 2.0,
+        "radius_tail": 1.4,
+        "twin": 17,
+        "x": -2.0,
+        "y": -2.5
+      },
+      {
+        "angle": -1.1873073157288445,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 19,
+        "length": 6.020797289396148,
+        "name": "shank_L",
+        "parent": 17,
+        "part": 4,
+        "radius_head": 1.2,
+        "radius_tail": 1.0,
+        "twin": 20,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 1.1873073157287877,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 20,
+        "length": 6.020797289396148,
+        "name": "shank_R",
+        "parent": 18,
+        "part": 5,
+        "radius_head": 1.2,
+        "radius_tail": 1.0,
+        "twin": 19,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -46.5765500551837,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 21,
+        "length": 3.2015621187164243,
+        "name": "foot_L",
+        "parent": 19,
+        "part": 4,
+        "radius_head": 1.0,
+        "radius_tail": 0.8,
+        "twin": 22,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 46.5765500551837,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 22,
+        "length": 3.2015621187164216,
+        "name": "foot_R",
+        "parent": 20,
+        "part": 5,
+        "radius_head": 1.0,
+        "radius_tail": 0.8,
+        "twin": 21,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": true,
+      "x": 32.0
+    },
+    "name": "Winged",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "wing_L",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "wing_R",
+        "z": -2
+      },
+      {
+        "blend": 2,
+        "color": [
+          120,
+          200,
+          110,
+          255
+        ],
+        "id": 3,
+        "name": "tail",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          190,
+          80,
+          255
+        ],
+        "id": 4,
+        "name": "leg_L",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          180,
+          120,
+          220,
+          255
+        ],
+        "id": 5,
+        "name": "leg_R",
+        "z": -1
+      },
+      {
+        "blend": 2,
+        "color": [
+          90,
+          200,
+          200,
+          255
+        ],
+        "id": 6,
+        "name": "body",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          236,
+          140,
+          70,
+          255
+        ],
+        "id": 7,
+        "name": "head",
+        "z": 1
+      }
+    ],
+    "width": 64
+  },
+  {
+    "bones": [
+      {
+        "angle": 14.036243467926479,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": false,
+        "id": 3,
+        "length": 8.246211251235321,
+        "name": "tail_tip",
+        "part": 1,
+        "radius_head": 0.6,
+        "radius_tail": 1.4,
+        "x": 4.0,
+        "y": 55.0
+      },
+      {
+        "angle": -21.161259816828306,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 4,
+        "length": 8.06225774829855,
+        "name": "tail",
+        "parent": 3,
+        "part": 1,
+        "radius_head": 1.4,
+        "radius_tail": 2.2,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -28.412661443072523,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 5,
+        "length": 8.602325267042623,
+        "name": "body_1",
+        "parent": 4,
+        "part": 1,
+        "radius_head": 2.2,
+        "radius_tail": 3.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -24.71744091108343,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 6,
+        "length": 8.06225774829855,
+        "name": "body_2",
+        "parent": 5,
+        "part": 1,
+        "radius_head": 3.0,
+        "radius_tail": 3.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": -6.546290783294012,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 7,
+        "length": 7.615773105863909,
+        "name": "body_3",
+        "parent": 6,
+        "part": 1,
+        "radius_head": 3.4,
+        "radius_tail": 3.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 16.606980578616977,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 8,
+        "length": 7.810249675906654,
+        "name": "body_4",
+        "parent": 7,
+        "part": 1,
+        "radius_head": 3.4,
+        "radius_tail": 3.0,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 26.995838394086622,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 9,
+        "length": 7.615773105863909,
+        "name": "neck",
+        "parent": 8,
+        "part": 1,
+        "radius_head": 3.0,
+        "radius_tail": 2.4,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "angle": 35.7273982227997,
+        "bulges_left": [],
+        "bulges_right": [],
+        "connected": true,
+        "id": 10,
+        "length": 9.219544457292887,
+        "name": "head",
+        "parent": 9,
+        "part": 2,
+        "radius_head": 3.8,
+        "radius_tail": 2.4,
+        "x": 0,
+        "y": 0
+      }
+    ],
+    "height": 64,
+    "mirror": {
+      "on": false,
+      "x": 32.0
+    },
+    "name": "Serpent",
+    "parts": [
+      {
+        "blend": 2,
+        "color": [
+          232,
+          98,
+          92,
+          255
+        ],
+        "id": 1,
+        "name": "body",
+        "z": 0
+      },
+      {
+        "blend": 2,
+        "color": [
+          92,
+          156,
+          232,
+          255
+        ],
+        "id": 2,
+        "name": "head",
+        "z": 1
+      }
+    ],
+    "width": 64
+  }
+]
