@@ -34,7 +34,9 @@ impl AudioTrack {
     }
     pub fn samples(&self) -> Vec<i16> {
         self.pcm
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|b| i16::from_le_bytes([b[0], b[1]]))
             .collect()
     }
@@ -177,7 +179,9 @@ pub fn playback_wav(track: &AudioTrack, timeline_ms: u64, max_ms: u64) -> Vec<u8
         .saturating_mul(width)
         .min(track.pcm.len());
     let samples: Vec<_> = track.pcm[start..end]
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|v| {
             (i16::from_le_bytes([v[0], v[1]]) as f32 * track.volume)
                 .round()
@@ -204,10 +208,10 @@ pub fn playback_cursor(clip: &crate::animation::Clip, elapsed: f64) -> (u64, boo
     } else if t >= total {
         return match clip.playback {
             crate::animation::Playback::Forward => (
-                (1..=clip.length).map(|f| clip.duration_ms(f) as u64).sum(),
+                clip.source_time_ms(clip.length as f32) + u64::from(clip.duration_ms(clip.length)),
                 false,
             ),
-            _ => (0, true),
+            _ => (clip.source_time_ms(1.), true),
         };
     }
     for (index, frame) in frames.iter().enumerate() {
@@ -216,7 +220,7 @@ pub fn playback_cursor(clip: &crate::animation::Clip, elapsed: f64) -> (u64, boo
             let reverse = clip.playback == crate::animation::Playback::Reverse
                 || (clip.playback == crate::animation::Playback::PingPong
                     && index >= clip.length as usize);
-            let origin: u64 = (1..*frame).map(|f| clip.duration_ms(f) as u64).sum();
+            let origin = clip.source_time_ms(*frame as f32);
             return (
                 origin
                     + if reverse {
@@ -230,6 +234,19 @@ pub fn playback_cursor(clip: &crate::animation::Clip, elapsed: f64) -> (u64, boo
         t -= duration;
     }
     (0, false)
+}
+/// Select a visible local frame from the original audio/reference clock. The
+/// waveform runs forward regardless of the clip's playback direction.
+pub fn frame_at_source_time(clip: &crate::animation::Clip, time_ms: u64) -> u32 {
+    let mut elapsed = time_ms.saturating_sub(clip.source_time_ms(1.));
+    for frame in 1..=clip.length {
+        let duration = u64::from(clip.duration_ms(frame));
+        if elapsed < duration {
+            return frame;
+        }
+        elapsed -= duration;
+    }
+    clip.length.max(1)
 }
 pub fn playback_wav_direction(
     track: &AudioTrack,
@@ -259,7 +276,7 @@ pub fn playback_wav_direction(
         .chunks_exact(width)
         .rev()
     {
-        for value in frame.chunks_exact(2) {
+        for value in frame.as_chunks::<2>().0 {
             samples.push(
                 (i16::from_le_bytes([value[0], value[1]]) as f32 * track.volume)
                     .round()

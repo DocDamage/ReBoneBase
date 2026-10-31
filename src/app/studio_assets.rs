@@ -396,7 +396,17 @@ impl ReboneApp {
             self.studio.store.root.display()
         ));
         if ui.button("Refresh recovery snapshots").clicked() {
-            self.studio.recoveries = self.studio.store.recoveries().unwrap_or_default();
+            match self.studio.store.recoveries_report() {
+                Ok(report) => {
+                    self.studio.recoveries = report.recoveries;
+                    self.status = if report.warnings.is_empty() {
+                        "Recovery snapshots refreshed".into()
+                    } else {
+                        format!("Recovery: {}", report.warnings.join("; "))
+                    };
+                }
+                Err(error) => self.status = format!("Recovery discovery failed: {error:#}"),
+            }
         }
         let recoveries = self.studio.recoveries.clone();
         for recovery in recoveries {

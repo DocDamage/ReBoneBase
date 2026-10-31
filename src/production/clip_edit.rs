@@ -1,7 +1,7 @@
-//! Project-aware, transactional clip editing. Temporal edits record displayed
-//! integer-frame poses as FK and retain independent, aligned scene timelines.
+//! Project-aware, transactional clip editing. Temporal edits retain editable
+//! source curves and live controllers behind independent, aligned clip windows.
 use super::*;
-use crate::{animation::Pose, editing};
+use crate::editing;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ClipEdit {
@@ -28,6 +28,7 @@ pub fn mirror_project_clip(project: &mut Project, index: usize) -> std::result::
     let mut evaluated = source.rig.clone();
     evaluated.active_clip = index;
     evaluated.clips[index].tracks.clear();
+    evaluated.clips[index].source = None;
     for frame in 1..=length {
         crate::advanced_motion::bake_pose(
             &mut evaluated,
@@ -40,6 +41,7 @@ pub fn mirror_project_clip(project: &mut Project, index: usize) -> std::result::
     edit_clip(&mut candidate, ClipEdit::Duplicate(index))?;
     let target = candidate.rig.active_clip;
     candidate.rig.clips[target] = evaluated.clips[reflected].clone();
+    candidate.rig.clips[target].restore_source_timing(source.rig.clips[index].source.clone())?;
     let axis = candidate.rig.mirror.x;
     for contact in candidate
         .extras
@@ -120,7 +122,13 @@ pub fn transition_project_clip(
     candidate.rig.clips[target].looped = false;
     candidate.rig.clips[target].playback = crate::animation::Playback::Forward;
     candidate.rig.clips[target].durations.clear();
+    let mut timing = candidate.rig.clips[target].source.clone();
+    if let Some(source) = &mut timing {
+        source.end = frames;
+    }
+    hold_scene_at_first_frame(&mut candidate, target);
     candidate.rig.clips[target].tracks.clear();
+    candidate.rig.clips[target].source = None;
     for frame in 1..=frames {
         let t = (frame - 1) as f32 / (frames - 1) as f32;
         let pose = crate::advanced_motion::transition_pose(
@@ -131,6 +139,7 @@ pub fn transition_project_clip(
         );
         crate::advanced_motion::bake_pose(&mut candidate.rig, &pose, frame as f32)?;
     }
+    candidate.rig.clips[target].restore_source_timing(timing)?;
     // A transition must not invent repeated source gameplay events or hit spans.
     candidate
         .extras
@@ -146,6 +155,65 @@ pub fn transition_project_clip(
     candidate.validate().map_err(|e| e.to_string())?;
     *project = candidate;
     Ok(())
+}
+
+/// A generated transition authors new motion from the selected endpoint. Keep
+/// that endpoint's artwork editable without exposing its retained future keys.
+fn hold_scene_at_first_frame(project: &mut Project, clip: usize) {
+    let p = &mut project.extras.production;
+    for prop in &mut p.attachments {
+        let mut state = prop_state(prop, clip, 1.);
+        state.frame = 1.;
+        prop.clip_keys.insert(clip, vec![state]);
+        if prop.clip == Some(clip) {
+            prop.keys.clear();
+        }
+    }
+    for mesh in &mut p.meshes {
+        let key = MeshKey {
+            frame: 1.,
+            offsets: mesh_offsets(mesh, clip, 1.),
+        };
+        mesh.clip_keys.insert(clip, vec![key]);
+        if mesh.clip == clip {
+            mesh.keys.clear();
+        }
+    }
+    for face in p.faces.iter_mut().filter(|face| face.clip == clip) {
+        face.keys = face
+            .keys
+            .iter()
+            .rev()
+            .find(|key| key.frame <= 1.)
+            .or_else(|| face.keys.first())
+            .cloned()
+            .into_iter()
+            .map(|mut key| {
+                key.frame = 1.;
+                key
+            })
+            .collect();
+    }
+    for actor in &mut p.actors {
+        let key = super::actor_placement(actor, clip, 1.);
+        actor.keys.retain(|key| key.clip != clip);
+        actor.keys.push(key);
+    }
+    // These tracks are inactive on generated FK motion, but retain an editable
+    // endpoint controller if the user later enables live controls explicitly.
+    for contact in p
+        .motion
+        .contacts
+        .iter_mut()
+        .filter(|c| c.clip == Some(clip))
+    {
+        if let Some(mut key) = crate::advanced_motion::contact_at(contact, 1.) {
+            key.frame = 1.;
+            contact.keys = vec![key];
+        } else {
+            contact.keys.clear();
+        }
+    }
 }
 
 pub fn prop_keys(prop: &Attachment, clip: usize) -> &[AttachmentKey] {
@@ -387,7 +455,6 @@ pub fn edit_clip(project: &mut Project, operation: ClipEdit) -> std::result::Res
         ClipEdit::Trim { index, start, end } => {
             editing::trim_clip(&mut candidate.rig, index, start, end)?;
             copy_range(&source, &mut candidate, index, index, start, end, false)?;
-            bake_range(&source, &mut candidate, index, index, start)?;
         }
         ClipEdit::Split { index, at } => {
             let new = editing::split_clip(&mut candidate.rig, index, at)?;
@@ -405,8 +472,9 @@ pub fn edit_clip(project: &mut Project, operation: ClipEdit) -> std::result::Res
                 source.rig.clips[index].length,
                 true,
             )?;
-            bake_range(&source, &mut candidate, index, index, 1)?;
-            bake_range(&source, &mut candidate, index, new, at)?;
+            if source.extras.production.baked_motion.contains(&index) {
+                candidate.extras.production.baked_motion.insert(new);
+            }
         }
         ClipEdit::Resize { index, length } => {
             if !(1..=240).contains(&length) {
@@ -416,13 +484,8 @@ pub fn edit_clip(project: &mut Project, operation: ClipEdit) -> std::result::Res
             if length == old {
                 return Ok(());
             }
-            if length < old {
-                editing::trim_clip(&mut candidate.rig, index, 1, length)?;
-            } else {
-                candidate.rig.clips[index].length = length;
-            }
+            candidate.rig.clips[index] = source.rig.clips[index].resized(length)?;
             copy_range(&source, &mut candidate, index, index, 1, length, false)?;
-            bake_range(&source, &mut candidate, index, index, 1)?;
         }
     }
     edit_character_clips(&source, &mut candidate, operation);
@@ -477,7 +540,9 @@ fn edit_character_clips(source: &Project, target: &mut Project, operation: ClipE
                 .iter()
                 .map(|&(new, index, start)| {
                     let mut b = old.playback(index);
-                    b.offset_ms += (1..start)
+                    let frame = source.rig.clips[index].evaluation_frame(start as f32);
+                    let whole = frame.floor() as u32;
+                    b.offset_ms += (1..whole)
                         .map(|f| u64::from(source.rig.clips[index].duration_ms(f)))
                         .sum::<u64>() as f64
                         * f64::from(b.speed);
@@ -487,41 +552,6 @@ fn edit_character_clips(source: &Project, target: &mut Project, operation: ClipE
         }
     }
 }
-fn bake_range(
-    source: &Project,
-    target: &mut Project,
-    source_clip: usize,
-    target_clip: usize,
-    start: u32,
-) -> std::result::Result<(), String> {
-    let length = target.rig.clips[target_clip].length;
-    if (target.rig.bones.len() as u64 * 4 + target.rig.parts.len() as u64 * 2) * u64::from(length)
-        > 100_000
-    {
-        return Err("Temporal edit exceeds the 100,000-key baked-pose budget".into());
-    }
-    let mut original = source.clone();
-    original.rig.active_clip = source_clip;
-    let active = target.rig.active_clip;
-    target.rig.active_clip = target_clip;
-    target.rig.clips[target_clip].tracks.clear();
-    for f in 1..=length {
-        let source_frame = (start + f - 1).min(source.rig.clips[source_clip].length);
-        let mut pose: Pose = original.pose_at(source_frame as f32);
-        for bone in &target.rig.bones {
-            pose.entry(bone.id).or_default();
-        }
-        for part in &target.rig.parts {
-            let p = pose.entry(part.id).or_default();
-            p.z.get_or_insert(part.z as f32);
-            p.visibility.get_or_insert(1.);
-        }
-        crate::advanced_motion::bake_pose(&mut target.rig, &pose, f as f32)?;
-    }
-    target.rig.active_clip = active;
-    target.extras.production.baked_motion.insert(target_clip);
-    Ok(())
-}
 fn fresh_id(p: &Production) -> std::result::Result<u64, String> {
     let id = p.next_id();
     if id == u64::MAX {
@@ -530,70 +560,9 @@ fn fresh_id(p: &Production) -> std::result::Result<u64, String> {
         Ok(id)
     }
 }
-fn face_at(face: &FaceTrack, frame: f32) -> Option<FaceKey> {
-    face.keys
-        .iter()
-        .rev()
-        .find(|k| k.frame <= frame)
-        .or_else(|| face.keys.first())
-        .cloned()
-}
-fn box_at(track: &BoxTrack, frame: f32) -> BoxKey {
-    let previous = track.keys.iter().rev().find(|k| k.frame <= frame);
-    let next = track.keys.iter().find(|k| k.frame > frame);
-    let mut key = previous.cloned().unwrap_or(BoxKey {
-        frame,
-        offset: track.offset,
-        size: track.size,
-        angle: track.angle,
-        enabled: true,
-    });
-    if let (Some(a), Some(b)) = (previous, next) {
-        let t = ((frame - a.frame) / (b.frame - a.frame)).clamp(0., 1.);
-        key.offset = a.offset * (1. - t) + b.offset * t;
-        key.size = a.size * (1. - t) + b.size * t;
-        key.angle = a.angle + crate::animation::wrap_degrees(b.angle - a.angle) * t;
-    }
-    key
-}
-fn contact_at(
-    track: &crate::advanced_motion::ContactTrack,
-    frame: f32,
-) -> crate::advanced_motion::ContactKey {
-    use crate::advanced_motion::ContactKey;
-    let Some(first) = track.keys.first().copied() else {
-        return ContactKey {
-            frame,
-            weight: 0.,
-            ..Default::default()
-        };
-    };
-    if frame < first.frame {
-        return ContactKey {
-            frame,
-            weight: 0.,
-            ..first
-        };
-    }
-    for pair in track.keys.windows(2) {
-        let (a, b) = (pair[0], pair[1]);
-        if frame == b.frame {
-            return b;
-        }
-        if frame < b.frame {
-            let t = (frame - a.frame) / (b.frame - a.frame);
-            return ContactKey {
-                frame,
-                target: a.target + (b.target - a.target) * t,
-                weight: a.weight + (b.weight - a.weight) * t,
-                bend: a.bend,
-            };
-        }
-    }
-    *track.keys.last().unwrap()
-}
-/// Copy a source interval into an existing destination clip. Shared artwork is
-/// never cloned: only its clip-specific animation override is copied.
+/// Copy retained sparse timelines into an independent clip window. Artwork is
+/// shared; animation keys remain editable at their shifted local coordinates,
+/// including hidden keys needed for interpolation and source-history replay.
 fn copy_range(
     source: &Project,
     target: &mut Project,
@@ -604,15 +573,20 @@ fn copy_range(
     fresh: bool,
 ) -> std::result::Result<(), String> {
     let old = &source.extras.production;
+    let clip = &source.rig.clips[from];
+    let left = clip.evaluation_frame(start as f32);
+    let right = clip.evaluation_frame(end as f32);
+    let shift = left - 1.;
+    let (first, last) = clip.source_bounds();
     let out = &mut target.extras.production;
-    let length = end - start + 1;
-    let source_frame = |f: u32| (start + f - 1).min(source.rig.clips[from].length) as f32;
     for original in &old.attachments {
         if let Some(prop) = out.attachments.iter_mut().find(|p| p.id == original.id) {
-            let keys = (1..=length)
-                .map(|f| {
-                    let mut k = prop_state(original, from, source_frame(f));
-                    k.frame = f as f32;
+            let keys = prop_keys(original, from)
+                .iter()
+                .filter(|k| k.frame >= first && k.frame <= last)
+                .cloned()
+                .map(|mut k| {
+                    k.frame -= shift;
                     k
                 })
                 .collect();
@@ -624,14 +598,12 @@ fn copy_range(
     }
     for original in &old.meshes {
         if let Some(mesh) = out.meshes.iter_mut().find(|m| m.id == original.id) {
-            let keys = (1..=length)
-                .map(|f| MeshKey {
-                    frame: f as f32,
-                    offsets: offsets(
-                        mesh_keys(original, from),
-                        original.vertices.len(),
-                        source_frame(f),
-                    ),
+            let keys = mesh_keys(original, from)
+                .iter()
+                .cloned()
+                .map(|mut k| {
+                    k.frame -= shift;
+                    k
                 })
                 .collect();
             mesh.clip_keys.insert(to, keys);
@@ -647,20 +619,15 @@ fn copy_range(
         if fresh {
             face.id = fresh_id(out)?;
         }
-        face.keys = (1..=length)
-            .filter_map(|f| {
-                face_at(original, source_frame(f)).map(|mut k| {
-                    k.frame = f as f32;
-                    k
-                })
-            })
-            .collect();
+        for key in &mut face.keys {
+            key.frame -= shift;
+        }
         out.faces.push(face);
     }
     out.boxes.retain(|b| b.clip != to);
     for original in old.boxes.iter().filter(|b| b.clip == from) {
-        let left = original.start.max(start);
-        let right = original.end.min(end);
+        let left = original.start.max(left as u32);
+        let right = original.end.min(right as u32);
         if left > right {
             continue;
         }
@@ -669,17 +636,15 @@ fn copy_range(
         if fresh {
             track.id = fresh_id(out)?;
         }
-        track.start = left - start + 1;
-        track.end = right - start + 1;
-        track.keys = (1..=length)
-            .map(|f| {
-                let mut k = box_at(original, source_frame(f));
-                k.frame = f as f32;
-                k
-            })
-            .collect();
+        track.start = left - shift as u32;
+        track.end = right - shift as u32;
+        for key in &mut track.keys {
+            key.frame -= shift;
+        }
         out.boxes.push(track);
     }
+    // Events are authored in the visible sequence: extending a hold must not
+    // invent another occurrence of the source endpoint's gameplay event.
     out.events.retain(|e| e.clip != to);
     for original in old
         .events
@@ -695,38 +660,40 @@ fn copy_range(
     for original in old
         .corrections
         .iter()
-        .filter(|c| c.clip == from && c.frame >= start && c.frame <= end)
+        .filter(|c| c.clip == from && c.frame as f32 >= left && c.frame as f32 <= right)
     {
         let mut c = original.clone();
         c.clip = to;
-        c.frame -= start - 1;
+        c.frame -= shift as u32;
         out.corrections.push(c);
     }
     out.motion.contacts.retain(|c| c.clip != Some(to));
     for original in old.motion.contacts.iter().filter(|c| c.clip == Some(from)) {
         let mut c = original.clone();
         c.clip = Some(to);
-        c.keys = (1..=length)
-            .map(|f| {
-                let mut k = contact_at(original, source_frame(f));
-                k.frame = f as f32;
-                k
-            })
-            .collect();
+        for key in &mut c.keys {
+            key.frame -= shift;
+        }
         out.motion.contacts.push(c);
     }
     let mut rig = source.rig.clone();
     rig.active_clip = from;
-    let prefix = super::timeline_ms(&rig, start as f32) as f64;
+    let prefix = super::timeline_ms(&rig, left) as f64;
     for original in &old.actors {
         if let Some(actor) = out.actors.iter_mut().find(|a| a.id == original.id) {
             actor.keys.retain(|k| k.clip != to);
-            for f in 1..=length {
-                let mut k = super::actor_placement(original, from, source_frame(f));
-                k.clip = to;
-                k.frame = f as f32;
-                actor.keys.push(k);
-            }
+            actor.keys.extend(
+                original
+                    .keys
+                    .iter()
+                    .filter(|k| k.clip == from)
+                    .cloned()
+                    .map(|mut k| {
+                        k.clip = to;
+                        k.frame -= shift;
+                        k
+                    }),
+            );
             actor.clip_time_ms.insert(
                 to,
                 original.clip_time_ms.get(&from).copied().unwrap_or(0.) + prefix,

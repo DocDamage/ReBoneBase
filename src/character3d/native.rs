@@ -242,9 +242,14 @@ pub(super) fn parse(data: &[u8], base: Option<&Path>, obj: bool) -> Result<Model
                     }
                 }
                 if normalized.color[3] < 1.
-                    || normalized
-                        .texture
-                        .is_some_and(|i| textures[i].pixels.chunks_exact(4).any(|p| p[3] < 255))
+                    || normalized.texture.is_some_and(|i| {
+                        textures[i]
+                            .pixels
+                            .as_chunks::<4>()
+                            .0
+                            .iter()
+                            .any(|p| p[3] < 255)
+                    })
                 {
                     normalized.alpha = AlphaMode::Blend;
                 }
@@ -275,7 +280,7 @@ pub(super) fn parse(data: &[u8], base: Option<&Path>, obj: bool) -> Result<Model
                 triangle_total <= MAX_TRIANGLES,
                 "Native model exceeds100000 triangles"
             );
-            for triangle in triangles.chunks_exact(3) {
+            for triangle in triangles.as_chunks::<3>().0 {
                 let mut indices = [0; 3];
                 for (i, corner) in triangle.iter().copied().enumerate() {
                     let corner = corner as usize;

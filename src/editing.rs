@@ -1,6 +1,6 @@
 //! Transactional native rig, timeline and clip editing operations.
 use crate::{
-    animation::{Channel, Clip, Ease, Keyframe},
+    animation::{Channel, Clip, Keyframe},
     model::{Rig, Vec2},
 };
 use std::collections::HashSet;
@@ -350,31 +350,9 @@ pub fn move_clip(rig: &mut Rig, from: usize, to: usize) -> Result<(), String> {
     commit(rig, candidate)
 }
 fn trimmed(clip: &Clip, start: u32, end: u32) -> Result<Clip, String> {
-    if start == 0 || end < start || end > clip.length {
-        return Err("Invalid trim range".into());
-    }
-    let mut result = clip.clone();
-    result.length = end - start + 1;
-    for (target, source) in result.tracks.iter_mut().zip(&clip.tracks) {
-        target.keys = (start..=end)
-            .map(|f| Keyframe {
-                frame: (f - start + 1) as f32,
-                value: clip.value(source, f as f32),
-                easing: Ease::Linear,
-                tangent_in: 0.,
-                tangent_out: 0.,
-            })
-            .collect();
-    }
-    result.durations = clip
-        .durations
-        .iter()
-        .filter(|(f, _)| **f >= start && **f <= end)
-        .map(|(f, ms)| (*f - start + 1, *ms))
-        .collect();
-    Ok(result)
+    clip.windowed(start, end)
 }
-/// Frame-exact trim: channel values are baked at each retained frame.
+/// Non-destructive trim: retain source curves, timing and hidden boundary keys.
 pub fn trim_clip(rig: &mut Rig, index: usize, start: u32, end: u32) -> Result<(), String> {
     let mut candidate = rig.clone();
     let clip = candidate.clips.get(index).ok_or("No such clip")?;

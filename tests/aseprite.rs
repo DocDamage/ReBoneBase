@@ -111,8 +111,10 @@ fn animated_z_and_visibility_keep_independent_part_cels() {
         for (layer, _) in order {
             let image = file.cel(frame as u32, u32::from(layer)).image();
             for (out, pixel) in composite
-                .chunks_exact_mut(4)
-                .zip(image.as_raw().chunks_exact(4))
+                .as_chunks_mut::<4>()
+                .0
+                .iter_mut()
+                .zip(image.as_raw().as_chunks::<4>().0.iter())
             {
                 if pixel[3] != 0 {
                     out.copy_from_slice(pixel);

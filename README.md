@@ -6,13 +6,19 @@ This is a local port of the supplied Bonebase 2.2.2 extension. The original arch
 
 ## Run
 
-Open `dist/ReBoneBase-motion.exe` for the latest build, or build from source:
+Build from source with Rust 1.89 or later:
 
 ```powershell
 cargo run --release
 ```
 
 You can pass a `.rebone` project or `.bbrig` rig as the first command-line argument. The executable contains its templates and fonts and can run from any folder.
+
+For a portable Windows package, run `scripts/package.ps1`, then open `dist/ReBoneBase-0.2.0/ReBoneBase-0.2.0.exe`. The package includes guides, samples and an executable SHA-256 checksum. The [Verify ReBoneBase workflow](https://github.com/DocDamage/ReBoneBase/actions/workflows/verify.yml) also builds a Windows package after its checks pass.
+
+## Reliability changes in 0.2.0
+
+Trim, split and resize preserve sparse animation keys, easing, live controllers and spring history. Native project schema 2 explicitly declares compatibility; schema 1 projects migrate in memory and upgrade only when saved. Batch and game-package exports stage output and retain originals for rollback or recovery. Recovery discovery can find valid snapshots whose metadata was interrupted, and preview/export failures report their cause. See [reliability behavior and limits](docs/RELIABILITY.md).
 
 ## Workflow
 
@@ -43,7 +49,7 @@ See the [Characters guide](docs/CHARACTERS_GUIDE.md). Included examples: `dist/C
 
 ## Compatibility and scope
 
-- Native `.rebone` JSON projects preserve rig geometry, groups, clips, keyframes, reference images, and saved poses. Saves validate documents and replace files through a same-directory temporary file.
+- Native `.rebone` JSON projects preserve rig geometry, groups, clips, keyframes, reference images, and saved poses. Saves validate documents and replace files through a same-directory temporary file. This release writes schema 2, reads schemas 1–2, and rejects unsupported fields or required features before data can be lost on save. Older builds cannot open schema 2 files; retain an original copy when exchanging projects with an older build.
 - `.bbrig` imports use a bounded Rust parser for Lua **data literals**, without executing file contents. Unsupported source features are reported during import. Original live IK controllers, embedded/per-frame reference images, saved source poses, ground constraints and global-root tracks are not transferred. Native ping-pong and per-frame durations are imported. Bake source animations before importing when those features are required.
 - Native IK supports persistent constrained hand/foot pins and ground contact. Native 3D character import and planar motion retargeting are described above; the original controller schema and live Aseprite connection are outside this standalone port. New bone creation currently creates one bone at a time; mirror gestures apply to existing linked twins.
 - BVH/glTF retargeting is a native planar FK importer with automatic and manual joint mapping. It preserves target bone lengths and root movement. glTF supports selecting and importing multiple named animations. Morph targets, embedded models/materials, and arbitrary camera orbit are outside this importer. External glTF buffers must be inside the selected file's directory.
@@ -53,24 +59,27 @@ See the [Characters guide](docs/CHARACTERS_GUIDE.md). Included examples: `dist/C
 ## Verify
 
 ```powershell
-cargo test --all-targets
+cargo test --locked --all-targets
 # With FFmpeg installed, also run the two optional decoder tests:
-cargo test --all-targets -- --include-ignored
+cargo test --locked --all-targets -- --include-ignored
 cargo fmt --all -- --check
-cargo clippy --all-targets -- -D warnings
+cargo clippy --locked --all-targets -- -D warnings
+python -m unittest discover -s tests -p test_unreal_export.py
 ```
 
 The Lua dependency is development-only: tests execute the original trusted source as an oracle for transforms, animation, IK, rasterization, and serialized legacy rigs. It is absent from the application's runtime dependency graph. `cargo run --example extract_templates` regenerates native template data from the supplied source.
 
-Animation import acceptance: **270 Rust tests passed**, including two optional real-FFmpeg checks, with **87.79% source line coverage** (examples and test-only source files excluded). Two local Unreal-helper API mock tests also pass; actual Unity/Unreal Editor execution has not been performed. Formatting and Clippy with warnings denied pass. Coverage and release details are in `docs/evidence/coverage-motion.json` and `docs/evidence/release-motion.json`. The packaged Windows app passed native file import, mapping, shared 2D/3D preview, scrubbing and undo checks. The sample in `examples/output/Wave.rebone` has matching PNG, GIF, sprite-sheet and layered Aseprite exports.
+Historical animation-import acceptance, before 0.2.0: **270 Rust tests passed**, including two optional real-FFmpeg checks, with **87.79% source line coverage** (examples and test-only source files excluded). Two local Unreal-helper API mock tests also passed; actual Unity/Unreal Editor execution was not performed. Formatting and Clippy with warnings denied passed. These earlier coverage and release details are in `docs/evidence/coverage-motion.json` and `docs/evidence/release-motion.json`; they do not measure the changes in 0.2.0. The earlier packaged Windows app passed native file import, mapping, shared 2D/3D preview, scrubbing and undo checks. The sample in `examples/output/Wave.rebone` has matching PNG, GIF, sprite-sheet and layered Aseprite exports.
+
+Current pull requests run Rust tests, formatting, Clippy and the Unreal helper tests on Linux and Windows with Rust 1.99.1. Additional regression tests exercise editable clip windows, schema migration, interrupted recovery, failed export publication and held-frame authoring. Interactive Windows acceptance and optional FFmpeg checks remain separate from this automated workflow.
 
 All 20 requested improvements are available through **Studio** and the motion-import dialog: [feature list](docs/FEATURE_IDEAS.md), [Studio guide](docs/STUDIO_GUIDE.md). Studio adds recovery/backups, selection/constraints/pins, key/curve/clip editing, shared libraries, onion controls, outlines/palettes, reference sequences/video and batch presets with atlas metadata and Aseprite tags. Video decoding uses an existing FFmpeg installation; choose its executable in Studio.
 
 The second 20 improvements are available through **Production (F3)**: [feature list](docs/PRODUCTION_FEATURES.md), [Production guide](docs/PRODUCTION_GUIDE.md). They add long-chain IK, animated contacts, FK baking, gait/loop/layer/transition tools, mirrored clips, sprite props, textured weighted meshes, outfits, facial tracks, springs, audio/events, multiple actors, pixel corrections, collision regions, game packages and customizable workspaces. **Commands / Ctrl+P** searches available actions. Open `dist/ProductionDemo.rebone` for a working example.
 
-Game packages contain baked sprite sheets and metadata with Godot/Unity helper scripts. Godot runtime loading, events and collisions were exercised in Godot 4.7.1; the Unity Editor integration has not been run here. Sound import supports PCM16 WAV. Use this latest executable to save projects with the new feature data; older releases may omit data they do not understand.
+Game packages contain baked sprite sheets and metadata with Godot/Unity helper scripts. Godot runtime loading, events and collisions were exercised in Godot 4.7.1; the Unity Editor integration has not been run here. Sound import supports PCM16 WAV. Use a schema 2 compatible build for projects saved by this release.
 
-Build a portable local copy with `scripts/package.ps1`. It writes the executable, sample project, README, and original license into `dist`.
+Build a portable local copy with `scripts/package.ps1`. It writes the versioned executable, samples, guides, README, checksum and license notices into `dist/ReBoneBase-<version>`.
 
 See [porting evidence](docs/PORTING.md) for source identity, REA evidence, and verification details.
 

@@ -191,12 +191,12 @@ impl MotionTools {
             {
                 return Err("Invalid or duplicate contact track".into());
             }
-            let length = c.clip.map_or(240., |i| rig.clips[i].length as f32);
-            let mut prev = 0.;
+            let (first, last) = c.clip.map_or((1., 240.), |i| rig.clips[i].source_bounds());
+            let mut prev = first - 1.;
             for k in &c.keys {
                 if !bounded(k.frame)
-                    || k.frame < 1.
-                    || k.frame > length
+                    || k.frame < first
+                    || k.frame > last
                     || k.frame <= prev
                     || !point(k.target)
                     || !weight(k.weight)
@@ -241,10 +241,16 @@ impl MotionTools {
                 return Err("Invalid spring or spring root bone".into());
             }
         }
-        work += self.springs.len() as u64 * 240;
+        work += self.springs.len() as u64
+            * rig
+                .active_clip()
+                .source_frame(rig.active_clip().length as f32)
+                .ceil() as u64;
         let keys_in = |clip: &Clip| clip.tracks.iter().map(|t| t.keys.len() as u64).sum::<u64>();
         let replay = if self.springs.iter().any(|s| s.enabled) {
-            u64::from(rig.active_clip().length)
+            rig.active_clip()
+                .source_frame(rig.active_clip().length as f32)
+                .ceil() as u64
         } else {
             1
         };
@@ -329,7 +335,7 @@ pub fn layers(rig: &Rig, tools: &MotionTools, frame: f32, base: &Pose) -> Pose {
             if t.keys.is_empty() {
                 continue;
             }
-            let value = clip.value(t, frame + layer.offset);
+            let value = clip.source_value(t, frame + layer.offset);
             let p = pose.entry(t.bone).or_default();
             let w = layer.weight;
             match t.channel {
@@ -449,7 +455,9 @@ fn solve_chain_validated(rig: &Rig, base: &Pose, chain: &Chain) -> Pose {
     }
     pose
 }
-fn contact_at(track: &ContactTrack, frame: f32) -> Option<ContactKey> {
+/// Sample an editable contact without solving IK. Before its first key the
+/// contact is inactive; target and strength interpolate while bend stays held.
+pub fn contact_at(track: &ContactTrack, frame: f32) -> Option<ContactKey> {
     let first = *track.keys.first()?;
     if frame < first.frame {
         return None;
@@ -521,9 +529,9 @@ fn spring_pose(rig: &Rig, tools: &MotionTools, frame: f32, base: &Pose) -> Pose 
         return base.clone();
     }
     let clip = rig.active_clip();
-    let frame = frame.clamp(1., clip.length as f32);
-    let first = layers(rig, tools, 1., &clip.sample(1.));
-    let drive = layers(rig, tools, frame, &clip.sample(frame));
+    let frame = clip.source_frame(frame);
+    let first = layers(rig, tools, 1., &clip.source_sample(1.));
+    let drive = layers(rig, tools, frame, &clip.source_sample(frame));
     let mut pose = base.clone();
     let mut states: Vec<_> = springs
         .iter()
@@ -531,9 +539,9 @@ fn spring_pose(rig: &Rig, tools: &MotionTools, frame: f32, base: &Pose) -> Pose 
         .collect();
     for step in 1..=frame.ceil() as u32 - 1 {
         let next_frame = ((step + 1) as f32).min(frame);
-        let dt = clip.duration_ms(step) as f32 * 0.001 * (next_frame - step as f32);
+        let dt = clip.source_duration_ms(step) as f32 * 0.001 * (next_frame - step as f32);
         // Replay layered FK once per frame, shared by every spring.
-        let sampled = layers(rig, tools, next_frame, &clip.sample(next_frame));
+        let sampled = layers(rig, tools, next_frame, &clip.source_sample(next_frame));
         let world = rig.world(Some(&sampled));
         for (s, (x, velocity)) in springs.iter().zip(&mut states) {
             let bone = rig.bone(s.bone).unwrap();
@@ -574,7 +582,12 @@ pub fn evaluate_constraints(rig: &Rig, tools: &MotionTools, frame: f32, base: &P
         .iter()
         .filter(|c| c.enabled && c.clip.is_none_or(|i| i == rig.active_clip))
     {
-        let Some(k) = contact_at(c, frame).filter(|k| k.weight > 0.) else {
+        let contact_frame = if c.clip.is_some() {
+            rig.active_clip().evaluation_frame(frame)
+        } else {
+            rig.active_clip().source_frame(frame)
+        };
+        let Some(k) = contact_at(c, contact_frame).filter(|k| k.weight > 0.) else {
             continue;
         };
         let upper = rig.bone(c.lower).unwrap().parent.unwrap();

@@ -25,6 +25,81 @@ fn root_ids(app: &ReboneApp) -> Vec<u32> {
 }
 
 #[test]
+fn global_contact_drag_in_a_trimmed_hold_uses_source_time_and_keeps_strength() {
+    use rebonebase::advanced_motion::{ContactKey, ContactTrack};
+    use rebonebase::production::{ClipEdit, edit_clip};
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    app.mode = Mode::Pose;
+    let lower = app
+        .project
+        .rig
+        .bones
+        .iter()
+        .find(|bone| bone.name == "shin_L")
+        .unwrap()
+        .id;
+    let rest = app.project.rig.world(None);
+    let tip = rest.iter().find(|bone| bone.id == lower).unwrap().tail;
+    app.project
+        .extras
+        .production
+        .motion
+        .contacts
+        .push(ContactTrack {
+            lower,
+            keys: vec![
+                ContactKey {
+                    frame: 1.,
+                    target: tip,
+                    weight: 0.2,
+                    bend: 1.,
+                },
+                ContactKey {
+                    frame: 11.,
+                    target: tip,
+                    weight: 0.8,
+                    bend: 1.,
+                },
+            ],
+            ..Default::default()
+        });
+    edit_clip(
+        &mut app.project,
+        ClipEdit::Trim {
+            index: 0,
+            start: 4,
+            end: 6,
+        },
+    )
+    .unwrap();
+    edit_clip(
+        &mut app.project,
+        ClipEdit::Resize {
+            index: 0,
+            length: 7,
+        },
+    )
+    .unwrap();
+    app.frame = 6.;
+    let before = app.project.clone();
+    assert_eq!(before.rig.active_clip().source_frame(app.frame), 6.);
+    let target = tip + Vec2::new(2., -1.);
+    begin(&mut app, Tool::IK, Some(lower), tip, true);
+    app.drag(target, false);
+    app.gesture = None;
+    assert_eq!(app.project.rig.active_clip().source_frame(app.frame), 9.);
+    let keys = &app.project.extras.production.motion.contacts[0].keys;
+    let authored = keys.iter().find(|key| key.frame == 9.).unwrap();
+    close(authored.target, target);
+    assert!((authored.weight - 0.5).abs() < 0.001);
+    assert!(!keys.iter().any(|key| key.frame == 6.));
+    app.project.validate().unwrap();
+    app.undo();
+    assert_eq!(app.project, before);
+}
+
+#[test]
 fn ordinary_root_drags_never_transform_the_whole_mannequin() {
     for mode in [Mode::Rest, Mode::Pose] {
         for tool in [Tool::Select, Tool::IK] {

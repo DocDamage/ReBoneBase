@@ -1,0 +1,57 @@
+name: Verify ReBoneBase
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'work/rebonebase-reliability']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  verify:
+    name: Rust and integration tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal --component rustfmt,clippy
+          rustup default 1.99.1
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run Rust tests
+        run: cargo test --locked --all-targets
+      - name: Check lints
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Verify Unreal export helper
+        run: python -m unittest discover -s tests -p test_unreal_export.py
+      - name: Build portable Windows package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/package.ps1
+      - name: Upload verified Windows build
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ReBoneBase-windows-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

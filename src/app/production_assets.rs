@@ -77,11 +77,12 @@ impl ReboneApp {
         {
             let mut a = self.project.extras.production.attachments[index].clone();
             if self.production.last_prop != Some(id) {
+                let frame = self.project.rig.active_clip().evaluation_frame(self.frame);
                 self.production.prop_parent =
                     production::prop_keys(&a, self.project.rig.active_clip)
                         .iter()
                         .rev()
-                        .find(|k| k.frame <= self.frame)
+                        .find(|k| k.frame <= frame)
                         .map_or(a.bone, |k| k.bone);
                 self.production.last_prop = Some(id);
             }
@@ -129,22 +130,27 @@ impl ReboneApp {
                 remove = ui.button("Remove prop").clicked();
             });
             if key {
-                let state = AttachmentKey {
-                    frame: self.frame,
-                    bone: a.bone,
-                    offset: a.offset,
-                    angle: a.angle,
-                    asset: a.asset,
-                    visible: a.enabled,
-                };
-                let keys = production::prop_keys_mut(
-                    &mut a,
-                    self.project.rig.active_clip,
-                    self.project.rig.active_clip().length,
-                );
-                keys.retain(|k| k.frame != self.frame);
-                keys.push(state);
-                keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                match self.project.rig.active_clip_mut().release_hold(self.frame) {
+                    Ok(()) => {
+                        let state = AttachmentKey {
+                            frame: self.frame,
+                            bone: a.bone,
+                            offset: a.offset,
+                            angle: a.angle,
+                            asset: a.asset,
+                            visible: a.enabled,
+                        };
+                        let keys = production::prop_keys_mut(
+                            &mut a,
+                            self.project.rig.active_clip,
+                            self.project.rig.active_clip().length,
+                        );
+                        keys.retain(|k| k.frame != self.frame);
+                        keys.push(state);
+                        keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                    }
+                    Err(error) => self.status = error,
+                }
             }
             let new_parent = self.production.prop_parent;
             self.project.extras.production.attachments[index] = a;
@@ -166,6 +172,9 @@ impl ReboneApp {
             let mut keys = old_keys.clone();
             let mut drop_key = None;
             for (i, k) in keys.iter_mut().enumerate() {
+                if k.frame < 1. || k.frame > self.project.rig.active_clip().length as f32 {
+                    continue;
+                }
                 ui.push_id(("propkey", i), |ui| {
                     ui.horizontal_wrapped(|ui| {
                         ui.label(format!("Frame {:.2}", k.frame));
@@ -189,11 +198,24 @@ impl ReboneApp {
                 keys.remove(i);
             }
             if keys != old_keys {
-                *production::prop_keys_mut(
-                    &mut self.project.extras.production.attachments[index],
-                    self.project.rig.active_clip,
-                    self.project.rig.active_clip().length,
-                ) = keys;
+                let changed_frame = keys
+                    .iter()
+                    .filter(|key| !old_keys.contains(key))
+                    .map(|key| key.frame)
+                    .max_by(f32::total_cmp);
+                let result = changed_frame.map_or(Ok(()), |frame| {
+                    self.project.rig.active_clip_mut().release_hold(frame)
+                });
+                match result {
+                    Ok(()) => {
+                        *production::prop_keys_mut(
+                            &mut self.project.extras.production.attachments[index],
+                            self.project.rig.active_clip,
+                            self.project.rig.active_clip().length,
+                        ) = keys
+                    }
+                    Err(error) => self.status = error,
+                }
             }
             if remove {
                 self.project.extras.production.attachments.remove(index);
@@ -378,21 +400,27 @@ impl ReboneApp {
                 let vi = self.production.mesh_vertex;
                 let clip = self.project.rig.active_clip;
                 let length = self.project.rig.active_clip().length;
-                let offsets = production::mesh_offsets(m, clip, self.frame);
+                let frame = self.project.rig.active_clip().evaluation_frame(self.frame);
+                let offsets = production::mesh_offsets(m, clip, frame);
                 let old = offsets.get(vi).copied().unwrap_or_default();
                 let mut offset = old;
                 row(ui, "Deform X", &mut offset.x, -4096. ..=4096.);
                 row(ui, "Deform Y", &mut offset.y, -4096. ..=4096.);
                 if offset != old {
-                    let mut offsets = offsets;
-                    offsets[vi] = offset;
-                    let keys = production::mesh_keys_mut(m, clip, length);
-                    keys.retain(|k| k.frame != self.frame);
-                    keys.push(MeshKey {
-                        frame: self.frame,
-                        offsets,
-                    });
-                    keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                    match self.project.rig.active_clip_mut().release_hold(self.frame) {
+                        Ok(()) => {
+                            let mut offsets = offsets;
+                            offsets[vi] = offset;
+                            let keys = production::mesh_keys_mut(m, clip, length);
+                            keys.retain(|k| k.frame != self.frame);
+                            keys.push(MeshKey {
+                                frame: self.frame,
+                                offsets,
+                            });
+                            keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                        }
+                        Err(error) => self.status = error,
+                    }
                 }
                 if ui.button("Remove current deformation key").clicked() {
                     production::mesh_keys_mut(m, clip, length).retain(|k| k.frame != self.frame);
@@ -419,7 +447,7 @@ impl ReboneApp {
                 &self.project.rig,
                 Some(&self.project.pose_at(self.frame)),
                 m,
-                self.frame,
+                self.project.rig.active_clip().evaluation_frame(self.frame),
             );
             let painter = ui.painter_at(rect);
             let scale = rect.width() / self.project.rig.width as f32;
@@ -623,47 +651,62 @@ impl ReboneApp {
             if ui.button("Key chosen expression / mouth here").clicked()
                 && let Some(asset) = self.production.asset
             {
-                f.keys.retain(|k| k.frame != self.frame);
-                f.keys.push(FaceKey {
-                    frame: self.frame,
-                    asset,
-                    offset: Vec2::default(),
-                });
-                f.keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                match self.project.rig.clips[f.clip].release_hold(self.frame) {
+                    Ok(()) => {
+                        f.keys.retain(|k| k.frame != self.frame);
+                        f.keys.push(FaceKey {
+                            frame: self.frame,
+                            asset,
+                            offset: Vec2::default(),
+                        });
+                        f.keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                    }
+                    Err(error) => self.status = error,
+                }
             }
             ui.label("Choose the closed-eye sprite, then add a blink; the current sprite is restored after two frames.");
             if ui.button("Add blink with chosen sprite").clicked()
                 && let Some(closed) = self.production.asset
             {
+                let frame = self.project.rig.clips[f.clip].evaluation_frame(self.frame);
                 let open = f
                     .keys
                     .iter()
                     .rev()
-                    .find(|k| k.frame <= self.frame)
+                    .find(|k| k.frame <= frame)
                     .or_else(|| f.keys.first())
                     .map(|k| k.asset);
                 if let Some(open) = open
                     && self.frame + 3. <= self.project.rig.clips[f.clip].length as f32
                 {
-                    for (frame, asset) in [
-                        (self.frame, open),
-                        (self.frame + 1., closed),
-                        (self.frame + 3., open),
-                    ] {
-                        f.keys.retain(|k| k.frame != frame);
-                        f.keys.push(FaceKey {
-                            frame,
-                            asset,
-                            offset: Vec2::default(),
-                        });
+                    match self.project.rig.clips[f.clip].release_hold(self.frame + 3.) {
+                        Ok(()) => {
+                            for (frame, asset) in [
+                                (self.frame, open),
+                                (self.frame + 1., closed),
+                                (self.frame + 3., open),
+                            ] {
+                                f.keys.retain(|k| k.frame != frame);
+                                f.keys.push(FaceKey {
+                                    frame,
+                                    asset,
+                                    offset: Vec2::default(),
+                                });
+                            }
+                            f.keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+                        }
+                        Err(error) => self.status = error,
                     }
-                    f.keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
                 } else {
                     self.status = "Leave at least three frames after the blink start".into();
                 }
             }
             let mut remove = None;
+            let old_keys = f.keys.clone();
             for (i, k) in f.keys.iter_mut().enumerate() {
+                if k.frame < 1. || k.frame > self.project.rig.clips[f.clip].length as f32 {
+                    continue;
+                }
                 ui.push_id(("facekey", i), |ui| {
                     ui.horizontal_wrapped(|ui| {
                         ui.label(format!("Frame {:.2}", k.frame));
@@ -678,6 +721,17 @@ impl ReboneApp {
             }
             if let Some(i) = remove {
                 f.keys.remove(i);
+            }
+            if let Some(frame) = f
+                .keys
+                .iter()
+                .filter(|key| !old_keys.contains(key))
+                .map(|key| key.frame)
+                .max_by(f32::total_cmp)
+                && let Err(error) = self.project.rig.clips[f.clip].release_hold(frame)
+            {
+                f.keys = old_keys;
+                self.status = error;
             }
             if ui.button("Remove facial track").clicked() {
                 p.faces.remove(index);

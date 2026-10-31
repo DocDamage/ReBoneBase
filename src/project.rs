@@ -1,9 +1,9 @@
 use crate::{model::Rig, skin};
-use anyhow::{Result, bail, ensure};
+use anyhow::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
-    io::{BufReader, Write},
+    io::{Read, Write},
     path::Path,
 };
 
@@ -22,6 +22,8 @@ pub struct Reference {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Project {
     pub version: u32,
+    #[serde(default)]
+    pub compatibility: crate::project_format::Compatibility,
     pub rig: Rig,
     #[serde(default)]
     pub reference: Option<Reference>,
@@ -38,7 +40,8 @@ pub struct SavedPose {
 impl Project {
     pub fn new(rig: Rig) -> Self {
         Self {
-            version: 1,
+            version: crate::project_format::CURRENT_VERSION,
+            compatibility: Default::default(),
             rig,
             reference: None,
             poses: vec![],
@@ -47,14 +50,21 @@ impl Project {
     }
     pub fn validate(&self) -> Result<()> {
         ensure!(
-            self.version == 1,
-            "Unsupported project version {}",
+            self.version == crate::project_format::CURRENT_VERSION,
+            "Unsupported project version {}; load older files through the project migration path",
             self.version
         );
+        self.compatibility.validate()?;
         self.rig.validate().map_err(anyhow::Error::msg)?;
         self.extras.validate(&self.rig)?;
         for c in &self.extras.characters3d {
-            c.validate_render(self.rig.width, self.rig.height)?;
+            c.validate_render(self.rig.width, self.rig.height)
+                .with_context(|| {
+                    format!(
+                        "3D character '{}' ({}) exceeds its render budget",
+                        c.name, c.id
+                    )
+                })?;
         }
         ensure!(
             self.render_work() <= 128 * 1024 * 1024,
@@ -197,7 +207,7 @@ impl Project {
         let layered = self.anchored_pose(crate::advanced_motion::layers(
             &self.rig,
             motion,
-            frame,
+            self.rig.active_clip().source_frame(frame),
             &self.anchored_pose(self.rig.active_clip().sample(frame)),
         ));
         let extras = crate::features::Extras {
@@ -234,6 +244,16 @@ impl Project {
     pub fn render_at(&self, frame: f32) -> image::RgbaImage {
         self.render_pose(frame, Some(&self.pose_at(frame)))
     }
+    /// Checked rendering for exports and interactive previews. A missing scene
+    /// component must never be mistaken for a successful render.
+    pub fn try_render_at(&self, frame: f32) -> Result<image::RgbaImage> {
+        ensure!(frame.is_finite(), "Render frame must be finite");
+        ensure!(
+            self.rig.active_clip < self.rig.clips.len(),
+            "Render references an invalid active timeline clip"
+        );
+        self.try_render_pose(frame, Some(&self.pose_at(frame)))
+    }
     pub fn complete_pose_at(&self, frame: f32) -> crate::animation::Pose {
         let mut pose = self.pose_at(frame);
         for b in &self.rig.bones {
@@ -259,6 +279,32 @@ impl Project {
         }
         crate::production::render::render_project(self, frame, pose, true)
     }
+    pub fn try_render_pose(
+        &self,
+        frame: f32,
+        pose: Option<&crate::animation::Pose>,
+    ) -> Result<image::RgbaImage> {
+        ensure!(frame.is_finite(), "Render frame must be finite");
+        ensure!(
+            self.rig.active_clip < self.rig.clips.len(),
+            "Render references an invalid active timeline clip"
+        );
+        ensure!(
+            (1..=4096).contains(&self.rig.width) && (1..=4096).contains(&self.rig.height),
+            "Render canvas dimensions must be between 1 and 4096 pixels"
+        );
+        if !self.extras.production.has_art() && self.extras.characters3d.is_empty() {
+            if !self.extras.show_2d {
+                return Ok(image::RgbaImage::new(self.rig.width, self.rig.height));
+            }
+            return Ok(skin::render_region(
+                &self.rig,
+                pose,
+                self.extras.canvas_origin,
+            ));
+        }
+        crate::production::render::try_render_project(self, frame, pose, true)
+    }
     pub fn baked_rig(&self) -> Result<Rig> {
         self.validate()?;
         let mut rig = self.rig.clone();
@@ -268,6 +314,7 @@ impl Project {
             && motion.contacts.is_empty()
             && motion.layers.is_empty()
             && motion.springs.is_empty()
+            && self.rig.active_clip().source.is_none()
             && !self.rig.active_clip().tracks.iter().any(|t| {
                 matches!(
                     t.channel,
@@ -277,6 +324,8 @@ impl Project {
         {
             return Ok(rig);
         }
+        rig.active_clip_mut().source = None;
+        rig.active_clip_mut().tracks.clear();
         for frame in 1..=rig.active_clip().length {
             let pose = self.complete_pose_at(frame as f32);
             crate::advanced_motion::bake_pose(&mut rig, &pose, frame as f32)
@@ -410,21 +459,34 @@ impl History {
     }
 }
 pub fn load(path: &Path) -> Result<Project> {
+    Ok(load_with_report(path)?.project)
+}
+pub fn load_with_report(path: &Path) -> Result<crate::project_format::LoadReport> {
+    let file = std::fs::File::open(path)?;
     ensure!(
-        std::fs::metadata(path)?.len() <= 96 * 1024 * 1024,
+        file.metadata()?.len() <= crate::project_format::MAX_PROJECT_BYTES,
         "Project exceeds 96 MiB"
     );
-    let p: Project = serde_json::from_reader(BufReader::new(std::fs::File::open(path)?))?;
-    p.validate()?;
-    Ok(p)
+    let mut bytes = Vec::new();
+    file.take(crate::project_format::MAX_PROJECT_BYTES + 1)
+        .read_to_end(&mut bytes)?;
+    crate::project_format::decode_with_report(&bytes)
 }
-pub fn save(path: &Path, p: &Project) -> Result<()> {
+pub fn decode(bytes: &[u8]) -> Result<Project> {
+    crate::project_format::decode(bytes)
+}
+/// Validate and serialize completely before a save or backup mutates any file.
+pub fn encode(p: &Project) -> Result<Vec<u8>> {
     p.validate()?;
     let bytes = serde_json::to_vec_pretty(p)?;
     ensure!(
-        bytes.len() <= 96 * 1024 * 1024,
+        bytes.len() as u64 <= crate::project_format::MAX_PROJECT_BYTES,
         "Serialized project exceeds 96 MiB"
     );
+    Ok(bytes)
+}
+pub fn save(path: &Path, p: &Project) -> Result<()> {
+    let bytes = encode(p)?;
     atomic_write(path, &bytes)
 }
 pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
@@ -508,7 +570,7 @@ pub fn sheet_project(project: &Project, columns: u32) -> Result<image::RgbaImage
     for (i, f) in sequence.iter().enumerate() {
         image::imageops::replace(
             &mut out,
-            &project.render_at(*f as f32),
+            &project.try_render_at(*f as f32)?,
             (i as u32 % cols * rig.width) as i64,
             (i as u32 / cols * rig.height) as i64,
         );
@@ -532,7 +594,7 @@ pub fn gif_project(project: &Project) -> Result<Vec<u8>> {
         }
         for f in sequence {
             encoder.encode_frame(image::Frame::from_parts(
-                project.render_at(f as f32),
+                project.try_render_at(f as f32)?,
                 0,
                 0,
                 image::Delay::from_numer_denom_ms(clip.duration_ms(f), 1),

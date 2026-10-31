@@ -292,7 +292,7 @@ pub(super) fn parse(data: &[u8], base: Option<&Path>) -> Result<Model3d> {
             match primitive.mode() {
                 g::mesh::Mode::Triangles => {
                     ensure!(indices.len() % 3 == 0, "Invalid triangle index count");
-                    triangles.extend(indices.chunks_exact(3).map(|p| [p[0], p[1], p[2]]));
+                    triangles.extend(indices.as_chunks::<3>().0.iter().copied());
                 }
                 g::mesh::Mode::TriangleStrip => {
                     for i in 2..indices.len() {

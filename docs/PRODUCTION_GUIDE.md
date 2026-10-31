@@ -18,7 +18,7 @@ Production → **Motion** contains the new animation tools:
 - **Mirror entire clip** creates a new clip from the evaluated motion, swaps linked sides, and copies/remaps clip metadata. Shared artwork remains shared; source texture pixels are not flipped. The original clip remains available.
 - Add springs to selected non-root bones for secondary motion. Stiffness, damping, gravity and wind control the result. Evaluation is deterministic for scrubbing and export. Bake to obtain ordinary editable keys.
 
-Trim, split and resize in Studio preserve displayed integer-frame poses and associated clip metadata. Resulting clips are marked **baked to FK** and bypass live controllers to prevent double application. Motion shows an explicit **Enable live controllers on this clip** action if you want to resume procedural editing; enabling them may change the pose.
+Trim, split and resize in Studio retain editable sparse keys and their original interpolation, along with live layers, contacts and spring history. These operations do not mark a clip **baked to FK**. Extending a clip holds its prior motion endpoint until a key is added or edited later; this resumes the whole clip's retained motion through that frame. Audio/reference time continues during held motion. Use **Bake all clips and switch to FK** when ordinary FK keys are the intended result. Existing deliberately baked clips keep their baked status. See [editable clip windows](RELIABILITY.md#editable-clip-windows).
 
 ## Props, meshes, outfits and faces
 
@@ -49,6 +49,8 @@ Choose Hurt, Hit or Interaction and select **Boxes (H)**, then drag a rectangle 
 PNG frames, sprite sheets, GIF and Aseprite exports include props, meshes, faces, scene actors and pixel corrections. Projects without added artwork retain editable group layers in Aseprite; projects with artwork use a composited scene layer with clip tags/timing. Procedural motion is evaluated during export.
 
 Production → **Game export** writes every clip's transparent PNG sheet, `package.json`, optional PCM WAV, a README and the selected engine helper. Set the pixel pivot and an output directory. Overwrite must be selected explicitly if package files already exist. Duplicate/empty display names receive unique nonempty animation identifiers in the manifest.
+
+Game packages use the same staged publication, rollback and recovery behavior as Studio batch exports. A render failure identifies the affected scene component and stops the export. Filesystem failures retain recovery data when rollback cannot finish. [Export recovery details](RELIABILITY.md#recoverable-exports) describe filesystem requirements and limits. Per-frame `source_time_ms` records the retained source clock for consumers that synchronize audio after trimming or splitting.
 
 - **Godot:** copy the package into a Godot 4 project and attach `ReBonePlayer.gd` to an `AnimatedSprite2D`. Set its manifest path. It creates SpriteFrames, marker signals and collision areas. Runtime loading, timing, markers and collision creation were exercised in Godot 4.7.1.
 - **Unity:** copy `ReBonePlayer.cs`, `Editor/ReBoneImporter.cs` and the package into a Unity project. Use the import menu described in the generated README to create the player. It creates sprites with the exported pivot, handles frame timing/events and uses trigger colliders. The generated files and metadata are covered by tests; a Unity Editor session has not been run here.

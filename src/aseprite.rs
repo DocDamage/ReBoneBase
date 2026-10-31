@@ -97,7 +97,7 @@ pub fn encode_project(project: &Project, all_clips: bool) -> Result<Vec<u8>> {
                 chunks += 1;
                 first = false;
             }
-            let image = p.render_at(frame as f32);
+            let image = p.try_render_at(frame as f32)?;
             if image.pixels().any(|p| p[3] != 0) {
                 let mut encoder = ZlibEncoder::new(Vec::new(), Compression::fast());
                 encoder.write_all(image.as_raw())?;

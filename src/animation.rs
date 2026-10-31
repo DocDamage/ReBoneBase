@@ -117,6 +117,20 @@ pub struct Track {
     #[serde(default)]
     pub keys: Vec<Keyframe>,
 }
+/// Retained source timing for a non-destructive clip window. Track keys stay in
+/// local coordinates, including keys outside the visible window. `origin` maps
+/// them back to the original source clock; its prefix also drives live springs.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ClipSource {
+    pub origin: u32,
+    pub length: u32,
+    pub end: u32,
+    pub looped: bool,
+    pub durations: BTreeMap<u32, u32>,
+    /// Global audio/reference origin. This clock advances through motion holds.
+    #[serde(default)]
+    pub time_offset_ms: u64,
+}
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Clip {
@@ -128,6 +142,8 @@ pub struct Clip {
     pub tracks: Vec<Track>,
     pub playback: Playback,
     pub durations: BTreeMap<u32, u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ClipSource>,
 }
 impl Default for Clip {
     fn default() -> Self {
@@ -139,6 +155,7 @@ impl Default for Clip {
             tracks: vec![],
             playback: Playback::Forward,
             durations: BTreeMap::new(),
+            source: None,
         }
     }
 }
@@ -147,11 +164,164 @@ pub fn wrap_degrees(a: f32) -> f32 {
     if a > 180. { a - 360. } else { a }
 }
 impl Clip {
+    /// Bounds for retained editable source keys, in this clip's local frame
+    /// coordinates. Gameplay events and clip windows still use `1..=length`.
+    pub fn source_bounds(&self) -> (f32, f32) {
+        self.source.as_ref().map_or((1., self.length as f32), |s| {
+            (1. - s.origin as f32, (s.length - s.origin) as f32)
+        })
+    }
+    /// Local frame used by motion and scene evaluation. A length extension
+    /// holds the previous endpoint until an author adds a key beyond it.
+    pub fn evaluation_frame(&self, frame: f32) -> f32 {
+        let end = self.source.as_ref().map_or(self.length, |s| s.end);
+        if frame.is_finite() {
+            frame.clamp(1., self.length.max(1) as f32).min(end as f32)
+        } else {
+            1.
+        }
+    }
+    /// Original controller clock, including the prefix hidden by a trim.
+    pub fn source_frame(&self, frame: f32) -> f32 {
+        self.evaluation_frame(frame) + self.source.as_ref().map_or(0, |s| s.origin) as f32
+    }
+    /// Duration on the original source clock. Visible duration edits remain
+    /// live, while hidden prefix/suffix timing is retained through later edits.
+    pub fn source_duration_ms(&self, frame: u32) -> u32 {
+        let Some(source) = &self.source else {
+            return self.duration_ms(frame);
+        };
+        if frame > source.origin && frame <= source.origin + source.end {
+            self.duration_ms(frame - source.origin)
+        } else {
+            source
+                .durations
+                .get(&frame)
+                .copied()
+                .unwrap_or_else(|| self.default_duration_ms())
+        }
+    }
+    /// Elapsed source time for global audio/reference alignment after a trim.
+    pub fn source_time_ms(&self, frame: f32) -> u64 {
+        self.source.as_ref().map_or(0, |s| s.time_offset_ms) + self.local_time_ms(frame)
+    }
+    fn local_time_ms(&self, frame: f32) -> u64 {
+        let frame = if frame.is_finite() {
+            frame.clamp(1., self.length as f32 + 1.)
+        } else {
+            1.
+        };
+        let whole = frame.floor() as u32;
+        (1..whole)
+            .map(|f| u64::from(self.duration_ms(f)))
+            .sum::<u64>()
+            + (frame.fract() * self.duration_ms(whole.min(self.length)) as f32) as u64
+    }
+    fn default_duration_ms(&self) -> u32 {
+        (1000. / self.fps).round().clamp(1., 60000.) as u32
+    }
+    fn source_snapshot(&self) -> ClipSource {
+        let mut source = self.source.clone().unwrap_or_else(|| ClipSource {
+            origin: 0,
+            length: self.length,
+            end: self.length,
+            looped: self.looped,
+            durations: self.durations.clone(),
+            time_offset_ms: 0,
+        });
+        // Commit live duration edits into the retained clock before moving it.
+        for frame in 1..=source.end {
+            let at = source.origin + frame;
+            if let Some(ms) = self.durations.get(&frame) {
+                source.durations.insert(at, *ms);
+            } else {
+                source.durations.remove(&at);
+            }
+        }
+        source
+    }
+    /// Preserve the complete source curves and history behind a local window.
+    pub fn windowed(&self, start: u32, end: u32) -> Result<Self, String> {
+        if start == 0 || end < start || end > self.length {
+            return Err("Invalid trim range".into());
+        }
+        if start == 1 && end == self.length {
+            return Ok(self.clone());
+        }
+        let mut result = self.clone();
+        let mut source = self.source_snapshot();
+        source.time_offset_ms += self.local_time_ms(start as f32);
+        // A window wholly inside an extended hold starts at that held source
+        // frame, without inventing additional spring/controller history.
+        let shift = (start - 1).min(source.end - 1);
+        source.origin += shift;
+        source.end = source.end.min(end) - shift;
+        result.length = end - start + 1;
+        for track in &mut result.tracks {
+            for key in &mut track.keys {
+                key.frame -= shift as f32;
+            }
+        }
+        result.durations = self
+            .durations
+            .iter()
+            .filter(|(f, _)| **f >= start && **f <= end)
+            .map(|(f, ms)| (*f - start + 1, *ms))
+            .collect();
+        result.source = Some(source);
+        Ok(result)
+    }
+    pub fn resized(&self, length: u32) -> Result<Self, String> {
+        if !(1..=240).contains(&length) {
+            return Err("Clip length must be 1–240".into());
+        }
+        if length <= self.length {
+            return self.windowed(1, length);
+        }
+        let mut result = self.clone();
+        result.source = Some(self.source_snapshot());
+        result.length = length;
+        Ok(result)
+    }
+    /// Restore scene/audio timing after explicitly baking local FK keys. The
+    /// original curve loop no longer applies to the newly baked local curves.
+    pub fn restore_source_timing(&mut self, source: Option<ClipSource>) -> Result<(), String> {
+        self.source = match source {
+            Some(mut source) => {
+                source.length = source.length.max(source.origin + self.length);
+                if source.length > 4096 {
+                    return Err("Retained animation source exceeds 4096 frames".into());
+                }
+                source.looped = false;
+                Some(source)
+            }
+            None => None,
+        };
+        Ok(())
+    }
+    /// Enable authoring at a visible local frame, including a previously held
+    /// extension. Controller and scene-key editors use the same path as FK keys.
+    pub fn release_hold(&mut self, frame: f32) -> Result<(), String> {
+        if !frame.is_finite() || frame < 1. || frame > self.length as f32 {
+            return Err("Keyframe is outside the visible clip".into());
+        }
+        if let Some(source) = &mut self.source {
+            let end = frame.ceil() as u32;
+            if source.origin.saturating_add(end) > 4096 {
+                return Err(
+                    "Retained animation source exceeds 4096 frames; bake before extending".into(),
+                );
+            }
+            source.end = source.end.max(end);
+            source.length = source.length.max(source.origin + end);
+        }
+        Ok(())
+    }
     pub fn duration_ms(&self, frame: u32) -> u32 {
         self.durations
             .get(&frame)
             .copied()
-            .unwrap_or_else(|| (1000. / self.fps).round().clamp(1., 60000.) as u32)
+            .unwrap_or_else(|| self.default_duration_ms())
     }
     pub fn frame_sequence(&self) -> Vec<u32> {
         match self.playback {
@@ -215,6 +385,7 @@ impl Clip {
         {
             return Err("Invalid keyframe time or value".into());
         }
+        self.release_hold(frame)?;
         let index = match self
             .tracks
             .iter()
@@ -258,6 +429,40 @@ impl Clip {
         removed
     }
     pub fn value(&self, track: &Track, frame: f32) -> f32 {
+        if let Some(source) = &self.source {
+            return self.value_in_domain(
+                track,
+                self.evaluation_frame(frame),
+                1. - source.origin as f32,
+                source.length,
+                source.looped,
+            );
+        }
+        self.value_in_domain(track, frame, 1., self.length, self.looped)
+    }
+    /// Sample the retained, editable curve on its original clock. Layers and
+    /// spring replay use this instead of wrapping inside the visible window.
+    pub fn source_value(&self, track: &Track, frame: f32) -> f32 {
+        if let Some(source) = &self.source {
+            self.value_in_domain(
+                track,
+                frame - source.origin as f32,
+                1. - source.origin as f32,
+                source.length,
+                source.looped,
+            )
+        } else {
+            self.value_in_domain(track, frame, 1., self.length, self.looped)
+        }
+    }
+    fn value_in_domain(
+        &self,
+        track: &Track,
+        frame: f32,
+        first_frame: f32,
+        length: u32,
+        looped: bool,
+    ) -> f32 {
         let keys = &track.keys;
         let Some(first) = keys.first() else {
             return track.channel.neutral();
@@ -267,15 +472,15 @@ impl Clip {
             return first.value;
         }
         let frame = if !frame.is_finite() {
-            1.
-        } else if self.looped && self.length > 0 {
-            (frame - 1.).rem_euclid(self.length as f32) + 1.
+            first_frame
+        } else if looped && length > 0 {
+            (frame - first_frame).rem_euclid(length as f32) + first_frame
         } else {
             frame
         };
         let at_seam = frame < first.frame || frame > last.frame;
         let (a, b, f, end_frame) = if at_seam {
-            if !self.looped {
+            if !looped {
                 return if frame < first.frame {
                     first.value
                 } else {
@@ -286,11 +491,11 @@ impl Clip {
                 last,
                 first,
                 if frame < first.frame {
-                    frame + self.length as f32
+                    frame + length as f32
                 } else {
                     frame
                 },
-                first.frame + self.length as f32,
+                first.frame + length as f32,
             )
         } else {
             if let Some(k) = keys.iter().find(|k| k.frame == frame) {
@@ -331,9 +536,15 @@ impl Clip {
         }
     }
     pub fn sample(&self, frame: f32) -> Pose {
+        self.sample_values(|track| self.value(track, frame))
+    }
+    pub fn source_sample(&self, frame: f32) -> Pose {
+        self.sample_values(|track| self.source_value(track, frame))
+    }
+    fn sample_values(&self, value: impl Fn(&Track) -> f32) -> Pose {
         let mut pose = Pose::new();
         for t in &self.tracks {
-            let value = self.value(t, frame);
+            let value = value(t);
             let p = pose.entry(t.bone).or_default();
             match t.channel {
                 Channel::Rotation => p.rotation = value,
@@ -347,6 +558,24 @@ impl Clip {
         pose
     }
     pub fn validate(&self, owners: &HashSet<u32>) -> Result<(), String> {
+        if let Some(source) = &self.source
+            && (source.length == 0
+                || source.length > 4096
+                || source.origin >= source.length
+                || source.end == 0
+                || source.end > self.length
+                || source
+                    .origin
+                    .checked_add(source.end)
+                    .is_none_or(|end| end > source.length)
+                || source.time_offset_ms > 1_000_000_000_000
+                || source
+                    .durations
+                    .iter()
+                    .any(|(f, ms)| *f == 0 || *f > source.length || !(1..=60000).contains(ms)))
+        {
+            return Err("Invalid retained clip source".into());
+        }
         if self
             .durations
             .iter()
@@ -370,7 +599,12 @@ impl Clip {
             {
                 return Err("Invalid or duplicate animation track".into());
             }
-            let mut previous = 0.;
+            let first = 1. - self.source.as_ref().map_or(0, |s| s.origin) as f32;
+            let last = self
+                .source
+                .as_ref()
+                .map_or(self.length, |s| s.length - s.origin) as f32;
+            let mut previous = first - 1.;
             for k in &t.keys {
                 if !k.tangent_in.is_finite()
                     || !k.tangent_out.is_finite()
@@ -381,8 +615,8 @@ impl Clip {
                 }
                 if !k.frame.is_finite()
                     || k.frame <= previous
-                    || k.frame < 1.
-                    || k.frame > self.length as f32
+                    || k.frame < first
+                    || k.frame > last
                     || !k.value.is_finite()
                     || k.value.abs() > 100_000.
                     || (t.channel == Channel::Scale && !(0.1..=4.).contains(&k.value))

@@ -126,8 +126,10 @@ fn every_original_template_matches_solid_rgba_raster_with_float_boundary_toleran
         let native = skin::render(&rig, None);
         let mismatches = native
             .as_raw()
-            .chunks_exact(4)
-            .zip(original.chunks_exact(4))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .zip(original.as_chunks::<4>().0.iter())
             .filter(|(a, b)| a != b)
             .count();
         checked_pixels += 64 * 64;
@@ -135,8 +137,10 @@ fn every_original_template_matches_solid_rgba_raster_with_float_boundary_toleran
             let world = rig.world(None);
             for (index, (actual, expected)) in native
                 .as_raw()
-                .chunks_exact(4)
-                .zip(original.chunks_exact(4))
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .zip(original.as_chunks::<4>().0.iter())
                 .enumerate()
                 .filter(|(_, (a, b))| a != b)
             {
