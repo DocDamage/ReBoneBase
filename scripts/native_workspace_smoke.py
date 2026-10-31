@@ -61,9 +61,12 @@ def main():
                     raise RuntimeError("Native window did not become visible")
                 command("xdotool", "windowfocus", window)
 
-                def capture(name, width, height):
+                def capture(name, width, height, fit=True):
                     command("xdotool", "windowsize", window, str(width), str(height), "windowmove", window, "0", "0")
-                    time.sleep(0.8)
+                    time.sleep(0.3)
+                    if fit:
+                        command("xdotool", "key", "--clearmodifiers", "f")
+                    time.sleep(0.5)
                     if app.poll() is not None:
                         raise RuntimeError("Native app exited during workspace checks")
                     image = output / name
@@ -89,7 +92,7 @@ def main():
                 time.sleep(0.3)
                 command("xdotool", "type", "--clearmodifiers", "workspace")
                 command("xdotool", "key", "--clearmodifiers", "Down")
-                capture("workspace-commands.png", 1280, 800)
+                capture("workspace-commands.png", 1280, 800, fit=False)
                 command("xdotool", "key", "--clearmodifiers", "Escape")
                 if sample.read_bytes() != original:
                     raise RuntimeError("View-only checks modified the sample file")
