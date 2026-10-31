@@ -18,6 +18,22 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  native_diagnostic:
+    name: Read native startup diagnostic
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Read isolated app log from previous verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api /repos/DocDamage/ReBoneBase/actions/artifacts/13060961011/zip > native-log.zip
+          python - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('native-log.zip') as archive:
+              print(archive.read('native-app.log').decode('utf-8', errors='replace'))
+          PY
   verify:
     name: Rust and integration tests (${{ matrix.os }})
     strategy:

@@ -95,6 +95,8 @@ def main():
                     raise RuntimeError("View-only checks modified the sample file")
                 print("Native launch, resizing, transport shortcuts, palette input, and captures completed.", flush=True)
             finally:
+                log.flush()
+                print((output / 'native-app.log').read_text(errors='replace'), flush=True)
                 app.terminate()
                 try:
                     app.wait(timeout=10)
