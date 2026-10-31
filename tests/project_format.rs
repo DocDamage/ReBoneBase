@@ -33,6 +33,38 @@ fn legacy_document_migrates_without_changing_art_or_animation() {
 }
 
 #[test]
+fn bundled_legacy_projects_migrate_and_roundtrip_without_changing_their_rigs() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    for sample in [
+        "examples/output/Wave.rebone",
+        "examples/output/characters/AnimationTemplates.rebone",
+        "examples/output/characters/CharactersDemo.rebone",
+        "examples/output/motion/MotionImportDemo.rebone",
+        "examples/output/production/ProductionDemo.rebone",
+    ] {
+        let path = root.join(sample);
+        let bytes = std::fs::read(&path).unwrap_or_else(|error| panic!("{sample}: {error}"));
+        let original: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            original["version"], 1,
+            "{sample} must remain a legacy fixture"
+        );
+        let original_rig: Rig = serde_json::from_value(original["rig"].clone()).unwrap();
+        let report = project::load_with_report(&path)
+            .unwrap_or_else(|error| panic!("Could not migrate {sample}: {error:#}"));
+        assert!(report.migrated_projects > 0, "{sample}");
+        assert_eq!(report.project.version, CURRENT_VERSION, "{sample}");
+        assert_eq!(report.project.rig, original_rig, "{sample}");
+        let encoded = project::encode(&report.project)
+            .unwrap_or_else(|error| panic!("Could not encode {sample}: {error:#}"));
+        let decoded = project::decode(&encoded)
+            .unwrap_or_else(|error| panic!("Could not roundtrip {sample}: {error:#}"));
+        assert_eq!(decoded, report.project, "{sample}");
+        assert_eq!(std::fs::read(&path).unwrap(), bytes, "{sample}");
+    }
+}
+
+#[test]
 fn legacy_scene_actors_migrate_with_the_parent_project() {
     let mut original = document();
     original.extras.production.actors.push(SceneActor {

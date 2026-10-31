@@ -45,7 +45,7 @@ The canvas now grows with the character in all directions and preserves joint/pi
 
 Use **Animation templates…** beside the dope sheet for ten editable motions. Use **File → Import 3D character…** or **Production → 3D characters** to add actual **GLB/glTF, FBX or OBJ** models with textures, skinning and included animations. Camera controls and joint pose overrides render the model into the pixel canvas and existing export formats. FBX/OBJ loading is native; no Blender installation is required.
 
-See the [Characters guide](docs/CHARACTERS_GUIDE.md). Included examples: `dist/CharactersDemo.rebone`, `dist/AnimationTemplates.rebone`, and `dist/Mannequin.obj` with its `.mtl` material file. All older executables are preserved separately.
+See the [Characters guide](docs/CHARACTERS_GUIDE.md). The versioned package folder includes `CharactersDemo.rebone`, `AnimationTemplates.rebone`, and `Mannequin.obj` with its `.mtl` material file. All older executables are preserved separately.
 
 ## Compatibility and scope
 
@@ -75,7 +75,7 @@ Current pull requests run Rust tests, formatting, Clippy and the Unreal helper t
 
 All 20 requested improvements are available through **Studio** and the motion-import dialog: [feature list](docs/FEATURE_IDEAS.md), [Studio guide](docs/STUDIO_GUIDE.md). Studio adds recovery/backups, selection/constraints/pins, key/curve/clip editing, shared libraries, onion controls, outlines/palettes, reference sequences/video and batch presets with atlas metadata and Aseprite tags. Video decoding uses an existing FFmpeg installation; choose its executable in Studio.
 
-The second 20 improvements are available through **Production (F3)**: [feature list](docs/PRODUCTION_FEATURES.md), [Production guide](docs/PRODUCTION_GUIDE.md). They add long-chain IK, animated contacts, FK baking, gait/loop/layer/transition tools, mirrored clips, sprite props, textured weighted meshes, outfits, facial tracks, springs, audio/events, multiple actors, pixel corrections, collision regions, game packages and customizable workspaces. **Commands / Ctrl+P** searches available actions. Open `dist/ProductionDemo.rebone` for a working example.
+The second 20 improvements are available through **Production (F3)**: [feature list](docs/PRODUCTION_FEATURES.md), [Production guide](docs/PRODUCTION_GUIDE.md). They add long-chain IK, animated contacts, FK baking, gait/loop/layer/transition tools, mirrored clips, sprite props, textured weighted meshes, outfits, facial tracks, springs, audio/events, multiple actors, pixel corrections, collision regions, game packages and customizable workspaces. **Commands / Ctrl+P** searches available actions. Open `ProductionDemo.rebone` in the versioned package folder for a working example.
 
 Game packages contain baked sprite sheets and metadata with Godot/Unity helper scripts. Godot runtime loading, events and collisions were exercised in Godot 4.7.1; the Unity Editor integration has not been run here. Sound import supports PCM16 WAV. Use a schema 2 compatible build for projects saved by this release.
 

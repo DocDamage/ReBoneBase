@@ -1,6 +1,6 @@
 # ReBoneBase Production
 
-Run the latest `ReBoneBase-characters.exe`. Open **Production** from the top bar or press **F3**. The first 20 improvements remain in **Studio (F2)**. The included `ProductionDemo.rebone` shows a walk cycle, sword, weighted cape, facial track, second character, events and a collision region. Pass its path as the executable's first argument, or use File → Open.
+Run the latest versioned ReBoneBase executable. Open **Production** from the top bar or press **F3**. The first 20 improvements remain in **Studio (F2)**. The included `ProductionDemo.rebone` shows a walk cycle, sword, weighted cape, facial track, second character, events and a collision region. Pass its path as the executable's first argument, or use File → Open.
 
 ## Movement and animation
 
