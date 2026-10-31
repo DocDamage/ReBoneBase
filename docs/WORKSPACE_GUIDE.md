@@ -20,6 +20,8 @@ The **Skeleton** panel follows parent relationships even when the file stores bo
 - Click a bone to select it. Shift-click adds or removes a bone from the selection. Locked bones retain an `[L]` indicator.
 - **Starter rigs…** opens the original template list; **+ Draw bone** activates the existing Bone tool.
 
+In shorter panels, **More** contains **Remove** and **Starter rigs…**, and **View** contains the Grid, Bones, Skin, and Onion skin toggles. **+ Draw bone** stays directly accessible.
+
 Changing search, branch expansion, or selection does not edit the document.
 
 ## Use the contextual inspector
@@ -34,7 +36,7 @@ The Inspector has three sections:
 
 In **Rig** mode, Selection edits length, angle, radii, group, and existing skin bulges. In **Animate** mode, it displays the current frame and makes auto-key behavior explicit: changing rotation or scale writes a key at that frame. **Key current pose** and **Reset pose here** remain available.
 
-When several bones are selected, the inspector identifies the primary bone it is editing and links to the existing group-transform tools. Locking a bone protects it from editing; unlock it in the inspector or Rig & pins when needed.
+When several bones are selected, the inspector identifies the primary bone it is editing and links to the existing group-transform tools. Locking a bone prevents direct edits in the canvas and inspector; unlock it in the inspector or Rig & pins when needed.
 
 Select **Pixels** on the canvas toolbar to access correction color, brush size, Paint, Erase ink, and Restore generated modes in the inspector. Select **Boxes** for collision overlay, attachment, and region-kind controls. The complete correction and collision editors remain in **Pixels & boxes…**.
 

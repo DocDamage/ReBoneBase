@@ -84,6 +84,7 @@ impl ReboneApp {
         self.panels.reveal = true;
     }
     pub(super) fn left_ui(&mut self, ui: &mut egui::Ui) {
+        let compact = ui.available_height() < 360.;
         ui.add_space(8.);
         ui.horizontal(|ui| {
             ui.label(RichText::new("SKELETON").small().color(ACCENT).strong());
@@ -93,13 +94,24 @@ impl ReboneApp {
                     .color(DIM),
             );
         });
+        let clear_width = 24.;
+        let search_gap = ui.spacing().item_spacing.x;
+        let search_width = (ui.available_width() - clear_width - search_gap).max(32.);
         ui.horizontal(|ui| {
-            let width = (ui.available_width() - 34.).max(60.);
             ui.add_sized(
-                [width, 26.],
-                egui::TextEdit::singleline(&mut self.panels.search).hint_text("Find a bone…"),
+                [search_width, 26.],
+                egui::TextEdit::singleline(&mut self.panels.search)
+                    .desired_width(search_width)
+                    .hint_text("Find a bone…"),
             );
-            if ui.small_button("×").on_hover_text("Clear search").clicked() {
+            let clear = ui
+                .scope(|ui| {
+                    // A small button keeps the global horizontal padding unless it is overridden.
+                    ui.spacing_mut().button_padding.x = 4.;
+                    ui.add_sized([clear_width, 26.], egui::Button::new("×").small())
+                })
+                .inner;
+            if clear.on_hover_text("Clear search").clicked() {
                 self.panels.search.clear();
             }
         });
@@ -129,7 +141,7 @@ impl ReboneApp {
         let visible_selected = rows.iter().any(|row| Some(row.id) == self.selected);
         if self.selected.is_some() && !visible_selected {
             ui.label(
-                RichText::new("Selected bone is outside this search.")
+                RichText::new("Selected bone is hidden. Use Reveal selected.")
                     .small()
                     .color(DIM),
             );
@@ -139,9 +151,10 @@ impl ReboneApp {
                 .small()
                 .color(DIM),
         );
+        let footer_height = if compact { 48. } else { 165. };
         egui::ScrollArea::vertical()
             .id_salt("hierarchy")
-            .max_height((ui.available_height() - 165.).max(60.))
+            .max_height((ui.available_height() - footer_height).max(60.))
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 if rows.is_empty() {
@@ -159,36 +172,65 @@ impl ReboneApp {
                     let locked = bone.locked;
                     let selected =
                         self.selected == Some(row.id) || self.studio.selection.contains(&row.id);
+                    let row_width = ui.available_width();
+                    let toggle_width = 18.;
+                    let row_spacing = 3.;
+                    let indent = (row.depth.min(12) as f32 * 10.)
+                        .min((row_width - toggle_width - row_spacing - 48.).max(0.));
+                    let label_width = (row_width - indent - toggle_width - row_spacing).max(48.);
                     ui.push_id(row.id, |ui| {
                         ui.horizontal(|ui| {
-                            ui.spacing_mut().item_spacing.x = 3.;
-                            ui.add_space(row.depth.min(12) as f32 * 10.);
+                            ui.spacing_mut().item_spacing.x = row_spacing;
+                            ui.add_space(indent);
+                            let (toggle_rect, toggle) = ui.allocate_exact_size(
+                                EVec2::new(toggle_width, 23.),
+                                if row.children {
+                                    egui::Sense::click()
+                                } else {
+                                    egui::Sense::hover()
+                                },
+                            );
                             if row.children {
                                 let closed = self.panels.collapsed.contains(&row.id)
                                     && self.panels.search.trim().is_empty();
-                                if ui
-                                    .add_sized(
-                                        [18., 23.],
-                                        egui::Button::new(if closed { "▸" } else { "▾" })
-                                            .frame(false),
+                                let center = toggle_rect.center();
+                                let points = if closed {
+                                    vec![
+                                        center + EVec2::new(-2., -4.),
+                                        center + EVec2::new(2., 0.),
+                                        center + EVec2::new(-2., 4.),
+                                    ]
+                                } else {
+                                    vec![
+                                        center + EVec2::new(-4., -2.),
+                                        center + EVec2::new(0., 2.),
+                                        center + EVec2::new(4., -2.),
+                                    ]
+                                };
+                                let stroke = ui.style().interact(&toggle).fg_stroke;
+                                ui.painter().add(egui::Shape::line(points, stroke));
+                                let hint = if closed {
+                                    "Expand branch"
+                                } else {
+                                    "Collapse branch"
+                                };
+                                toggle.widget_info(|| {
+                                    egui::WidgetInfo::labeled(
+                                        egui::WidgetType::Button,
+                                        ui.is_enabled(),
+                                        hint,
                                     )
-                                    .on_hover_text(if closed {
-                                        "Expand branch"
-                                    } else {
-                                        "Collapse branch"
-                                    })
-                                    .clicked()
+                                });
+                                if toggle.on_hover_text(hint).clicked()
                                     && !self.panels.collapsed.insert(row.id)
                                 {
                                     self.panels.collapsed.remove(&row.id);
                                 }
-                            } else {
-                                ui.add_space(18.);
                             }
                             let label = format!("{}{}", if locked { "[L] " } else { "" }, name);
                             let response = ui
                                 .add_sized(
-                                    [ui.available_width(), 25.],
+                                    [label_width, 25.],
                                     egui::Button::selectable(
                                         selected,
                                         RichText::new(label).color(if selected {
@@ -199,6 +241,7 @@ impl ReboneApp {
                                             DIM
                                         }),
                                     )
+                                    .right_text("")
                                     .truncate(),
                                 )
                                 .on_hover_text(format!(
@@ -218,40 +261,57 @@ impl ReboneApp {
                 }
             });
         ui.separator();
-        ui.horizontal_wrapped(|ui| {
-            if ui
-                .button("+ Draw bone")
-                .on_hover_text(format!(
-                    "Draw bones · {}",
-                    self.action_shortcut(rebonebase::workspace::Action::Bone)
-                ))
-                .clicked()
-            {
-                self.run_action(rebonebase::workspace::Action::Bone);
+        ui.scope(|ui| {
+            if compact {
+                ui.spacing_mut().item_spacing.x = 6.;
+                ui.spacing_mut().button_padding.x = 6.;
             }
-            if ui
-                .add_enabled(self.selected.is_some(), egui::Button::new("Remove"))
-                .clicked()
-            {
-                self.delete();
-            }
-            ui.menu_button("Starter rigs…", |ui| {
-                for i in 0..self.templates.len() {
-                    if ui.button(&self.templates[i].name).clicked() {
-                        self.request(Pending::Template(i));
-                        ui.close();
-                    }
+            ui.horizontal_wrapped(|ui| {
+                if ui
+                    .button("+ Draw bone")
+                    .on_hover_text(format!(
+                        "Draw bones · {}",
+                        self.action_shortcut(rebonebase::workspace::Action::Bone)
+                    ))
+                    .clicked()
+                {
+                    self.run_action(rebonebase::workspace::Action::Bone);
+                }
+                if compact {
+                    ui.menu_button("More", |ui| self.skeleton_edit_actions(ui));
+                    ui.menu_button("View", |ui| self.skeleton_view_controls(ui));
+                } else {
+                    self.skeleton_edit_actions(ui);
                 }
             });
-        });
-        ui.horizontal_wrapped(|ui| {
-            ui.checkbox(&mut self.grid, "Grid");
-            ui.checkbox(&mut self.bones, "Bones");
-            ui.checkbox(&mut self.show_skin, "Skin");
-            if ui.checkbox(&mut self.onion, "Onion skin").changed() {
-                self.changed();
+            if !compact {
+                ui.horizontal_wrapped(|ui| self.skeleton_view_controls(ui));
             }
         });
+    }
+    fn skeleton_edit_actions(&mut self, ui: &mut egui::Ui) {
+        if ui
+            .add_enabled(self.selected.is_some(), egui::Button::new("Remove"))
+            .clicked()
+        {
+            self.delete();
+        }
+        ui.menu_button("Starter rigs…", |ui| {
+            for i in 0..self.templates.len() {
+                if ui.button(&self.templates[i].name).clicked() {
+                    self.request(Pending::Template(i));
+                    ui.close();
+                }
+            }
+        });
+    }
+    fn skeleton_view_controls(&mut self, ui: &mut egui::Ui) {
+        ui.checkbox(&mut self.grid, "Grid");
+        ui.checkbox(&mut self.bones, "Bones");
+        ui.checkbox(&mut self.show_skin, "Skin");
+        if ui.checkbox(&mut self.onion, "Onion skin").changed() {
+            self.changed();
+        }
     }
     pub(super) fn left(&mut self, ctx: &egui::Context) {
         self.dock_panel(ctx, workspaces::Panel::Skeleton, Self::left_ui);

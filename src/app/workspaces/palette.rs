@@ -105,7 +105,7 @@ impl ReboneApp {
                     });
                 self.workspace_ui.palette_scroll = false;
                 ui.label(
-                    RichText::new("↑ ↓ Choose  ·  Enter Run  ·  Esc Close")
+                    RichText::new("Up / Down Choose  ·  Enter Run  ·  Esc Close")
                         .small()
                         .color(DIM),
                 );

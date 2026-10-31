@@ -91,7 +91,7 @@ impl ReboneApp {
         let before = self.project.clone();
         let mut edited = bone.clone();
         ui.checkbox(&mut edited.locked, "Lock bone")
-            .on_hover_text("Protect this bone from pose and shape edits.");
+            .on_hover_text("Lock direct canvas and inspector edits.");
         ui.add_enabled_ui(!edited.locked, |ui| {
             ui.add(egui::TextEdit::singleline(&mut edited.name).desired_width(f32::INFINITY));
         });

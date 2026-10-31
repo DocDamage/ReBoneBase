@@ -64,6 +64,8 @@ def main():
                 def capture(name, width, height, fit=True):
                     command("xdotool", "windowsize", window, str(width), str(height), "windowmove", window, "0", "0")
                     time.sleep(0.3)
+                    if name == "workspace-1280x800.png":
+                        command("xdotool", "mousemove", "--window", window, "80", "192", "click", "1")
                     if fit:
                         command("xdotool", "key", "--clearmodifiers", "f")
                     time.sleep(0.5)

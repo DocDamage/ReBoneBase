@@ -5,7 +5,7 @@ impl ReboneApp {
         let length = self.project.rig.active_clip().length;
         ui.horizontal_wrapped(|ui| {
             if ui
-                .button(if self.playing { "Pause" } else { "Play ▷" })
+                .button(if self.playing { "Pause" } else { "Play" })
                 .on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::Play))
                 .clicked()
             {

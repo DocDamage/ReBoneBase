@@ -202,3 +202,131 @@ fn released_hidden_timeline_gestures_are_cleared_and_undo_stops_transport() {
     assert!(!app.playing);
     assert!(app.mode == Mode::Rest);
 }
+
+fn render_workspace(
+    app: &mut ReboneApp,
+    ctx: &egui::Context,
+    size: EVec2,
+    events: Vec<egui::Event>,
+) -> egui::FullOutput {
+    ctx.run(
+        egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
+            events,
+            ..Default::default()
+        },
+        |ctx| app.show(ctx),
+    )
+}
+
+fn workspace_text_position(output: &egui::FullOutput, size: EVec2, label: &str) -> Option<Pos2> {
+    let screen = Rect::from_min_size(Pos2::ZERO, size);
+    output.shapes.iter().find_map(|shape| match &shape.shape {
+        egui::Shape::Text(text) if text.galley.text() == label => {
+            let center = text.pos + text.galley.size() * 0.5;
+            (shape.clip_rect.contains(center) && screen.contains(center)).then_some(center)
+        }
+        _ => None,
+    })
+}
+
+fn click_workspace(app: &mut ReboneApp, ctx: &egui::Context, size: EVec2, label: &str) {
+    let output = render_workspace(app, ctx, size, vec![]);
+    let position = workspace_text_position(&output, size, label)
+        .unwrap_or_else(|| panic!("Workspace control not visible: {label}"));
+    for pressed in [true, false] {
+        render_workspace(
+            app,
+            ctx,
+            size,
+            vec![
+                egui::Event::PointerMoved(position),
+                egui::Event::PointerButton {
+                    pos: position,
+                    button: egui::PointerButton::Primary,
+                    pressed,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+        );
+    }
+}
+
+#[test]
+fn skeleton_width_stays_stable_across_frames_and_window_resizes() {
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    app.project.rig.bones[0].name =
+        "A long root bone name that must fit within the existing skeleton panel".into();
+    let before = app.project.clone();
+    for (size, minimum_canvas_width) in [
+        (EVec2::new(1280., 800.), 650.),
+        (EVec2::new(1000., 640.), 400.),
+        (EVec2::new(1280., 800.), 650.),
+    ] {
+        for frame in 0..16 {
+            render_workspace(&mut app, &ctx, size, vec![]);
+            let width = app.studio.preferences.workspace.skeleton.width;
+            assert!(
+                (width - 230.).abs() <= 2.,
+                "Skeleton width grew to {width} at {size:?}, frame {frame}"
+            );
+            assert!(
+                app.last_canvas.width() >= minimum_canvas_width,
+                "Canvas narrowed to {} at {size:?}, frame {frame}",
+                app.last_canvas.width()
+            );
+        }
+    }
+    assert_eq!(app.project, before);
+    assert!(!app.history.can_undo());
+}
+
+#[test]
+fn compact_skeleton_footer_keeps_edit_and_view_controls_reachable() {
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    let before = app.project.clone();
+    let size = EVec2::new(1000., 640.);
+    render_workspace(&mut app, &ctx, size, vec![]);
+    let output = render_workspace(&mut app, &ctx, size, vec![]);
+    for label in ["+ Draw bone", "More", "View"] {
+        let center = workspace_text_position(&output, size, label)
+            .unwrap_or_else(|| panic!("Compact footer control not visible: {label}"));
+        assert!(center.y <= app.last_canvas.bottom() + 8.);
+    }
+
+    click_workspace(&mut app, &ctx, size, "View");
+    let output = render_workspace(&mut app, &ctx, size, vec![]);
+    for label in ["Grid", "Bones", "Skin", "Onion skin"] {
+        assert!(
+            workspace_text_position(&output, size, label).is_some(),
+            "View control not visible: {label}"
+        );
+    }
+    let grid = app.grid;
+    click_workspace(&mut app, &ctx, size, "Grid");
+    assert_ne!(app.grid, grid);
+    render_workspace(
+        &mut app,
+        &ctx,
+        size,
+        vec![egui::Event::Key {
+            key: egui::Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::NONE,
+        }],
+    );
+    click_workspace(&mut app, &ctx, size, "More");
+    let output = render_workspace(&mut app, &ctx, size, vec![]);
+    for label in ["Remove", "Starter rigs…"] {
+        assert!(
+            workspace_text_position(&output, size, label).is_some(),
+            "Edit control not visible: {label}"
+        );
+    }
+    assert_eq!(app.project, before);
+    assert!(!app.history.can_undo());
+}
