@@ -81,7 +81,7 @@ jobs:
           sys.exit(0 if all(value == 'success' for value in results.values()) else 1)
           PY
       - name: Exercise native workspace on Linux
-        if: runner.os == 'Linux'
+        if: always() && runner.os == 'Linux'
         shell: bash
         run: |
           sudo apt-get update -qq

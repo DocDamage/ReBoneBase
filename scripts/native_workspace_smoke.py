@@ -32,6 +32,7 @@ def main():
             directory = root / key.lower()
             directory.mkdir(mode=0o700)
             environment[key] = str(directory)
+        environment["REBONEBASE_HOME"] = str(root / "store")
         environment["LIBGL_ALWAYS_SOFTWARE"] = "1"
         sample = root / "Wave.rebone"
         shutil.copyfile(repository / "examples/output/Wave.rebone", sample)

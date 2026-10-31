@@ -97,6 +97,8 @@ fn empty_palette_results_keep_the_document_and_wait_for_a_new_query() {
     let before = app.project.clone();
     app.run_action(Action::CommandPalette);
     app.production.palette_query = "no-matching-command-739".into();
+    // A new egui window needs its sizing pass before asserting painted text.
+    palette_pass(&mut app, &ctx, vec![]);
     let output = palette_pass(&mut app, &ctx, vec![key(egui::Key::Enter)]);
     assert!(app.production.palette_open);
     assert!(output.shapes.iter().any(|shape| matches!(
@@ -121,9 +123,15 @@ fn hidden_panels_restore_their_dock_and_floating_recovery_applies_once() {
         height: 900.,
     };
     app.set_panel_visible(Panel::Inspector, false);
-    assert_eq!(app.studio.preferences.workspace.inspector.dock, Dock::Hidden);
+    assert_eq!(
+        app.studio.preferences.workspace.inspector.dock,
+        Dock::Hidden
+    );
     app.run_action(Action::ShowInspector);
-    assert_eq!(app.studio.preferences.workspace.inspector.dock, Dock::Floating);
+    assert_eq!(
+        app.studio.preferences.workspace.inspector.dock,
+        Dock::Floating
+    );
     apply_layout(&mut app, &ctx);
     let layout = &app.studio.preferences.workspace.inspector;
     assert!(layout.x >= 8. && layout.x + layout.width <= 892.);
@@ -140,7 +148,10 @@ fn hidden_panels_restore_their_dock_and_floating_recovery_applies_once() {
     app.production.open = false;
     app.open_production_tab(production_ui::Tab::Workspace);
     assert!(app.production.open);
-    assert_eq!(app.studio.preferences.workspace.production.dock, Dock::Floating);
+    assert_eq!(
+        app.studio.preferences.workspace.production.dock,
+        Dock::Floating
+    );
     assert!(app.workspace_ui.pending_layout);
 }
 
@@ -171,15 +182,23 @@ fn saved_workspace_palette_destination_preserves_its_original_geometry() {
 fn palette_and_menu_shortcut_labels_follow_user_bindings() {
     let ctx = egui::Context::default();
     let mut app = ReboneApp::with_context(&ctx);
-    let binding = app.studio.preferences.bindings.iter_mut()
-        .find(|binding| binding.action == Action::MoveRig).unwrap();
+    let binding = app
+        .studio
+        .preferences
+        .bindings
+        .iter_mut()
+        .find(|binding| binding.action == Action::MoveRig)
+        .unwrap();
     binding.key = "F8".into();
     assert_eq!(app.action_shortcut(Action::MoveRig), "F8");
     assert!(app.action_shortcut(Action::SceneTools).is_empty());
     app.production.palette_query = "F8".into();
     let entries = app.palette_commands();
     assert_eq!(entries.len(), 1);
-    assert!(matches!(entries[0].command, PaletteCommand::Action(Action::MoveRig)));
+    assert!(matches!(
+        entries[0].command,
+        PaletteCommand::Action(Action::MoveRig)
+    ));
     assert_eq!(entries[0].shortcut, "F8");
 }
 
@@ -189,7 +208,8 @@ fn loading_a_saved_scene_layout_restores_production_visibility() {
     let mut app = ReboneApp::with_context(&ctx);
     let before = app.project.clone();
     let scene = WorkspacePreset::Scene.layout();
-    let restored: Workspace = serde_json::from_str(&serde_json::to_string(&scene).unwrap()).unwrap();
+    let restored: Workspace =
+        serde_json::from_str(&serde_json::to_string(&scene).unwrap()).unwrap();
     app.studio.preferences.workspaces.push(restored);
     assert!(!app.production.open);
     app.load_saved_workspace(1);

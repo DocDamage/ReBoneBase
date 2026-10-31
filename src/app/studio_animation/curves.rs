@@ -91,9 +91,18 @@ impl ReboneApp {
                 Channel::Z => value.z.unwrap_or(0.),
                 Channel::Visibility => value.visibility.unwrap_or(1.),
             };
-            match self.project.rig.active_clip_mut().set_key(id, channel, self.frame, value) {
+            match self
+                .project
+                .rig
+                .active_clip_mut()
+                .set_key(id, channel, self.frame, value)
+            {
                 Ok(()) => {
-                    self.studio.keys = vec![KeySelection { bone: id, channel, frame: self.frame }];
+                    self.studio.keys = vec![KeySelection {
+                        bone: id,
+                        channel,
+                        frame: self.frame,
+                    }];
                     self.seek_frame(self.frame);
                 }
                 Err(error) => self.status = error,
@@ -412,4 +421,3 @@ pub(super) fn replace_key(rig: &mut Rig, old: KeySelection, key: Keyframe) -> Re
     *rig = candidate;
     Ok(())
 }
-

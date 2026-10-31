@@ -76,7 +76,8 @@ fn navigation_actions_can_be_remapped_without_changing_legacy_shortcuts() {
 fn production_visibility_roundtrips_and_older_workspaces_default_to_closed() {
     let scene = WorkspacePreset::Scene.layout();
     assert!(scene.production_open);
-    let restored: Workspace = serde_json::from_str(&serde_json::to_string(&scene).unwrap()).unwrap();
+    let restored: Workspace =
+        serde_json::from_str(&serde_json::to_string(&scene).unwrap()).unwrap();
     assert_eq!(restored, scene);
 
     let mut old = serde_json::to_value(&scene).unwrap();
@@ -89,10 +90,15 @@ fn production_visibility_roundtrips_and_older_workspaces_default_to_closed() {
 
 #[test]
 fn navigation_shortcut_upgrade_preserves_custom_actions_and_occupied_chords() {
-    let mut bindings: Vec<_> = default_bindings().into_iter().filter(|binding| !matches!(
-        binding.action,
-        Action::FirstFrame | Action::LastFrame | Action::NextKey | Action::PreviousKey
-    )).collect();
+    let mut bindings: Vec<_> = default_bindings()
+        .into_iter()
+        .filter(|binding| {
+            !matches!(
+                binding.action,
+                Action::FirstFrame | Action::LastFrame | Action::NextKey | Action::PreviousKey
+            )
+        })
+        .collect();
     bindings.push(Binding {
         action: Action::ShowSkeleton,
         key: "Home".into(),
@@ -111,10 +117,28 @@ fn navigation_shortcut_upgrade_preserves_custom_actions_and_occupied_chords() {
     assert!(upgrade_navigation_bindings(&mut bindings));
     assert_eq!(&bindings[..original.len()], original.as_slice());
     assert_eq!(bindings.len(), original.len() + 2);
-    assert!(!bindings.iter().any(|binding| binding.action == Action::FirstFrame));
-    assert!(bindings.iter().any(|binding| binding.action == Action::LastFrame));
-    assert!(bindings.iter().any(|binding| binding.action == Action::PreviousKey));
-    assert_eq!(bindings.iter().filter(|binding| binding.action == Action::NextKey).count(), 1);
+    assert!(
+        !bindings
+            .iter()
+            .any(|binding| binding.action == Action::FirstFrame)
+    );
+    assert!(
+        bindings
+            .iter()
+            .any(|binding| binding.action == Action::LastFrame)
+    );
+    assert!(
+        bindings
+            .iter()
+            .any(|binding| binding.action == Action::PreviousKey)
+    );
+    assert_eq!(
+        bindings
+            .iter()
+            .filter(|binding| binding.action == Action::NextKey)
+            .count(),
+        1
+    );
     validate_bindings(&bindings).unwrap();
     assert!(!upgrade_navigation_bindings(&mut bindings));
 }

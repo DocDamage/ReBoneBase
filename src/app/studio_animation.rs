@@ -36,9 +36,24 @@ impl ReboneApp {
                     Err(e) => self.status = e,
                 }
             }
-            for (label, target) in [("Move left", index.checked_sub(1)), ("Move right", (index + 1 < self.project.rig.clips.len()).then_some(index + 1))] {
-                if ui.add_enabled(target.is_some(), egui::Button::new(label)).clicked() {
-                    match rebonebase::production::edit_clip(&mut self.project, rebonebase::production::ClipEdit::Move { from: index, to: target.unwrap() }) {
+            for (label, target) in [
+                ("Move left", index.checked_sub(1)),
+                (
+                    "Move right",
+                    (index + 1 < self.project.rig.clips.len()).then_some(index + 1),
+                ),
+            ] {
+                if ui
+                    .add_enabled(target.is_some(), egui::Button::new(label))
+                    .clicked()
+                {
+                    match rebonebase::production::edit_clip(
+                        &mut self.project,
+                        rebonebase::production::ClipEdit::Move {
+                            from: index,
+                            to: target.unwrap(),
+                        },
+                    ) {
                         Ok(()) => self.activate_clip(self.project.rig.active_clip),
                         Err(error) => self.status = error,
                     }

@@ -42,13 +42,24 @@ fn hierarchy_rows(rig: &Rig, search: &str, collapsed: &BTreeSet<u32>) -> Vec<Hie
             }
         }
     }
-    let mut stack: Vec<_> = children.get(&None).into_iter().flatten().rev().map(|id| (*id, 0)).collect();
+    let mut stack: Vec<_> = children
+        .get(&None)
+        .into_iter()
+        .flatten()
+        .rev()
+        .map(|id| (*id, 0))
+        .collect();
     let mut rows = Vec::new();
     while let Some((id, depth)) = stack.pop() {
         if !visible.contains(&id) {
             continue;
         }
-        rows.push(HierarchyRow { id, depth, children: children.contains_key(&Some(id)), matches: matches.contains(&id) });
+        rows.push(HierarchyRow {
+            id,
+            depth,
+            children: children.contains_key(&Some(id)),
+            matches: matches.contains(&id),
+        });
         if (!query.is_empty() || !collapsed.contains(&id))
             && let Some(list) = children.get(&Some(id))
         {
@@ -62,7 +73,10 @@ impl ReboneApp {
         if clear_search {
             self.panels.search.clear();
         }
-        let mut parent = self.selected.and_then(|id| self.project.rig.bone(id)).and_then(|b| b.parent);
+        let mut parent = self
+            .selected
+            .and_then(|id| self.project.rig.bone(id))
+            .and_then(|b| b.parent);
         while let Some(id) = parent {
             self.panels.collapsed.remove(&id);
             parent = self.project.rig.bone(id).and_then(|b| b.parent);
@@ -73,17 +87,30 @@ impl ReboneApp {
         ui.add_space(8.);
         ui.horizontal(|ui| {
             ui.label(RichText::new("SKELETON").small().color(ACCENT).strong());
-            ui.label(RichText::new(self.project.rig.bones.len().to_string()).small().color(DIM));
+            ui.label(
+                RichText::new(self.project.rig.bones.len().to_string())
+                    .small()
+                    .color(DIM),
+            );
         });
         ui.horizontal(|ui| {
             let width = (ui.available_width() - 34.).max(60.);
-            ui.add_sized([width, 26.], egui::TextEdit::singleline(&mut self.panels.search).hint_text("Find a bone…"));
+            ui.add_sized(
+                [width, 26.],
+                egui::TextEdit::singleline(&mut self.panels.search).hint_text("Find a bone…"),
+            );
             if ui.small_button("×").on_hover_text("Clear search").clicked() {
                 self.panels.search.clear();
             }
         });
         ui.horizontal_wrapped(|ui| {
-            if ui.add_enabled(self.selected.is_some(), egui::Button::new("Reveal selected").small()).clicked() {
+            if ui
+                .add_enabled(
+                    self.selected.is_some(),
+                    egui::Button::new("Reveal selected").small(),
+                )
+                .clicked()
+            {
                 self.reveal_selected_bone(true);
             }
             if ui.small_button("Expand all").clicked() {
@@ -94,14 +121,28 @@ impl ReboneApp {
             self.panels.last_selected = self.selected;
             self.reveal_selected_bone(false);
         }
-        let rows = hierarchy_rows(&self.project.rig, &self.panels.search, &self.panels.collapsed);
+        let rows = hierarchy_rows(
+            &self.project.rig,
+            &self.panels.search,
+            &self.panels.collapsed,
+        );
         let visible_selected = rows.iter().any(|row| Some(row.id) == self.selected);
         if self.selected.is_some() && !visible_selected {
-            ui.label(RichText::new("Selected bone is outside this search.").small().color(DIM));
+            ui.label(
+                RichText::new("Selected bone is outside this search.")
+                    .small()
+                    .color(DIM),
+            );
         }
-        ui.label(RichText::new("Shift-click to select several bones").small().color(DIM));
-        egui::ScrollArea::vertical().id_salt("hierarchy")
-            .max_height((ui.available_height() - 165.).max(60.)).auto_shrink([false, false])
+        ui.label(
+            RichText::new("Shift-click to select several bones")
+                .small()
+                .color(DIM),
+        );
+        egui::ScrollArea::vertical()
+            .id_salt("hierarchy")
+            .max_height((ui.available_height() - 165.).max(60.))
+            .auto_shrink([false, false])
             .show(ui, |ui| {
                 if rows.is_empty() {
                     ui.label(if self.project.rig.bones.is_empty() {
@@ -111,32 +152,60 @@ impl ReboneApp {
                     });
                 }
                 for row in rows {
-                    let Some(bone) = self.project.rig.bone(row.id) else { continue };
+                    let Some(bone) = self.project.rig.bone(row.id) else {
+                        continue;
+                    };
                     let name = bone.name.clone();
                     let locked = bone.locked;
-                    let selected = self.selected == Some(row.id) || self.studio.selection.contains(&row.id);
+                    let selected =
+                        self.selected == Some(row.id) || self.studio.selection.contains(&row.id);
                     ui.push_id(row.id, |ui| {
                         ui.horizontal(|ui| {
                             ui.spacing_mut().item_spacing.x = 3.;
                             ui.add_space(row.depth.min(12) as f32 * 10.);
                             if row.children {
-                                let closed = self.panels.collapsed.contains(&row.id) && self.panels.search.trim().is_empty();
-                                if ui.add_sized([18., 23.], egui::Button::new(if closed { "▸" } else { "▾" }).frame(false))
-                                    .on_hover_text(if closed { "Expand branch" } else { "Collapse branch" }).clicked()
+                                let closed = self.panels.collapsed.contains(&row.id)
+                                    && self.panels.search.trim().is_empty();
+                                if ui
+                                    .add_sized(
+                                        [18., 23.],
+                                        egui::Button::new(if closed { "▸" } else { "▾" })
+                                            .frame(false),
+                                    )
+                                    .on_hover_text(if closed {
+                                        "Expand branch"
+                                    } else {
+                                        "Collapse branch"
+                                    })
+                                    .clicked()
+                                    && !self.panels.collapsed.insert(row.id)
                                 {
-                                    if !self.panels.collapsed.insert(row.id) {
-                                        self.panels.collapsed.remove(&row.id);
-                                    }
+                                    self.panels.collapsed.remove(&row.id);
                                 }
                             } else {
                                 ui.add_space(18.);
                             }
                             let label = format!("{}{}", if locked { "[L] " } else { "" }, name);
-                            let response = ui.add_sized([ui.available_width(), 25.],
-                                egui::Button::selectable(selected, RichText::new(label).color(
-                                    if selected { ACCENT } else if row.matches { Color32::LIGHT_GRAY } else { DIM },
-                                )).truncate(),
-                            ).on_hover_text(format!("{name} · ID {}{}", row.id, if locked { " · Locked" } else { "" }));
+                            let response = ui
+                                .add_sized(
+                                    [ui.available_width(), 25.],
+                                    egui::Button::selectable(
+                                        selected,
+                                        RichText::new(label).color(if selected {
+                                            ACCENT
+                                        } else if row.matches {
+                                            Color32::LIGHT_GRAY
+                                        } else {
+                                            DIM
+                                        }),
+                                    )
+                                    .truncate(),
+                                )
+                                .on_hover_text(format!(
+                                    "{name} · ID {}{}",
+                                    row.id,
+                                    if locked { " · Locked" } else { "" }
+                                ));
                             if response.clicked() {
                                 self.select_bone(row.id, ui.input(|i| i.modifiers.shift));
                             }
@@ -150,10 +219,20 @@ impl ReboneApp {
             });
         ui.separator();
         ui.horizontal_wrapped(|ui| {
-            if ui.button("+ Draw bone").on_hover_text(format!("Draw bones · {}", self.action_shortcut(rebonebase::workspace::Action::Bone))).clicked() {
+            if ui
+                .button("+ Draw bone")
+                .on_hover_text(format!(
+                    "Draw bones · {}",
+                    self.action_shortcut(rebonebase::workspace::Action::Bone)
+                ))
+                .clicked()
+            {
                 self.run_action(rebonebase::workspace::Action::Bone);
             }
-            if ui.add_enabled(self.selected.is_some(), egui::Button::new("Remove")).clicked() {
+            if ui
+                .add_enabled(self.selected.is_some(), egui::Button::new("Remove"))
+                .clicked()
+            {
                 self.delete();
             }
             ui.menu_button("Starter rigs…", |ui| {

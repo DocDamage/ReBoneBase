@@ -4,25 +4,59 @@ impl ReboneApp {
     pub(super) fn timeline_transport(&mut self, ui: &mut egui::Ui) {
         let length = self.project.rig.active_clip().length;
         ui.horizontal_wrapped(|ui| {
-            if ui.button(if self.playing { "Pause" } else { "Play ▷" }).on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::Play)).clicked() {
+            if ui
+                .button(if self.playing { "Pause" } else { "Play ▷" })
+                .on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::Play))
+                .clicked()
+            {
                 self.toggle_play();
             }
-            if ui.small_button("|◀").on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::FirstFrame)).clicked() {
+            if ui
+                .small_button("|◀")
+                .on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::FirstFrame))
+                .clicked()
+            {
                 self.seek_frame(1.);
                 self.timeline.reveal_playhead = true;
             }
-            if ui.small_button("‹ Key").on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::PreviousKey)).clicked() {
+            if ui
+                .small_button("‹ Key")
+                .on_hover_text(
+                    self.timeline_action_hint(rebonebase::workspace::Action::PreviousKey),
+                )
+                .clicked()
+            {
                 self.seek_key(false);
             }
             let mut frame = self.frame;
-            if ui.add(egui::DragValue::new(&mut frame).range(1. ..=length as f32).speed(1.).prefix("Frame ")).changed() {
+            if ui
+                .add(
+                    egui::DragValue::new(&mut frame)
+                        .range(1. ..=length as f32)
+                        .speed(1.)
+                        .prefix("Frame "),
+                )
+                .changed()
+            {
                 self.seek_frame(frame.round());
             }
-            ui.label(RichText::new(format!("/ {length}")).monospace().color(ACCENT));
-            if ui.small_button("Key ›").on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::NextKey)).clicked() {
+            ui.label(
+                RichText::new(format!("/ {length}"))
+                    .monospace()
+                    .color(ACCENT),
+            );
+            if ui
+                .small_button("Key ›")
+                .on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::NextKey))
+                .clicked()
+            {
                 self.seek_key(true);
             }
-            if ui.small_button("▶|").on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::LastFrame)).clicked() {
+            if ui
+                .small_button("▶|")
+                .on_hover_text(self.timeline_action_hint(rebonebase::workspace::Action::LastFrame))
+                .clicked()
+            {
                 self.seek_frame(length as f32);
                 self.timeline.reveal_playhead = true;
             }
@@ -39,13 +73,26 @@ impl ReboneApp {
                 self.record();
                 self.activate_clip(index);
             }
-            if ui.add_enabled(self.project.rig.clips.len() < 32, egui::Button::new("+ Clip")).clicked() {
+            if ui
+                .add_enabled(
+                    self.project.rig.clips.len() < 32,
+                    egui::Button::new("+ Clip"),
+                )
+                .clicked()
+            {
                 self.record();
                 let index = self.project.rig.clips.len();
-                self.project.rig.clips.push(Clip { name: format!("Clip {}", index + 1), ..Default::default() });
+                self.project.rig.clips.push(Clip {
+                    name: format!("Clip {}", index + 1),
+                    ..Default::default()
+                });
                 self.activate_clip(index);
             }
-            if ui.menu_button("Clip settings", |ui| self.timeline_clip_metadata(ui)).inner.is_none() {
+            if ui
+                .menu_button("Clip settings", |ui| self.timeline_clip_metadata(ui))
+                .inner
+                .is_none()
+            {
                 self.timeline.metadata_control = None;
             }
         });
@@ -58,19 +105,41 @@ impl ReboneApp {
         ui.horizontal_wrapped(|ui| {
             let clip = self.project.rig.active_clip_mut();
             for response in [
-                ui.add(egui::TextEdit::singleline(&mut clip.name).desired_width(125.).hint_text("Clip name")),
-                ui.add(egui::DragValue::new(&mut clip.fps).range(1. / 60. ..=240.).prefix("FPS ")),
-                ui.add(egui::DragValue::new(&mut new_length).range(1..=240).prefix("Frames ")),
+                ui.add(
+                    egui::TextEdit::singleline(&mut clip.name)
+                        .desired_width(125.)
+                        .hint_text("Clip name"),
+                ),
+                ui.add(
+                    egui::DragValue::new(&mut clip.fps)
+                        .range(1. / 60. ..=240.)
+                        .prefix("FPS "),
+                ),
+                ui.add(
+                    egui::DragValue::new(&mut new_length)
+                        .range(1..=240)
+                        .prefix("Frames "),
+                ),
             ] {
-                if response.has_focus() || response.dragged() { active_control = Some(response.id); }
-                if response.changed() { edited_control = Some(response.id); }
+                if response.has_focus() || response.dragged() {
+                    active_control = Some(response.id);
+                }
+                if response.changed() {
+                    edited_control = Some(response.id);
+                }
             }
             ui.checkbox(&mut clip.looped, "Loop");
         });
         let resized = new_length != self.project.rig.active_clip().length;
         if resized {
             let index = self.project.rig.active_clip;
-            if let Err(e) = rebonebase::production::edit_clip(&mut self.project, rebonebase::production::ClipEdit::Resize { index, length: new_length }) {
+            if let Err(e) = rebonebase::production::edit_clip(
+                &mut self.project,
+                rebonebase::production::ClipEdit::Resize {
+                    index,
+                    length: new_length,
+                },
+            ) {
                 self.project = before.clone();
                 self.status = e;
             }
@@ -98,6 +167,10 @@ impl ReboneApp {
     }
     fn timeline_action_hint(&self, action: rebonebase::workspace::Action) -> String {
         let shortcut = self.action_shortcut(action);
-        if shortcut.is_empty() { action.label().into() } else { format!("{} ({shortcut})", action.label()) }
+        if shortcut.is_empty() {
+            action.label().into()
+        } else {
+            format!("{} ({shortcut})", action.label())
+        }
     }
 }

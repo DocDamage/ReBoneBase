@@ -14,21 +14,21 @@ use std::{
 mod animation_import_ui;
 mod canvas_ui;
 mod characters_ui;
-mod import_ui;
 mod editor_panels;
+mod import_ui;
 mod inspector;
 mod inspector_project;
-mod shell;
-mod timeline;
 mod picking;
 mod production_assets;
 mod production_motion;
 mod production_scene;
 mod production_ui;
+mod shell;
 mod studio;
 mod studio_animation;
 mod studio_assets;
 mod studio_rig;
+mod timeline;
 mod workspaces;
 use studio::Studio;
 #[cfg(test)]
@@ -517,7 +517,11 @@ impl ReboneApp {
         let editing_text = ctx
             .memory(|m| m.focused())
             .is_some_and(|id| egui::TextEdit::load_state(ctx, id).is_some());
-        if self.pending.is_some() || self.motion_setup.is_some() || self.production.palette_open || editing_text {
+        if self.pending.is_some()
+            || self.motion_setup.is_some()
+            || self.production.palette_open
+            || editing_text
+        {
             return;
         }
         let keys = ctx.input(|i| i.events.clone());
@@ -1509,7 +1513,8 @@ impl ReboneApp {
                 .and_then(|b| b.parent);
         }
         self.top(ctx);
-        let bottom_timeline = self.studio.preferences.workspace.timeline.dock == rebonebase::workspace::Dock::Bottom;
+        let bottom_timeline =
+            self.studio.preferences.workspace.timeline.dock == rebonebase::workspace::Dock::Bottom;
         if bottom_timeline {
             self.timeline(ctx);
         }
@@ -1539,7 +1544,12 @@ fn unit_rect() -> Rect {
 fn row(ui: &mut egui::Ui, label: &str, value: &mut f32, range: std::ops::RangeInclusive<f32>) {
     ui.horizontal(|ui| {
         ui.add_sized([95., 22.], egui::Label::new(label));
-        ui.add(egui::DragValue::new(value).range(range).clamp_existing_to_range(false).speed(0.1));
+        ui.add(
+            egui::DragValue::new(value)
+                .range(range)
+                .clamp_existing_to_range(false)
+                .speed(0.1),
+        );
     });
 }
 
