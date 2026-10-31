@@ -1,6 +1,6 @@
 # Canvas, attached joints, 3D characters and animation templates
 
-Run `ReBoneBase-motion.exe` for the latest version. This release includes the earlier Studio and Production tools.
+Run the latest versioned ReBoneBase executable. This release includes the earlier Studio and Production tools.
 
 ## A canvas that follows the character
 

@@ -202,12 +202,78 @@ impl ReboneApp {
   egui::CollapsingHeader::new("Animation layers and bone masks").default_open(true).show(ui,|ui|{clip_combo(ui,&self.project.rig,"Layer source",&mut self.production.layer_clip);if ui.button("Add layer from clip").clicked(){self.project.extras.production.motion.layers.push(Layer{name:format!("Layer {}",self.project.extras.production.motion.layers.len()+1),clip:self.production.layer_clip,mask:self.selected_bones(),weight:0.5,..Default::default()});}let selected=self.selected_bones();let mut remove=None;for(i,l)in self.project.extras.production.motion.layers.iter_mut().enumerate(){ui.push_id(i,|ui|{ui.horizontal_wrapped(|ui|{ui.checkbox(&mut l.enabled,"");ui.text_edit_singleline(&mut l.name);ui.checkbox(&mut l.additive,"Additive");ui.add(egui::Slider::new(&mut l.weight,0. ..=1.).text("Weight"));ui.add(egui::DragValue::new(&mut l.offset).range(-240. ..=240.).prefix("Offset "));if ui.small_button("Remove layer").clicked(){remove=Some(i);}});clip_combo(ui,&self.project.rig,"Clip",&mut l.clip);ui.horizontal(|ui|{ui.label(format!("{} masked bones (empty = all)",l.mask.len()));if ui.button("Mask selected bones").clicked(){l.mask=selected.clone();}
 if ui.button("Use all bones").clicked(){l.mask.clear();}});});}
 if let Some(i)=remove{self.project.extras.production.motion.layers.remove(i);}});
-  egui::CollapsingHeader::new("Contacts and seamless IK / FK").default_open(true).show(ui,|ui|{ui.horizontal_wrapped(|ui|{if ui.button("Hold selected limb here (IK)").clicked(){self.key_contact(1.);}
-if ui.button("Release selected contact here").clicked(){self.key_contact(0.);}
-if ui.button("Bake all clips and switch to FK").clicked(){match self.bake_all_motion(){Ok(())=>self.status="All displayed controller motion baked to FK without a pose jump".into(),Err(e)=>self.status=e.to_string()}}});ui.label("Select a lower limb or hand/foot. Contact target and strength keys interpolate across the active clip.");let mut remove=None;for(i,c)in self.project.extras.production.motion.contacts.iter_mut().enumerate(){ui.push_id(("contact",i),|ui|{ui.horizontal(|ui|{ui.checkbox(&mut c.enabled,self.project.rig.bone(c.lower).map_or("Limb",|b|b.name.as_str()));ui.label(c.clip.map_or("All clips".into(),|idx|self.project.rig.clips.get(idx).map_or("Missing".into(),|c|c.name.clone())));if ui.small_button("Remove contact").clicked(){remove=Some(i);}});let mut drop=None;for(j,k)in c.keys.iter_mut().enumerate(){ui.horizontal_wrapped(|ui|{ui.label(format!("Frame {:.2}",k.frame));ui.add(egui::DragValue::new(&mut k.target.x).prefix("X ").speed(0.1));ui.add(egui::DragValue::new(&mut k.target.y).prefix("Y ").speed(0.1));ui.add(egui::Slider::new(&mut k.weight,0. ..=1.).text("Strength"));if ui.small_button("Flip").clicked(){k.bend = -k.bend;}
-if ui.small_button("Delete contact key").clicked(){drop=Some(j);}});}
-if let Some(j)=drop{c.keys.remove(j);}});}
-if let Some(i)=remove{self.project.extras.production.motion.contacts.remove(i);}});
+        egui::CollapsingHeader::new("Contacts and seamless IK / FK")
+            .default_open(true)
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    if ui.button("Hold selected limb here (IK)").clicked() {
+                        self.key_contact(1.);
+                    }
+                    if ui.button("Release selected contact here").clicked() {
+                        self.key_contact(0.);
+                    }
+                    if ui.button("Bake all clips and switch to FK").clicked() {
+                        match self.bake_all_motion() {
+                            Ok(()) => self.status = "All displayed controller motion baked to FK without a pose jump".into(),
+                            Err(e) => self.status = e.to_string(),
+                        }
+                    }
+                });
+                ui.label("Select a lower limb or hand/foot. Contact target and strength keys interpolate across the active clip.");
+                let mut remove = None;
+                for (i, contact) in self.project.extras.production.motion.contacts.iter_mut().enumerate() {
+                    ui.push_id(("contact", i), |ui| {
+                        ui.horizontal(|ui| {
+                            ui.checkbox(&mut contact.enabled, self.project.rig.bone(contact.lower).map_or("Limb", |b| b.name.as_str()));
+                            ui.label(contact.clip.map_or("All clips".into(), |idx| self.project.rig.clips.get(idx).map_or("Missing".into(), |c| c.name.clone())));
+                            if ui.small_button("Remove contact").clicked() {
+                                remove = Some(i);
+                            }
+                        });
+                        let visible_end = contact.clip.and_then(|idx| self.project.rig.clips.get(idx)).map(|clip| clip.length as f32);
+                        let mut drop_key = None;
+                        for (j, key) in contact.keys.iter_mut().enumerate() {
+                            if visible_end.is_some_and(|end| !(1. ..=end).contains(&key.frame)) {
+                                continue;
+                            }
+                            let before = *key;
+                            ui.horizontal_wrapped(|ui| {
+                                ui.label(format!("Frame {:.2}", key.frame));
+                                ui.add(egui::DragValue::new(&mut key.target.x).prefix("X ").speed(0.1));
+                                ui.add(egui::DragValue::new(&mut key.target.y).prefix("Y ").speed(0.1));
+                                ui.add(egui::Slider::new(&mut key.weight, 0. ..=1.).text("Strength"));
+                                if ui.small_button("Flip").clicked() {
+                                    key.bend = -key.bend;
+                                }
+                                if ui.small_button("Delete contact key").clicked() {
+                                    drop_key = Some(j);
+                                }
+                            });
+                            if *key != before {
+                                let index = contact.clip.unwrap_or(self.project.rig.active_clip);
+                                let clip = &mut self.project.rig.clips[index];
+                                let frame = if contact.clip.is_some() {
+                                    key.frame
+                                } else {
+                                    key.frame - clip.source.as_ref().map_or(0, |source| source.origin) as f32
+                                };
+                                if (1. ..=clip.length as f32).contains(&frame)
+                                    && let Err(error) = clip.release_hold(frame)
+                                {
+                                    *key = before;
+                                    self.status = error;
+                                }
+                            }
+                        }
+                        if let Some(j) = drop_key {
+                            contact.keys.remove(j);
+                        }
+                    });
+                }
+                if let Some(i) = remove {
+                    self.project.extras.production.motion.contacts.remove(i);
+                }
+            });
   egui::CollapsingHeader::new("Long-chain IK").default_open(true).show(ui,|ui|{ui.horizontal(|ui|{ui.add(egui::DragValue::new(&mut self.production.chain_length).range(2..=64).prefix("Bones "));if ui.button("Create chain from selected tip").clicked(){self.add_long_chain();}});let mut remove=None;for(i,c)in self.project.extras.production.motion.chains.iter_mut().enumerate(){ui.push_id(("chain",i),|ui|{ui.horizontal_wrapped(|ui|{ui.checkbox(&mut c.enabled,&c.name);ui.add(egui::DragValue::new(&mut c.target.x).prefix("Target X "));ui.add(egui::DragValue::new(&mut c.target.y).prefix("Y "));ui.add(egui::Slider::new(&mut c.weight,0. ..=1.).text("Strength"));ui.add(egui::DragValue::new(&mut c.iterations).range(1..=64).prefix("Iterations "));if ui.small_button("Remove chain").clicked(){remove=Some(i);}});});}
 if let Some(i)=remove{self.project.extras.production.motion.chains.remove(i);}ui.label("In IK mode, drag the final bone's tail to reposition a long-chain target.");});
   egui::CollapsingHeader::new("Secondary motion").default_open(true).show(ui,|ui|{if ui.button("Add springs to selected bones").clicked(){for id in self.selected_bones(){if self.project.rig.bone(id).is_some_and(|b|b.parent.is_some())&&!self.project.extras.production.motion.springs.iter().any(|s|s.bone==id){self.project.extras.production.motion.springs.push(Spring{bone:id,..Default::default()});}}}let mut remove=None;for(i,s)in self.project.extras.production.motion.springs.iter_mut().enumerate(){ui.push_id(("spring",i),|ui|ui.horizontal_wrapped(|ui|{ui.checkbox(&mut s.enabled,self.project.rig.bone(s.bone).map_or("Bone",|b|b.name.as_str()));ui.add(egui::DragValue::new(&mut s.stiffness).range(0.01..=1000.).prefix("Stiffness "));ui.add(egui::DragValue::new(&mut s.damping).range(0. ..=100.).prefix("Damping "));ui.add(egui::DragValue::new(&mut s.gravity).range(-1000. ..=1000.).prefix("Gravity "));ui.add(egui::DragValue::new(&mut s.wind).range(-1000. ..=1000.).prefix("Wind "));if ui.small_button("Remove spring").clicked(){remove=Some(i);}}));}
@@ -251,6 +317,10 @@ if let Some(i)=remove{self.project.extras.production.motion.springs.remove(i);}u
             weight,
             bend,
         };
+        if let Err(error) = self.project.rig.active_clip_mut().release_hold(self.frame) {
+            self.status = error;
+            return;
+        }
         let clips = self.project.rig.active_clip;
         let contacts = &mut self.project.extras.production.motion.contacts;
         if let Some(c) = contacts
@@ -322,7 +392,7 @@ if let Some(i)=remove{self.project.extras.production.motion.springs.remove(i);}u
             .iter()
             .map(|c| {
                 c.length as u64
-                    * c.length as u64
+                    * c.source_frame(c.length as f32).ceil() as u64
                     * self.project.rig.bones.len().max(1) as u64
                     * self.project.extras.production.motion.springs.len().max(1) as u64
             })
@@ -336,6 +406,9 @@ if let Some(i)=remove{self.project.extras.production.motion.springs.remove(i);}u
             let mut source = self.project.clone();
             source.rig.active_clip = index;
             rig.active_clip = index;
+            let source_timing = rig.active_clip().source.clone();
+            rig.active_clip_mut().source = None;
+            rig.active_clip_mut().tracks.clear();
             for frame in 1..=rig.active_clip().length {
                 motion::bake_pose(
                     &mut rig,
@@ -344,6 +417,9 @@ if let Some(i)=remove{self.project.extras.production.motion.springs.remove(i);}u
                 )
                 .map_err(anyhow::Error::msg)?;
             }
+            rig.active_clip_mut()
+                .restore_source_timing(source_timing)
+                .map_err(anyhow::Error::msg)?;
         }
         rig.active_clip = self.project.rig.active_clip;
         self.project.rig = rig;

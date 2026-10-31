@@ -1,6 +1,6 @@
 # ReBoneBase Studio
 
-Run the latest `ReBoneBase-characters.exe`. Open **Studio** in the top bar for the new tools. The original 20 templates, FK/IK editor and existing `.rebone` files remain usable.
+Run the latest versioned ReBoneBase executable. Open **Studio** in the top bar for the new tools. The original 20 templates, FK/IK editor and existing `.rebone` files remain usable.
 
 ## Rig & pins
 
@@ -18,7 +18,9 @@ Click timeline diamonds, Shift-click to extend selection, then drag to move them
 
 The curve editor shows the selected bone's channel, or its group's depth/visibility channel. Add a key, drag points, adjust exact frame/value fields, and choose easing. Yellow handles edit Cubic tangents in value per frame. Editing an incoming tangent automatically enables Cubic easing on the preceding segment.
 
-Duplicate, delete, reorder, trim and split clips. Trim/split preserve their displayed integer-frame poses. Choose Forward, Reverse or PingPong and set individual frame holds in milliseconds. The main Play button and exported timing use these settings. Enable the root-motion path or convert the active clip to an in-place cycle.
+Duplicate, delete, reorder, trim and split clips. Trim/split preserve sparse keys, interpolation, live controllers and spring history, including fractional-frame poses. Keys outside the visible range are retained for evaluation but hidden from the dope sheet and curve handles. Extending a clip holds its prior endpoint. Adding or editing a key later resumes the entire clip's retained motion through that frame; audio and reference time keep advancing during holds. Explicit FK baking is still available in Production. See [clip timing details](RELIABILITY.md#editable-clip-windows).
+
+Choose Forward, Reverse or PingPong and set individual frame holds in milliseconds. The main Play button and exported timing use these settings. Enable the root-motion path or convert the active clip to an in-place cycle.
 
 ## Motion import
 
@@ -44,10 +46,14 @@ Dirty projects get local recovery snapshots every 30 seconds by default; configu
 
 Application data lives in `%APPDATA%\ReBoneBase`, or `REBONEBASE_HOME` when set. This includes preferences, recovery snapshots, backups, retarget profiles and the shared library. Project saves use validated JSON and same-directory temporary files.
 
+Recovery discovery validates the snapshot itself, including snapshots whose sidecar metadata is missing, damaged or interrupted. An unmatched snapshot is offered without an assumed original save location. Warnings identify files that could not be loaded; discovery preserves them on disk. Backups are written before replacing an existing project, and old-backup pruning occurs only after a successful save. Cleanup warnings do not turn a completed save into a failure.
+
+Schema 1 projects upgrade in memory when opened. The original file stays unchanged until you save. Schema 2 files require a compatible build; unsupported fields, features and newer versions stop loading with a reason.
+
 ## Batch export
 
 Save named presets for RGBA sheets, indexed sheets, GIFs, layered Aseprite files or individual PNG frames. Choose all clips or the active clip, naming prefix/suffix and sheet columns. Each batch writes `atlas.json` with clip names, source frames, rectangles and durations. Aseprite output includes named animation tags; the main Export menu can also write all clips in one tagged file.
 
-Existing files require **Replace existing files**. Export renders and validates the complete batch before writing, with bounded memory/render work. Pins and outlines are included. A filesystem failure can leave a partially written batch; individual files are replaced atomically.
+Existing files require **Replace existing files**. Export renders and validates the complete batch before publishing, with bounded memory/render work. Pins and outlines are included. Output is staged and original files are retained until publication succeeds. A failed publication attempts rollback; if that cannot complete, the error identifies the retained recovery directory and the next export attempts recovery first. Unrelated files are preserved. This provides recoverable publication, not simultaneous visibility of every package file. Export requires a filesystem with hard-link support, checked before existing files are moved. See [export recovery](RELIABILITY.md#recoverable-exports).
 
 Ctrl+Z / Ctrl+Shift+Z undo/redo project edits. Library entries, saved preferences/profiles, exported files and recovery snapshots are separate local files.

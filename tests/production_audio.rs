@@ -1,5 +1,26 @@
 use rebonebase::production::audio::*;
 #[test]
+fn trimmed_audio_and_waveform_keep_the_original_source_clock() {
+    use rebonebase::animation::{Clip, Playback};
+    let mut source = Clip {
+        length: 6,
+        looped: false,
+        ..Default::default()
+    };
+    source.durations.insert(1, 200);
+    source.durations.insert(2, 300);
+    let mut clip = source.windowed(3, 5).unwrap();
+    assert_eq!(playback_cursor(&clip, 50.), (550, false));
+    assert_eq!(playback_cursor(&clip, 350.), (800, false));
+    assert_eq!(frame_at_source_time(&clip, 10), 1);
+    assert_eq!(frame_at_source_time(&clip, 650), 2);
+    assert_eq!(frame_at_source_time(&clip, 1000), 3);
+    clip.playback = Playback::Reverse;
+    assert_eq!(playback_cursor(&clip, 50.), (750, true));
+    assert_eq!(playback_cursor(&clip, 350.), (500, true));
+    assert_eq!(frame_at_source_time(&clip, 650), 2);
+}
+#[test]
 fn continuous_audio_cursor_advances_through_holds_and_reverses_without_restarting() {
     let mut clip = rebonebase::animation::Clip {
         length: 2,

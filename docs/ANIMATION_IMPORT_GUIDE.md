@@ -1,6 +1,6 @@
 # Import Unity and Unreal animations
 
-Run **ReBoneBase-motion.exe**. Existing characters, attached joints, canvas growth and motion templates remain available.
+Run the latest versioned ReBoneBase executable. Existing characters, attached joints, canvas growth and motion templates remain available.
 
 ## Choose a destination
 

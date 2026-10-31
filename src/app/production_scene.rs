@@ -133,6 +133,12 @@ impl ReboneApp {
                                     .prefix("Speed "),
                             );
                             if ui.button("Key actor placement here").clicked() {
+                                if let Err(error) =
+                                    self.project.rig.active_clip_mut().release_hold(self.frame)
+                                {
+                                    self.status = error;
+                                    return;
+                                }
                                 a.keys.retain(|k| {
                                     k.clip != self.project.rig.active_clip || k.frame != self.frame
                                 });
@@ -212,13 +218,11 @@ impl ReboneApp {
                 }
                 ui.checkbox(&mut self.production.audition, "Audition while scrubbing");
             });
-            let duration = self
-                .project
-                .rig
-                .active_clip()
-                .total_duration_ms()
-                .max(a.duration_ms() + a.start_ms)
-                .max(1);
+            let clip = self.project.rig.active_clip();
+            let duration = (clip.source_time_ms(clip.length as f32)
+                + u64::from(clip.duration_ms(clip.length)))
+            .max(a.duration_ms() + a.start_ms)
+            .max(1);
             let values = audio::waveform(a, 512);
             let (rect, response) = ui.allocate_exact_size(
                 EVec2::new(ui.available_width(), 110.),
@@ -235,34 +239,24 @@ impl ReboneApp {
                         Pos2::new(x, rect.center().y + min * 45.),
                         Pos2::new(x, rect.center().y + max * 45.),
                     ],
-                    Stroke::new(1., ACCENT),
+                    Stroke::new(1.0_f32, ACCENT),
                 );
             }
             let play_time = if self.playing {
                 audio::playback_cursor(self.project.rig.active_clip(), self.studio.playback_ms).0
             } else {
-                production::timeline_ms(&self.project.rig, self.frame)
+                self.project.rig.active_clip().source_time_ms(self.frame)
             };
             let x = rect.left() + play_time as f32 / duration as f32 * rect.width();
             p.line_segment(
                 [Pos2::new(x, rect.top()), Pos2::new(x, rect.bottom())],
-                Stroke::new(1.5, Color32::YELLOW),
+                Stroke::new(1.5_f32, Color32::YELLOW),
             );
             if (response.clicked() || response.dragged())
                 && let Some(at) = response.interact_pointer_pos()
             {
                 let time = ((at.x - rect.left()) / rect.width() * duration as f32).max(0.) as u64;
-                let max = self
-                    .project
-                    .rig
-                    .active_clip()
-                    .total_duration_ms()
-                    .saturating_sub(1);
-                let (f, _) = self
-                    .project
-                    .rig
-                    .active_clip()
-                    .frame_at_ms(time.min(max) as f64);
+                let f = audio::frame_at_source_time(self.project.rig.active_clip(), time);
                 self.frame = f as f32;
                 self.mode = Mode::Pose;
                 self.playing = false;
@@ -270,7 +264,7 @@ impl ReboneApp {
             }
             ui.horizontal(|ui| {
                 if ui.button("Audition from playhead").clicked() {
-                    let time = production::timeline_ms(&self.project.rig, self.frame);
+                    let time = self.project.rig.active_clip().source_time_ms(self.frame);
                     match self.production.player.play(
                         self.project.extras.production.audio.as_ref().unwrap(),
                         time,
@@ -452,6 +446,12 @@ impl ReboneApp {
                         });
                         ui.horizontal(|ui| {
                             if ui.button("Key region here").clicked() {
+                                if let Err(error) =
+                                    self.project.rig.clips[b.clip].release_hold(self.frame)
+                                {
+                                    self.status = error;
+                                    return;
+                                }
                                 b.keys.retain(|k| k.frame != self.frame);
                                 b.keys.push(BoxKey {
                                     frame: self.frame,
@@ -468,6 +468,12 @@ impl ReboneApp {
                         });
                         let mut drop_key = None;
                         for (j, k) in b.keys.iter_mut().enumerate() {
+                            if !(1. ..=self.project.rig.clips[b.clip].length as f32)
+                                .contains(&k.frame)
+                            {
+                                continue;
+                            }
+                            let before = k.clone();
                             ui.horizontal_wrapped(|ui| {
                                 ui.label(format!("Frame {:.2}", k.frame));
                                 ui.checkbox(&mut k.enabled, "Active");
@@ -488,6 +494,13 @@ impl ReboneApp {
                                     drop_key = Some(j);
                                 }
                             });
+                            if *k != before
+                                && let Err(error) =
+                                    self.project.rig.clips[b.clip].release_hold(k.frame)
+                            {
+                                *k = before;
+                                self.status = error;
+                            }
                         }
                         if let Some(j) = drop_key {
                             b.keys.remove(j);
@@ -545,7 +558,7 @@ impl ReboneApp {
                 let result =
                     production::engine_export::export_package(&p, &folder, engine, overwrite)
                         .map(|files| files.len())
-                        .map_err(|e| e.to_string());
+                        .map_err(|e| format!("{e:#}"));
                 let _ = sender.send(result);
             });
             self.production.export_job = Some(receiver);
@@ -580,6 +593,7 @@ impl ReboneApp {
             PaintMode::Erase => Some([0; 4]),
             PaintMode::Restore => None,
         };
+        let mut pixels = Vec::new();
         for i in 0..=steps {
             let t = i as f32 / steps.max(1) as f32;
             let point = a + (b - a) * t;
@@ -588,20 +602,18 @@ impl ReboneApp {
                     let px = point.x.floor() as i32 + x - radius / 2;
                     let py = point.y.floor() as i32 + y - radius / 2;
                     if px >= 0 && py >= 0 && px < width && py < height {
-                        let _ = production::paint_pixel(
-                            &mut self.project,
-                            clip_index,
-                            self.frame as u32,
-                            px as u32,
-                            py as u32,
-                            color,
-                        );
+                        pixels.push((px as u32, py as u32));
                     }
                 }
             }
         }
-        if let Err(e) = self.project.validate() {
-            self.project = before;
+        if let Err(e) = production::paint_pixels(
+            &mut self.project,
+            clip_index,
+            self.frame as u32,
+            &pixels,
+            color,
+        ) {
             self.status = format!("Pixel edit exceeds document limits: {e}");
             return;
         }

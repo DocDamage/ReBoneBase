@@ -198,7 +198,15 @@ impl ReboneApp {
         if rebonebase::workspace::validate_bindings(&self.studio.preferences.bindings).is_err() {
             self.studio.preferences.bindings = rebonebase::workspace::default_bindings();
         }
-        self.studio.recoveries = store.recoveries().unwrap_or_default();
+        match store.recoveries_report() {
+            Ok(report) => {
+                self.studio.recoveries = report.recoveries;
+                if !report.warnings.is_empty() {
+                    self.status = format!("Recovery: {}", report.warnings.join("; "));
+                }
+            }
+            Err(error) => self.status = format!("Recovery discovery failed: {error:#}"),
+        }
         self.studio.profiles = store.read_records("profiles").unwrap_or_default();
         if !self.studio.recoveries.is_empty() {
             self.studio.open = true;
@@ -330,7 +338,7 @@ impl ReboneApp {
             std::thread::spawn(move || {
                 let result = rebonebase::references::video_frames(&path, &options)
                     .map(JobResult::References)
-                    .map_err(|e| e.to_string());
+                    .map_err(|e| format!("{e:#}"));
                 let _ = sender.send(result);
             });
         } else {
@@ -344,7 +352,7 @@ impl ReboneApp {
             std::thread::spawn(move || {
                 let result = rebonebase::references::load_sequence(&paths, fps)
                     .map(JobResult::References)
-                    .map_err(|e| e.to_string());
+                    .map_err(|e| format!("{e:#}"));
                 let _ = sender.send(result);
             });
         }
@@ -369,7 +377,7 @@ impl ReboneApp {
         std::thread::spawn(move || {
             let result = rebonebase::batch::export(&project, &folder, &preset, overwrite)
                 .map(|r| JobResult::Export(r.files.len()))
-                .map_err(|e| e.to_string());
+                .map_err(|e| format!("{e:#}"));
             let _ = sender.send(result);
         });
         self.studio.job = Some(Job {
@@ -444,8 +452,6 @@ impl ReboneApp {
         }
     }
     pub(super) fn timeline_ms(&self) -> u64 {
-        (1..self.frame as u32)
-            .map(|f| self.project.rig.active_clip().duration_ms(f) as u64)
-            .sum()
+        self.project.rig.active_clip().source_time_ms(self.frame)
     }
 }

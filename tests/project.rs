@@ -72,7 +72,10 @@ fn reference_buffers_share_history_storage_and_save_compactly() {
         &copy.reference.as_ref().unwrap().pixels
     ));
     let json = serde_json::to_vec(&p).unwrap();
-    assert!(json.len() < 2400);
+    let document: serde_json::Value = serde_json::from_slice(&json).unwrap();
+    let pixels = document["reference"]["pixels"].as_str().unwrap();
+    // Check the compact image representation independently of project headers.
+    assert_eq!(pixels.len(), (16usize * 16 * 4).div_ceil(3) * 4);
     let decoded: Project = serde_json::from_slice(&json).unwrap();
     assert_eq!(decoded, p);
     decoded.validate().unwrap();

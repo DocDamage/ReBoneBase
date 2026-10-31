@@ -118,6 +118,7 @@ pub struct ReboneApp {
     gesture: Option<Gesture>,
     pending: Option<Pending>,
     status: String,
+    render_error: Option<String>,
     help: bool,
     easing: Ease,
     sheet_cols: u32,
@@ -144,7 +145,7 @@ impl ReboneApp {
         visuals.window_fill = Color32::from_rgb(30, 37, 44);
         visuals.extreme_bg_color = Color32::from_rgb(17, 22, 28);
         visuals.selection.bg_fill = Color32::from_rgb(41, 87, 76);
-        visuals.selection.stroke = Stroke::new(1., ACCENT);
+        visuals.selection.stroke = Stroke::new(1.0_f32, ACCENT);
         visuals.widgets.active.bg_fill = Color32::from_rgb(43, 91, 77);
         visuals.widgets.hovered.bg_fill = Color32::from_rgb(52, 65, 73);
         ctx.set_visuals(visuals);
@@ -181,6 +182,7 @@ impl ReboneApp {
             gesture: None,
             pending: None,
             status: "Ready · Select a bone to begin".into(),
+            render_error: None,
             help: false,
             easing: Ease::Ease,
             sheet_cols: 8,
@@ -245,6 +247,7 @@ impl ReboneApp {
     }
     fn replace(&mut self, p: Project, path: Option<PathBuf>) {
         self.canvas_snapshot = None;
+        self.render_error = None;
         self.reset_production_document();
         let _ = self.studio.store.clear_recovery(&self.studio.session);
         self.reset_studio_document();
@@ -300,10 +303,15 @@ impl ReboneApp {
             }
             return;
         }
-        match project::load(&path) {
-            Ok(p) => {
-                self.replace(p, Some(path));
-                self.status = "Project opened".into();
+        match project::load_with_report(&path) {
+            Ok(report) => {
+                let migrated = report.migrated_projects;
+                self.replace(report.project, Some(path));
+                self.status = if migrated > 0 {
+                    "Project upgraded in memory to schema 2 · Save writes the new format; the original is unchanged until then".into()
+                } else {
+                    "Project opened".into()
+                };
             }
             Err(e) => self.status = format!("Could not open project: {e}"),
         }
@@ -324,13 +332,17 @@ impl ReboneApp {
                 .save_file()
         });
         let Some(p) = p else { return false };
-        match self.studio.store.save_with_backup(&p, &self.project) {
-            Ok(()) => {
+        match self.studio.store.save_with_backup_report(&p, &self.project) {
+            Ok(report) => {
                 self.path = Some(p);
                 self.saved = self.project.clone();
                 self.studio.recovered = false;
                 let _ = self.studio.store.clear_recovery(&self.studio.session);
-                self.status = "Project saved".into();
+                self.status = if report.warnings.is_empty() {
+                    "Project saved".into()
+                } else {
+                    format!("Project saved · {}", report.warnings.join("; "))
+                };
                 true
             }
             Err(e) => {
@@ -364,7 +376,7 @@ impl ReboneApp {
                     let img = if kind == "sheet" {
                         project::sheet_project(&self.project, self.sheet_cols)?
                     } else {
-                        prepared.render_pose(self.frame, self.pose().as_ref())
+                        prepared.try_render_pose(self.frame, self.pose().as_ref())?
                     };
                     if kind == "indexed" {
                         rebonebase::batch::indexed_png(&img, &self.project.extras.palette)?
@@ -380,7 +392,7 @@ impl ReboneApp {
         })();
         self.status = match result {
             Ok(()) => format!("Exported {}", path.display()),
-            Err(e) => format!("Export failed: {e}"),
+            Err(e) => format!("Export failed: {e:#}"),
         };
     }
     fn import_reference(&mut self) {
@@ -1089,6 +1101,9 @@ impl ReboneApp {
                     }
                 });
                 ui.add_space(6.);
+                if let Some(error) = &self.render_error {
+                    ui.colored_label(Color32::from_rgb(255, 140, 140), format!("Preview unavailable: {error}"));
+                }
                 self.sync_canvas();
                 let (rect, response) =
                     ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
@@ -1189,7 +1204,22 @@ impl ReboneApp {
                 }
                 if self.show_skin {
                     if self.skin_tex.is_none() {
-                        let img = self.project.render_pose(self.frame,self.pose().as_ref());
+                        let img = match self.project.try_render_pose(self.frame,self.pose().as_ref()) {
+                            Ok(image) => {
+                                self.render_error = None;
+                                image
+                            }
+                            Err(error) => {
+                                let message = format!("{error:#}");
+                                self.status = format!("Render failed: {message}");
+                                self.render_error = Some(message);
+                                image::RgbaImage::from_pixel(
+                                    self.project.rig.width.clamp(1, 4096),
+                                    self.project.rig.height.clamp(1, 4096),
+                                    image::Rgba([190, 0, 90, 255]),
+                                )
+                            }
+                        };
                         self.skin_tex = Some(ctx.load_texture(
                             "skin",
                             egui::ColorImage::from_rgba_unmultiplied(
@@ -1219,42 +1249,42 @@ impl ReboneApp {
                         let x = raster_origin.x + x as f32 * self.zoom;
                         p.line_segment(
                             [Pos2::new(x, visible.top()), Pos2::new(x, visible.bottom())],
-                            Stroke::new(0.5, Color32::from_white_alpha(16)),
+                            Stroke::new(0.5_f32, Color32::from_white_alpha(16)),
                         );
                     }
                     for y in y0..=y1 {
                         let y = raster_origin.y + y as f32 * self.zoom;
                         p.line_segment(
                             [Pos2::new(visible.left(), y), Pos2::new(visible.right(), y)],
-                            Stroke::new(0.5, Color32::from_white_alpha(16)),
+                            Stroke::new(0.5_f32, Color32::from_white_alpha(16)),
                         );
                     }
                 }
                 p.rect_stroke(
                     canvas,
                     0.,
-                    Stroke::new(1., Color32::from_rgb(77, 91, 99)),
+                    Stroke::new(1.0_f32, Color32::from_rgb(77, 91, 99)),
                     egui::StrokeKind::Outside,
                 );
                 if self.project.rig.mirror.on && self.mode == Mode::Rest {
                     let x = to_screen(Vec2::new(self.project.rig.mirror.x, 0.)).x;
                     p.line_segment(
                         [Pos2::new(x, canvas.top()), Pos2::new(x, canvas.bottom())],
-                        Stroke::new(1., Color32::from_rgba_unmultiplied(119, 225, 187, 50)),
+                        Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(119, 225, 187, 50)),
                     );
                 }
                 let world = self.project.rig.world(self.pose().as_ref());
-                if self.production.show_boxes{for region in rebonebase::production::collision_shapes(&self.project,self.frame){let color=match region.kind{rebonebase::production::BoxKind::Hit=>Color32::from_rgb(255,105,95),rebonebase::production::BoxKind::Hurt=>Color32::from_rgb(100,175,255),rebonebase::production::BoxKind::Interaction=>Color32::from_rgb(255,215,100)};let mut points:Vec<_>=region.corners.iter().map(|v|to_screen(*v)).collect();points.push(points[0]);p.add(egui::Shape::line(points,Stroke::new(1.5,color)));p.text(to_screen(region.center),egui::Align2::CENTER_CENTER,&region.name,egui::FontId::proportional(10.),color);}}
-                if self.tool==Tool::Box&&let Some(g)=&self.gesture&&let Some(at)=response.interact_pointer_pos(){p.rect_stroke(Rect::from_two_pos(to_screen(g.start),at),0.,Stroke::new(1.5,Color32::YELLOW),egui::StrokeKind::Inside);}
-                if self.tool==Tool::Pixel&&let Some(at)=response.hover_pos(){let point=to_world(at);let start=to_screen(Vec2::new(point.x.floor(),point.y.floor()));p.rect_stroke(Rect::from_min_size(start,EVec2::splat(self.production.brush as f32*self.zoom)),0.,Stroke::new(1.,Color32::WHITE),egui::StrokeKind::Inside);}
+                if self.production.show_boxes{for region in rebonebase::production::collision_shapes(&self.project,self.frame){let color=match region.kind{rebonebase::production::BoxKind::Hit=>Color32::from_rgb(255,105,95),rebonebase::production::BoxKind::Hurt=>Color32::from_rgb(100,175,255),rebonebase::production::BoxKind::Interaction=>Color32::from_rgb(255,215,100)};let mut points:Vec<_>=region.corners.iter().map(|v|to_screen(*v)).collect();points.push(points[0]);p.add(egui::Shape::line(points,Stroke::new(1.5_f32,color)));p.text(to_screen(region.center),egui::Align2::CENTER_CENTER,&region.name,egui::FontId::proportional(10.),color);}}
+                if self.tool==Tool::Box&&let Some(g)=&self.gesture&&let Some(at)=response.interact_pointer_pos(){p.rect_stroke(Rect::from_two_pos(to_screen(g.start),at),0.,Stroke::new(1.5_f32,Color32::YELLOW),egui::StrokeKind::Inside);}
+                if self.tool==Tool::Pixel&&let Some(at)=response.hover_pos(){let point=to_world(at);let start=to_screen(Vec2::new(point.x.floor(),point.y.floor()));p.rect_stroke(Rect::from_min_size(start,EVec2::splat(self.production.brush as f32*self.zoom)),0.,Stroke::new(1.0_f32,Color32::WHITE),egui::StrokeKind::Inside);}
                 self.studio.hover=response.hover_pos().and_then(|pos|self.pick(&world,to_world(pos),false).map(|h|h.0));
-                if let Some(y)=self.project.extras.ground{p.line_segment([to_screen(Vec2::new(0.,y)),to_screen(Vec2::new(self.project.rig.width as f32,y))],Stroke::new(1.,Color32::from_rgb(230,175,90)));}
+                if let Some(y)=self.project.extras.ground{p.line_segment([to_screen(Vec2::new(0.,y)),to_screen(Vec2::new(self.project.rig.width as f32,y))],Stroke::new(1.0_f32,Color32::from_rgb(230,175,90)));}
                 if self.studio.show_path{
                     let mut root=self.selected.or_else(||self.project.rig.bones.iter().find(|b|b.parent.is_none()).map(|b|b.id));
                     while let Some(parent)=root.and_then(|id|self.project.rig.bone(id)).and_then(|b|b.parent){root=Some(parent);}
-                    if let Some(root)=root{let path=rebonebase::editing::root_path(&self.project.rig,self.project.rig.active_clip,root).unwrap_or_default();for points in path.windows(2){p.line_segment([to_screen(points[0]),to_screen(points[1])],Stroke::new(1.5,Color32::from_rgb(255,197,91)));}}
+                    if let Some(root)=root{let path=rebonebase::editing::root_path(&self.project.rig,self.project.rig.active_clip,root).unwrap_or_default();for points in path.windows(2){p.line_segment([to_screen(points[0]),to_screen(points[1])],Stroke::new(1.5_f32,Color32::from_rgb(255,197,91)));}}
                 }
-                if self.mode==Mode::Pose{for pin in self.project.extras.pins.iter().filter(|p|p.enabled){let target=to_screen(pin.target);p.circle_stroke(target,7.,Stroke::new(2.,Color32::from_rgb(255,197,91)));p.line_segment([target-EVec2::new(10.,0.),target+EVec2::new(10.,0.)],Stroke::new(1.,Color32::from_rgb(255,197,91)));}}
+                if self.mode==Mode::Pose{for pin in self.project.extras.pins.iter().filter(|p|p.enabled){let target=to_screen(pin.target);p.circle_stroke(target,7.,Stroke::new(2.0_f32,Color32::from_rgb(255,197,91)));p.line_segment([target-EVec2::new(10.,0.),target+EVec2::new(10.,0.)],Stroke::new(1.0_f32,Color32::from_rgb(255,197,91)));}}
                 if self.bones {
                     for b in &world {
                         let h = to_screen(b.head);
@@ -1272,10 +1302,10 @@ impl ReboneApp {
                         p.add(egui::Shape::convex_polygon(
                             vec![h, mid + n, t, mid - n],
                             Color32::from_rgba_unmultiplied(col.r(), col.g(), col.b(), 40),
-                            Stroke::new(if selected { 1.8 } else { 1. }, col),
+                            Stroke::new(if selected { 1.8_f32 } else { 1.0_f32 }, col),
                         ));
                         p.circle_filled(h, 3., Color32::from_rgb(22, 30, 35));
-                        p.circle_stroke(h, 3., Stroke::new(1., col));
+                        p.circle_stroke(h, 3., Stroke::new(1.0_f32, col));
                         p.circle_filled(t, if selected { 4. } else { 2.2 }, col);
                         if selected {
                             p.text(
@@ -1288,12 +1318,12 @@ impl ReboneApp {
                         }
                     }
                 }
-                if let Some((a,b))=self.studio.marquee{p.rect_stroke(Rect::from_two_pos(to_screen(a),to_screen(b)),0.,Stroke::new(1.,ACCENT),egui::StrokeKind::Inside);}
+                if let Some((a,b))=self.studio.marquee{p.rect_stroke(Rect::from_two_pos(to_screen(a),to_screen(b)),0.,Stroke::new(1.0_f32,ACCENT),egui::StrokeKind::Inside);}
                 if self.tool == Tool::Bone
                     && let Some(g) = &self.gesture
                     && let Some(pos) = response.interact_pointer_pos()
                 {
-                    p.line_segment([to_screen(g.start), pos], Stroke::new(2., ACCENT));
+                    p.line_segment([to_screen(g.start), pos], Stroke::new(2.0_f32, ACCENT));
                 }
                 p.text(
                     rect.left_bottom() + EVec2::new(16., -13.),
@@ -1447,6 +1477,7 @@ impl ReboneApp {
                 self.gesture = Some(g);
                 return;
             }
+            let motion_frame = candidate.rig.active_clip().evaluation_frame(self.frame);
             if let Some(actor) = self.production.actor.and_then(|id| {
                 candidate
                     .extras
@@ -1461,10 +1492,15 @@ impl ReboneApp {
                         k.offset = k.offset + delta;
                     }
                 } else {
+                    if let Err(error) = candidate.rig.active_clip_mut().release_hold(self.frame) {
+                        self.status = error;
+                        self.gesture = Some(g);
+                        return;
+                    }
                     let mut placement = rebonebase::production::actor_placement(
                         actor,
                         candidate.rig.active_clip,
-                        self.frame,
+                        motion_frame,
                     );
                     if !actor
                         .keys
@@ -1631,35 +1667,54 @@ impl ReboneApp {
                 self.gesture = Some(g);
                 return;
             }
-            if let Some(contact) = self
-                .project
-                .extras
-                .production
-                .motion
-                .contacts
-                .iter_mut()
-                .find(|c| {
-                    c.enabled
-                        && c.lower == id
-                        && c.clip.is_none_or(|i| i == self.project.rig.active_clip)
-                })
-            {
-                let base = contact
-                    .keys
-                    .iter()
-                    .rev()
-                    .find(|k| k.frame <= self.frame)
-                    .copied()
+            let clip = self.project.rig.active_clip;
+            let contacts = &self.project.extras.production.motion.contacts;
+            let contact_index = contacts
+                .iter()
+                .position(|c| c.enabled && c.lower == id && c.clip == Some(clip))
+                .or_else(|| {
+                    contacts
+                        .iter()
+                        .position(|c| c.enabled && c.lower == id && c.clip.is_none())
+                });
+            if let Some(index) = contact_index {
+                let mut candidate = self.project.clone();
+                let global = candidate.extras.production.motion.contacts[index]
+                    .clip
+                    .is_none();
+                let sample_frame = if global {
+                    candidate.rig.active_clip().source_frame(self.frame)
+                } else {
+                    candidate.rig.active_clip().evaluation_frame(self.frame)
+                };
+                if let Err(error) = candidate.rig.active_clip_mut().release_hold(self.frame) {
+                    self.status = error;
+                    self.gesture = Some(g);
+                    return;
+                }
+                let authored_frame = if global {
+                    candidate.rig.active_clip().source_frame(self.frame)
+                } else {
+                    self.frame
+                };
+                let contact = &mut candidate.extras.production.motion.contacts[index];
+                let base = rebonebase::advanced_motion::contact_at(contact, sample_frame)
                     .unwrap_or_default();
-                contact.keys.retain(|k| k.frame != self.frame);
+                contact.keys.retain(|k| k.frame != authored_frame);
                 contact.keys.push(rebonebase::advanced_motion::ContactKey {
-                    frame: self.frame,
+                    frame: authored_frame,
                     target,
                     bend: if shift { -base.bend } else { base.bend },
                     ..base
                 });
                 contact.keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
-                self.changed();
+                match candidate.validate() {
+                    Ok(()) => {
+                        self.project = candidate;
+                        self.changed();
+                    }
+                    Err(error) => self.status = format!("Contact key rejected: {error}"),
+                }
                 self.gesture = Some(g);
                 return;
             }

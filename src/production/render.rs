@@ -1,13 +1,40 @@
 use super::*;
 use crate::{animation::Pose, model::WorldBone};
+use anyhow::Context;
 use image::{Rgba, RgbaImage};
 
+/// Compatibility renderer for callers that cannot display a Result. A failed
+/// render is deliberately conspicuous; exports must use try_render_project.
 pub(crate) fn render_project(
     project: &Project,
     frame: f32,
     pose: Option<&Pose>,
     scene: bool,
 ) -> RgbaImage {
+    try_render_project(project, frame, pose, scene).unwrap_or_else(|_| {
+        let mut image = RgbaImage::new(
+            project.rig.width.clamp(1, 4096),
+            project.rig.height.clamp(1, 4096),
+        );
+        for (x, y, pixel) in image.enumerate_pixels_mut() {
+            *pixel = Rgba(if (x / 8 + y / 8) % 2 == 0 {
+                [230, 0, 110, 255]
+            } else {
+                [40, 0, 20, 255]
+            });
+        }
+        image
+    })
+}
+
+pub(crate) fn try_render_project(
+    project: &Project,
+    frame: f32,
+    pose: Option<&Pose>,
+    scene: bool,
+) -> Result<RgbaImage> {
+    let requested_frame = frame;
+    let frame = project.rig.active_clip().evaluation_frame(frame);
     let p = &project.extras.production;
     let mut rig = project.rig.clone();
     let look = p.active_look.and_then(|i| p.looks.get(i));
@@ -89,9 +116,19 @@ pub(crate) fn render_project(
         match layer {
             Layer::Character(c) => {
                 let (c, time) = c.for_clip(rig.active_clip, timeline_ms(&rig, frame) as f64);
-                if let Ok(image) = c.render(out.width(), out.height(), origin, time) {
-                    composite_image(&mut out, &image, Vec2::default(), 1.);
-                }
+                let image = c
+                    .render(out.width(), out.height(), origin, time)
+                    .with_context(|| {
+                        format!(
+                            "Could not render 3D character {:?} (id {}) in clip {:?} (#{}) at frame {}",
+                            c.name,
+                            c.id,
+                            rig.active_clip().name,
+                            rig.active_clip + 1,
+                            requested_frame
+                        )
+                    })?;
+                composite_image(&mut out, &image, Vec2::default(), 1.);
             }
             Layer::Part(part) => {
                 let mut single = rig.clone();
@@ -101,9 +138,20 @@ pub(crate) fn render_project(
             }
             Layer::Prop(a) => {
                 let state = attachment_state(a, frame, rig.active_clip);
-                if state.visible
-                    && let Some(asset) = p.assets.iter().find(|v| v.id == state.asset)
-                {
+                if state.visible {
+                    let asset =
+                        p.assets
+                            .iter()
+                            .find(|v| v.id == state.asset)
+                            .with_context(|| {
+                                format!(
+                                    "Missing asset {} for prop {:?} in clip {:?} at frame {}",
+                                    state.asset,
+                                    a.name,
+                                    rig.active_clip().name,
+                                    requested_frame
+                                )
+                            })?;
                     let (position, angle) = anchor(&world, state.bone, state.offset, state.angle);
                     draw_sprite(
                         &mut out,
@@ -116,13 +164,20 @@ pub(crate) fn render_project(
                 }
             }
             Layer::Mesh(m) => {
-                if let Some(asset) = p.assets.iter().find(|a| a.id == m.asset) {
-                    let points = deform(m, &rest, &world, frame, rig.active_clip)
-                        .into_iter()
-                        .map(|p| p - origin)
-                        .collect::<Vec<_>>();
-                    draw_mesh(&mut out, &asset.image, m, &points);
-                }
+                let asset = p.assets.iter().find(|a| a.id == m.asset).with_context(|| {
+                    format!(
+                        "Missing asset {} for mesh {} in clip {:?} at frame {}",
+                        m.asset,
+                        m.id,
+                        rig.active_clip().name,
+                        requested_frame
+                    )
+                })?;
+                let points = deform(m, &rest, &world, frame, rig.active_clip)
+                    .into_iter()
+                    .map(|p| p - origin)
+                    .collect::<Vec<_>>();
+                draw_mesh(&mut out, &asset.image, m, &points);
             }
             Layer::Face(f) => {
                 if let Some(k) = f
@@ -131,8 +186,16 @@ pub(crate) fn render_project(
                     .rev()
                     .find(|k| k.frame <= frame)
                     .or_else(|| f.keys.first())
-                    && let Some(asset) = p.assets.iter().find(|a| a.id == k.asset)
                 {
+                    let asset = p.assets.iter().find(|a| a.id == k.asset).with_context(|| {
+                        format!(
+                            "Missing asset {} for face {:?} in clip {:?} at frame {}",
+                            k.asset,
+                            f.name,
+                            rig.active_clip().name,
+                            requested_frame
+                        )
+                    })?;
                     let (position, angle) = anchor(&world, f.bone, f.offset + k.offset, f.angle);
                     draw_sprite(
                         &mut out,
@@ -157,7 +220,17 @@ pub(crate) fn render_project(
                     .max(0.);
                 let (af, _) = actor_clip.frame_at_ms(time);
                 let ap = a.project.pose_at(af as f32);
-                let img = render_project(&a.project, af as f32, Some(&ap), false);
+                let img = try_render_project(&a.project, af as f32, Some(&ap), false)
+                    .with_context(|| {
+                        format!(
+                            "Could not render scene actor {:?} (id {}) in clip {:?} (#{}) at frame {}",
+                            a.name,
+                            a.id,
+                            rig.active_clip().name,
+                            rig.active_clip + 1,
+                            requested_frame
+                        )
+                    })?;
                 composite_image(
                     &mut out,
                     &img,
@@ -178,9 +251,10 @@ pub(crate) fn render_project(
             }
         }
     }
-    out
+    Ok(out)
 }
 pub fn timeline_ms(rig: &Rig, frame: f32) -> u64 {
+    let frame = rig.active_clip().evaluation_frame(frame);
     let whole = frame.floor().max(1.) as u32;
     let elapsed: u64 = (1..whole.min(rig.active_clip().length + 1))
         .map(|f| rig.active_clip().duration_ms(f) as u64)
@@ -557,31 +631,49 @@ pub fn switch_attachment_parent(
     bone: Option<u32>,
     frame: f32,
 ) -> Result<()> {
+    let clip = project.rig.active_clip;
+    let active = project.rig.clips.get(clip).context("Invalid active clip")?;
     ensure!(
         bone.is_none_or(|id| project.rig.bone(id).is_some())
             && frame.is_finite()
-            && (1. ..=project.rig.active_clip().length as f32).contains(&frame),
+            && (1. ..=active.length as f32).contains(&frame),
         "Invalid parent or frame"
     );
-    let pose = project.pose_at(frame);
-    let world = project.rig.world(Some(&pose));
-    let clip = project.rig.active_clip;
-    let length = project.rig.active_clip().length;
-    let a = project
+    let displayed = active.evaluation_frame(frame);
+    let length = active.length;
+    let index = project
         .extras
         .production
         .attachments
-        .iter_mut()
-        .find(|a| a.id == id)
-        .ok_or_else(|| anyhow::anyhow!("Attachment not found"))?;
-    let state = attachment_state(a, frame, clip);
+        .iter()
+        .position(|a| a.id == id)
+        .context("Attachment not found")?;
+    let state = attachment_state(
+        &project.extras.production.attachments[index],
+        displayed,
+        clip,
+    );
+    let pose = project.pose_at(displayed);
+    let world = project.rig.world(Some(&pose));
     let (pos, angle) = anchor(&world, state.bone, state.offset, state.angle);
+
+    let mut candidate = project.clone();
+    candidate.rig.clips[clip]
+        .release_hold(frame)
+        .map_err(anyhow::Error::msg)?;
+    // Releasing a held tail also resumes its parent controller clock. Express
+    // the displayed world transform relative to that newly evaluated parent.
+    let world = candidate.rig.world(Some(&candidate.pose_at(frame)));
     let (offset, relative) = bone
         .and_then(|id| world.iter().find(|w| w.id == id))
         .map_or((pos, angle), |w| {
             ((pos - w.head).rotate(-w.angle), angle - w.angle)
         });
-    let keys = prop_keys_mut(a, clip, length);
+    let keys = prop_keys_mut(
+        &mut candidate.extras.production.attachments[index],
+        clip,
+        length,
+    );
     keys.retain(|k| k.frame != frame);
     keys.push(AttachmentKey {
         frame,
@@ -592,6 +684,8 @@ pub fn switch_attachment_parent(
         visible: state.visible,
     });
     keys.sort_by(|a, b| a.frame.total_cmp(&b.frame));
+    candidate.validate()?;
+    *project = candidate;
     Ok(())
 }
 pub fn paint_pixel(
@@ -602,15 +696,47 @@ pub fn paint_pixel(
     y: u32,
     color: Option<[u8; 4]>,
 ) -> Result<()> {
+    paint_pixels(project, clip, frame, &[(x, y)], color)
+}
+
+/// Apply a complete brush stroke with one clone, clock release and validation.
+/// Invalid coordinates or a failed release leave the whole project unchanged.
+pub fn paint_pixels(
+    project: &mut Project,
+    clip: usize,
+    frame: u32,
+    pixels: &[(u32, u32)],
+    color: Option<[u8; 4]>,
+) -> Result<()> {
     ensure!(
         clip < project.rig.clips.len()
             && frame >= 1
             && frame <= project.rig.clips[clip].length
-            && x < project.rig.width
-            && y < project.rig.height,
+            && pixels
+                .iter()
+                .all(|&(x, y)| x < project.rig.width && y < project.rig.height),
         "Pixel correction is outside the canvas or clip"
     );
-    let all = &mut project.extras.production.corrections;
+    if pixels.is_empty() {
+        return Ok(());
+    }
+    if color.is_none()
+        && !project
+            .extras
+            .production
+            .corrections
+            .iter()
+            .any(|c| c.clip == clip && c.frame == frame)
+    {
+        return Ok(());
+    }
+    let mut candidate = project.clone();
+    if color.is_some() {
+        candidate.rig.clips[clip]
+            .release_hold(frame as f32)
+            .map_err(anyhow::Error::msg)?;
+    }
+    let all = &mut candidate.extras.production.corrections;
     let i = if let Some(i) = all.iter().position(|c| c.clip == clip && c.frame == frame) {
         i
     } else {
@@ -624,15 +750,19 @@ pub fn paint_pixel(
         });
         all.len() - 1
     };
-    let index = y * project.rig.width + x;
-    if let Some(color) = color {
-        all[i].pixels.insert(index, color);
-    } else {
-        all[i].pixels.remove(&index);
+    for &(x, y) in pixels {
+        let index = y * project.rig.width + x;
+        if let Some(color) = color {
+            all[i].pixels.insert(index, color);
+        } else {
+            all[i].pixels.remove(&index);
+        }
     }
     if all[i].pixels.is_empty() {
         all.remove(i);
     }
+    candidate.validate()?;
+    *project = candidate;
     Ok(())
 }
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -646,6 +776,7 @@ pub struct CollisionShape {
     pub corners: [Vec2; 4],
 }
 pub fn collision_shapes(project: &Project, frame: f32) -> Vec<CollisionShape> {
+    let frame = project.rig.active_clip().evaluation_frame(frame);
     let world = project.rig.world(Some(&project.pose_at(frame)));
     project
         .extras

@@ -123,6 +123,7 @@ pub(super) struct ProductionUi {
     pub preview_texture: Option<egui::TextureHandle>,
     pub preview_project: Option<Project>,
     pub preview_frame: f32,
+    pub preview_error: Option<String>,
 }
 impl Default for ProductionUi {
     fn default() -> Self {
@@ -192,6 +193,7 @@ impl Default for ProductionUi {
             preview_texture: None,
             preview_project: None,
             preview_frame: 0.,
+            preview_error: None,
         }
     }
 }
@@ -319,17 +321,28 @@ impl ReboneApp {
         if self.production.preview_project.as_ref() != Some(&self.project)
             || self.production.preview_frame != self.frame
         {
-            let image = self.project.render_at(self.frame);
-            self.production.preview_texture = Some(ui.ctx().load_texture(
-                "production_preview",
-                egui::ColorImage::from_rgba_unmultiplied(
-                    [image.width() as usize, image.height() as usize],
-                    image.as_raw(),
-                ),
-                egui::TextureOptions::NEAREST,
-            ));
+            match self.project.try_render_at(self.frame) {
+                Ok(image) => {
+                    self.production.preview_error = None;
+                    self.production.preview_texture = Some(ui.ctx().load_texture(
+                        "production_preview",
+                        egui::ColorImage::from_rgba_unmultiplied(
+                            [image.width() as usize, image.height() as usize],
+                            image.as_raw(),
+                        ),
+                        egui::TextureOptions::NEAREST,
+                    ));
+                }
+                Err(error) => {
+                    self.production.preview_texture = None;
+                    self.production.preview_error = Some(format!("Preview failed: {error:#}"));
+                }
+            }
             self.production.preview_project = Some(self.project.clone());
             self.production.preview_frame = self.frame;
+        }
+        if let Some(error) = &self.production.preview_error {
+            ui.colored_label(Color32::YELLOW, error);
         }
         let scale = (ui.available_width().min(500.) / self.project.rig.width as f32)
             .min(300. / self.project.rig.height as f32);
@@ -367,7 +380,7 @@ impl ReboneApp {
             )
         } else {
             (
-                production::timeline_ms(&self.project.rig, self.frame),
+                self.project.rig.active_clip().source_time_ms(self.frame),
                 false,
             )
         };

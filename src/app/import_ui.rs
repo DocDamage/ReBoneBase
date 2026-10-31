@@ -303,7 +303,7 @@ fn source_preview(ui: &mut egui::Ui, setup: &MotionSetup, size: EVec2) {
         rect.center() + EVec2::new(p.x - (min.x + max.x) * 0.5, p.y - (min.y + max.y) * 0.5) * scale
     };
     for (a, b) in segments {
-        painter.line_segment([map(a), map(b)], Stroke::new(1.5, ACCENT));
+        painter.line_segment([map(a), map(b)], Stroke::new(1.5_f32, ACCENT));
     }
 }
 

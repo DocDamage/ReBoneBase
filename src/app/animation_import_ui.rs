@@ -199,7 +199,18 @@ impl ReboneApp {
                     }
                     if let Some(preview)=&d.preview {
                         let changed=ui.add(egui::Slider::new(&mut d.frame,1. ..=preview.rig.active_clip().length as f32).text("Preview frame")).changed();
-                        if changed||d.texture.is_none(){let img=preview.render_at(d.frame);d.texture=Some(ctx.load_texture("external-animation-preview",egui::ColorImage::from_rgba_unmultiplied([img.width()as usize,img.height()as usize],img.as_raw()),egui::TextureOptions::NEAREST));}
+                        if changed || (d.texture.is_none() && d.error.is_none()) {
+                            match preview.try_render_at(d.frame) {
+                                Ok(img) => {
+                                    d.error = None;
+                                    d.texture = Some(ctx.load_texture("external-animation-preview",egui::ColorImage::from_rgba_unmultiplied([img.width()as usize,img.height()as usize],img.as_raw()),egui::TextureOptions::NEAREST));
+                                }
+                                Err(error) => {
+                                    d.texture = None;
+                                    d.error = Some(format!("Preview failed: {error:#}"));
+                                }
+                            }
+                        }
                         if let Some(t)=&d.texture {ui.add(egui::Image::new(t).fit_to_exact_size(EVec2::new(220.,220.)));}
                     }
                     ui.separator();ui.label("Clips to import");

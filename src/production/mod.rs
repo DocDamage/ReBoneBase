@@ -14,7 +14,7 @@ pub use clip_edit::{
 };
 pub use render::{
     CollisionShape, actor_placement, collision_pixels, collision_shapes, grid_mesh, mesh_vertices,
-    paint_pixel, switch_attachment_parent, timeline_ms,
+    paint_pixel, paint_pixels, switch_attachment_parent, timeline_ms,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -360,6 +360,12 @@ impl Production {
         let key = |f: f32, i: usize| {
             clip(i) && f.is_finite() && f >= 1. && f <= rig.clips[i].length as f32
         };
+        let source_key = |f: f32, i: usize| {
+            clip(i) && f.is_finite() && {
+                let (first, last) = rig.clips[i].source_bounds();
+                f >= first && f <= last
+            }
+        };
         ensure!(
             self.baked_motion.iter().all(|i| clip(*i)),
             "Invalid baked-motion clip"
@@ -369,10 +375,10 @@ impl Production {
             ensure!(a.clip_keys.len() <= 32, "Too many prop clip timelines");
             for (i, keys) in &a.clip_keys {
                 ensure!(clip(*i) && keys.len() <= 240, "Invalid prop clip timeline");
-                let mut last = 0.;
+                let mut last = rig.clips[*i].source_bounds().0 - 1.;
                 for k in keys {
                     ensure!(
-                        key(k.frame, *i)
+                        source_key(k.frame, *i)
                             && k.frame > last
                             && bone(k.bone)
                             && asset(k.asset)
@@ -440,12 +446,13 @@ impl Production {
                     && a.clip.is_none_or(clip),
                 "Invalid attachment"
             );
-            let mut last = 0.;
+            let (first, end) = a.clip.map_or((1., 240.), |i| rig.clips[i].source_bounds());
+            let mut last = first - 1.;
             for k in &a.keys {
                 ensure!(
                     k.frame.is_finite()
-                        && k.frame >= 1.
-                        && k.frame <= a.clip.map_or(240., |i| rig.clips[i].length as f32)
+                        && k.frame >= first
+                        && k.frame <= end
                         && k.frame > last
                         && bone(k.bone)
                         && asset(k.asset)
@@ -512,10 +519,10 @@ impl Production {
                     "Invalid mesh triangle"
                 );
             }
-            let mut last = 0.;
+            let mut last = rig.clips[m.clip].source_bounds().0 - 1.;
             for k in &m.keys {
                 ensure!(
-                    key(k.frame, m.clip)
+                    source_key(k.frame, m.clip)
                         && k.frame > last
                         && k.offsets.len() == m.vertices.len()
                         && k.offsets.iter().all(|v| point(*v)),
@@ -527,10 +534,10 @@ impl Production {
             ensure!(m.clip_keys.len() <= 32, "Too many mesh clip timelines");
             for (i, keys) in &m.clip_keys {
                 ensure!(clip(*i) && keys.len() <= 240, "Invalid mesh clip timeline");
-                let mut last = 0.;
+                let mut last = rig.clips[*i].source_bounds().0 - 1.;
                 for k in keys {
                     ensure!(
-                        key(k.frame, *i)
+                        source_key(k.frame, *i)
                             && k.frame > last
                             && k.offsets.len() == m.vertices.len()
                             && k.offsets.iter().all(|v| point(*v)),
@@ -580,10 +587,13 @@ impl Production {
                     && f.keys.len() <= 240,
                 "Invalid face track"
             );
-            let mut last = 0.;
+            let mut last = rig.clips[f.clip].source_bounds().0 - 1.;
             for k in &f.keys {
                 ensure!(
-                    key(k.frame, f.clip) && k.frame > last && asset(k.asset) && point(k.offset),
+                    source_key(k.frame, f.clip)
+                        && k.frame > last
+                        && asset(k.asset)
+                        && point(k.offset),
                     "Invalid facial animation key"
                 );
                 last = k.frame;
@@ -610,7 +620,7 @@ impl Production {
             let mut used = HashSet::new();
             for k in &a.keys {
                 ensure!(
-                    key(k.frame, k.clip)
+                    source_key(k.frame, k.clip)
                         && point(k.offset)
                         && k.scale.is_finite()
                         && (0.05..=16.).contains(&k.scale)
@@ -659,10 +669,10 @@ impl Production {
                     && b.keys.len() <= 240,
                 "Invalid collision region"
             );
-            let mut last = 0.;
+            let mut last = rig.clips[b.clip].source_bounds().0 - 1.;
             for k in &b.keys {
                 ensure!(
-                    key(k.frame, b.clip)
+                    source_key(k.frame, b.clip)
                         && k.frame > last
                         && point(k.offset)
                         && point(k.size)

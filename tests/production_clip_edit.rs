@@ -372,7 +372,7 @@ fn delete_and_move_remap_every_reference_and_keep_globally_visible_artwork() {
 }
 
 #[test]
-fn temporal_edits_bake_layers_and_spring_history_without_double_application() {
+fn temporal_edits_keep_live_layers_and_spring_history_without_double_application() {
     let mut p = fixture();
     let bone = p.rig.bones[2].id;
     p.extras.production.motion.contacts.clear();
@@ -389,9 +389,370 @@ fn temporal_edits_bake_layers_and_spring_history_without_double_application() {
     });
     let before = p.clone();
     production::edit_clip(&mut p, ClipEdit::Split { index: 0, at: 4 }).unwrap();
+    assert!(p.extras.production.baked_motion.is_empty());
+    assert_eq!(p.extras.production.motion.layers.len(), 1);
+    assert_eq!(
+        p.extras.production.motion.springs,
+        before.extras.production.motion.springs
+    );
+    assert_eq!(
+        p.rig.clips[1].tracks.len(),
+        before.rig.clips[0].tracks.len()
+    );
     same_frames(&before, 0, 1, &p, 0, 3);
     same_frames(&before, 0, 4, &p, 1, 3);
     p.validate().unwrap();
+}
+
+fn same_fractional_pose(a: &Project, from: f32, b: &Project, to: f32) {
+    let left = a.rig.world(Some(&a.pose_at(from)));
+    let right = b.rig.world(Some(&b.pose_at(to)));
+    for (l, r) in left.iter().zip(&right) {
+        assert!(
+            (l.head - r.head).length() < 0.001 && (l.tail - r.tail).length() < 0.001,
+            "source frame {from}, local frame {to}: {l:?} != {r:?}"
+        );
+    }
+    assert_eq!(
+        a.render_at(from),
+        b.render_at(to),
+        "render differs at {from} -> {to}"
+    );
+}
+
+#[test]
+fn trim_retains_sparse_curves_tangents_and_fractional_contact_activation() {
+    let mut p = fixture();
+    p.rig.clips[0].tracks[1].keys[0].easing = Ease::Cubic;
+    p.rig.clips[0].tracks[1].keys[0].tangent_out = 17.;
+    p.rig.clips[0].tracks[1].keys[1].tangent_in = -8.;
+    // The source contact activates abruptly inside the retained interval.
+    p.extras.production.motion.contacts[0].keys[0].frame = 3.5;
+    let before = p.clone();
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 3,
+            end: 5,
+        },
+    )
+    .unwrap();
+    assert!(p.extras.production.baked_motion.is_empty());
+    for (old, new) in before.rig.clips[0]
+        .tracks
+        .iter()
+        .zip(&p.rig.clips[0].tracks)
+    {
+        assert_eq!(new.keys.len(), old.keys.len());
+        for (a, b) in old.keys.iter().zip(&new.keys) {
+            let mut shifted = a.clone();
+            shifted.frame -= 2.;
+            assert_eq!(&shifted, b);
+        }
+    }
+    assert_eq!(p.extras.production.motion.contacts[0].keys.len(), 2);
+    assert_eq!(
+        production::mesh_keys(&p.extras.production.meshes[0], 0).len(),
+        2
+    );
+    for frame in [1., 1.125, 1.499, 1.5, 1.75, 2., 2.25, 2.75, 3.] {
+        same_fractional_pose(&before, frame + 2., &p, frame);
+    }
+    p.validate().unwrap();
+}
+
+#[test]
+fn a_trim_preserves_original_loop_seams_and_stepped_part_channels() {
+    let mut p = fixture();
+    p.extras.production.motion.contacts.clear();
+    let lower = p.rig.bones[2].id;
+    let part = p.rig.parts[0].id;
+    let rotation = p.rig.clips[0]
+        .tracks
+        .iter_mut()
+        .find(|t| t.bone == lower && t.channel == Channel::Rotation)
+        .unwrap();
+    rotation.keys[0].frame = 2.;
+    rotation.keys[0].value = -165.;
+    rotation.keys[0].tangent_in = 7.;
+    rotation.keys[1].frame = 4.;
+    rotation.keys[1].value = 170.;
+    rotation.keys[1].easing = Ease::Cubic;
+    rotation.keys[1].tangent_out = 14.;
+    p.rig.clips[0]
+        .set_key(part, Channel::Visibility, 2., 1.)
+        .unwrap();
+    p.rig.clips[0]
+        .set_key(part, Channel::Visibility, 4., 0.)
+        .unwrap();
+    let before = p.clone();
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 4,
+            end: 6,
+        },
+    )
+    .unwrap();
+    for frame in [1., 1.125, 1.75, 2., 2.5, 2.875, 3.] {
+        same_fractional_pose(&before, frame + 3., &p, frame);
+    }
+    p.validate().unwrap();
+}
+
+#[test]
+fn trimmed_keys_layers_contacts_and_springs_remain_editable() {
+    let mut p = fixture();
+    let root = p.rig.bones[0].id;
+    let lower = p.rig.bones[2].id;
+    p.rig.clips[1].set_key(root, Channel::X, 1., 12.).unwrap();
+    p.extras.production.motion.layers.push(Layer {
+        clip: 1,
+        weight: 0.25,
+        mask: vec![root],
+        ..Default::default()
+    });
+    p.extras.production.motion.springs.push(Spring {
+        bone: lower,
+        gravity: 60.,
+        wind: 10.,
+        ..Default::default()
+    });
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 3,
+            end: 6,
+        },
+    )
+    .unwrap();
+    let initial = p.complete_pose_at(2.);
+    p.rig.clips[0].set_key(root, Channel::X, 2., 20.).unwrap();
+    let keyed = p.complete_pose_at(2.);
+    assert!((keyed[&root].x - initial[&root].x).abs() > 1.);
+    assert_eq!(p.rig.clips[0].sample(2.)[&root].x, 20.);
+    p.extras.production.motion.layers[0].weight = 0.75;
+    let layered = p.complete_pose_at(2.);
+    assert!((layered[&root].x - keyed[&root].x).abs() > 1.);
+    p.extras.production.motion.contacts[0].enabled = false;
+    let released = p.complete_pose_at(2.);
+    assert_ne!(released, layered);
+    p.extras.production.motion.springs[0].enabled = false;
+    assert_ne!(p.complete_pose_at(2.), released);
+    assert!(p.extras.production.baked_motion.is_empty());
+    p.validate().unwrap();
+}
+
+#[test]
+fn split_replays_live_original_spring_prefix_and_duration_edits() {
+    let mut p = fixture();
+    let lower = p.rig.bones[2].id;
+    p.extras.production.motion.contacts.clear();
+    p.extras.production.motion.springs.push(Spring {
+        bone: lower,
+        gravity: 35.,
+        wind: 11.,
+        ..Default::default()
+    });
+    p.rig.clips[0].tracks[1].keys[0].easing = Ease::Cubic;
+    p.rig.clips[0].tracks[1].keys[0].tangent_out = 15.;
+    p.rig.clips[0].tracks[1].keys[1].tangent_in = -5.;
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 2,
+            end: 6,
+        },
+    )
+    .unwrap();
+    p.rig.clips[0].durations.insert(1, 250);
+    let before = p.clone();
+    production::edit_clip(&mut p, ClipEdit::Split { index: 0, at: 3 }).unwrap();
+    same_frames(&before, 0, 3, &p, 1, 3);
+    for frame in [1., 1.125, 1.75, 2.25, 2.75, 3.] {
+        same_fractional_pose(&before, frame + 2., &p, frame);
+    }
+    assert_eq!(p.rig.active_clip().source_frame(1.), 4.);
+    assert_eq!(p.rig.active_clip().source_duration_ms(2), 250);
+    let initial = p.complete_pose_at(1.);
+    // Source keys before the window still participate in deterministic replay.
+    p.rig
+        .active_clip_mut()
+        .tracks
+        .iter_mut()
+        .find(|t| t.bone == lower && t.channel == Channel::Rotation)
+        .unwrap()
+        .keys[0]
+        .value += 45.;
+    assert_ne!(p.complete_pose_at(1.), initial);
+    p.validate().unwrap();
+}
+
+#[test]
+fn trimming_a_layer_source_preserves_other_clips_and_live_source_editing() {
+    let mut p = fixture();
+    let root = p.rig.bones[0].id;
+    p.extras.production.motion.layers.push(Layer {
+        clip: 0,
+        additive: true,
+        weight: 0.5,
+        mask: vec![root],
+        offset: 0.25,
+        ..Default::default()
+    });
+    let before = p.clone();
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 3,
+            end: 5,
+        },
+    )
+    .unwrap();
+    same_frames(&before, 0, 3, &p, 0, 3);
+    same_frames(&before, 1, 1, &p, 1, 4);
+    p.rig.active_clip = 1;
+    let previous = p.complete_pose_at(3.);
+    p.rig.clips[0].set_key(root, Channel::X, 1., 20.).unwrap();
+    assert_ne!(p.complete_pose_at(3.), previous);
+    p.validate().unwrap();
+}
+
+#[test]
+fn held_extensions_keep_scene_motion_while_audio_clock_advances_through_further_trims() {
+    let mut p = fixture();
+    p.extras.production.motion.springs.push(Spring {
+        bone: p.rig.bones[2].id,
+        wind: 22.,
+        ..Default::default()
+    });
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 2,
+            end: 5,
+        },
+    )
+    .unwrap();
+    let endpoint = p.render_at(4.);
+    let pose = p.complete_pose_at(4.);
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Resize {
+            index: 0,
+            length: 7,
+        },
+    )
+    .unwrap();
+    for frame in [4., 4.5, 5., 6., 7.] {
+        assert_eq!(p.complete_pose_at(frame), pose);
+        assert_eq!(p.render_at(frame), endpoint);
+    }
+    assert!(p.rig.clips[0].source_time_ms(7.) > p.rig.clips[0].source_time_ms(4.));
+    let before = p.clone();
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 5,
+            end: 7,
+        },
+    )
+    .unwrap();
+    same_frames(&before, 0, 5, &p, 0, 3);
+    assert_eq!(
+        p.rig.clips[0].source_time_ms(1.),
+        before.rig.clips[0].source_time_ms(5.)
+    );
+    assert_eq!(
+        p.rig.clips[0].source_time_ms(3.),
+        before.rig.clips[0].source_time_ms(7.)
+    );
+    let root = p.rig.bones[0].id;
+    p.rig.clips[0].set_key(root, Channel::X, 3., 18.).unwrap();
+    assert_eq!(p.rig.clips[0].sample(3.)[&root].x, 18.);
+    assert_eq!(p.rig.clips[0].evaluation_frame(3.), 3.);
+    p.validate().unwrap();
+}
+
+#[test]
+fn editable_windows_roundtrip_undo_redo_and_explicit_bake_without_mutating_source() {
+    use rebonebase::project::{History, load, save};
+    let mut p = fixture();
+    p.extras.production.motion.springs.push(Spring {
+        bone: p.rig.bones[2].id,
+        gravity: 25.,
+        ..Default::default()
+    });
+    let before = p.clone();
+    let mut history = History::default();
+    history.record(&p);
+    production::edit_clip(&mut p, ClipEdit::Split { index: 0, at: 4 }).unwrap();
+    let edited = p.clone();
+    assert!(history.undo(&mut p));
+    assert_eq!(p, before);
+    assert!(history.redo(&mut p));
+    assert_eq!(p, edited);
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let directory =
+        std::env::temp_dir().join(format!("rebone-editable-{}-{nonce}", std::process::id()));
+    std::fs::create_dir(&directory).unwrap();
+    let path = directory.join("editable.rebone");
+    save(&path, &p).unwrap();
+    let loaded = load(&path).unwrap();
+    assert_eq!(loaded, p);
+    same_frames(&before, 0, 4, &loaded, 1, 3);
+    let baked = loaded.baked_rig().unwrap();
+    assert!(baked.active_clip().source.is_none());
+    for frame in 1..=baked.active_clip().length {
+        let a = loaded.rig.world(Some(&loaded.pose_at(frame as f32)));
+        let b = baked.world(Some(&baked.active_clip().sample(frame as f32)));
+        for (a, b) in a.iter().zip(&b) {
+            assert!((a.head - b.head).length() < 0.001 && (a.tail - b.tail).length() < 0.001);
+        }
+    }
+    assert_eq!(loaded, edited);
+    std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn malformed_retained_source_windows_are_rejected() {
+    let mut p = fixture();
+    production::edit_clip(
+        &mut p,
+        ClipEdit::Trim {
+            index: 0,
+            start: 3,
+            end: 5,
+        },
+    )
+    .unwrap();
+    let mut bad = p.clone();
+    bad.rig.clips[0].source.as_mut().unwrap().origin = 6;
+    assert!(bad.validate().is_err());
+    let mut bad = p.clone();
+    bad.rig.clips[0].source.as_mut().unwrap().end = 4;
+    assert!(bad.validate().is_err());
+    let mut bad = p.clone();
+    bad.rig.clips[0]
+        .source
+        .as_mut()
+        .unwrap()
+        .durations
+        .insert(7, 100);
+    assert!(bad.validate().is_err());
+    let mut bad = p;
+    bad.rig.clips[0].source.as_mut().unwrap().time_offset_ms = 1_000_000_000_001;
+    assert!(bad.validate().is_err());
 }
 
 #[test]

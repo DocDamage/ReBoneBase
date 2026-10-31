@@ -107,6 +107,15 @@ impl ReboneApp {
                 }
             }
         });
+        if let Some(source) = &self.project.rig.active_clip().source {
+            ui.label("Trimmed animation keeps its original keys and live controllers. Earlier and later keys are retained.");
+            if source.end < self.project.rig.active_clip().length {
+                ui.label(format!(
+                    "Motion holds after frame {}. Adding a key later resumes the animation through that frame.",
+                    source.end
+                ));
+            }
+        }
         ui.horizontal(|ui| {
             let clip = self.project.rig.active_clip_mut();
             egui::ComboBox::from_label("Playback")
@@ -147,6 +156,7 @@ impl ReboneApp {
         ));
         ui.horizontal(|ui| {
             if ui.button("Select all keys").clicked() {
+                let visible_length = self.project.rig.active_clip().length as f32;
                 self.studio.keys = self
                     .project
                     .rig
@@ -154,11 +164,14 @@ impl ReboneApp {
                     .tracks
                     .iter()
                     .flat_map(|t| {
-                        t.keys.iter().map(|k| KeySelection {
-                            bone: t.bone,
-                            channel: t.channel,
-                            frame: k.frame,
-                        })
+                        t.keys
+                            .iter()
+                            .filter(move |k| (1. ..=visible_length).contains(&k.frame))
+                            .map(|k| KeySelection {
+                                bone: t.bone,
+                                channel: t.channel,
+                                frame: k.frame,
+                            })
                     })
                     .collect();
             }
@@ -316,7 +329,7 @@ impl ReboneApp {
                     }
                     p.line_segment(
                         [Pos2::new(x, rect.top()), Pos2::new(x, rect.bottom())],
-                        Stroke::new(1., Color32::from_rgb(40, 48, 55)),
+                        Stroke::new(1.0_f32, Color32::from_rgb(40, 48, 55)),
                     );
                     p.text(
                         Pos2::new(x + cell * 0.5, rect.top() + 11.),
@@ -340,7 +353,11 @@ impl ReboneApp {
                     );
                     for t in &self.project.rig.active_clip().tracks {
                         if t.bone == b.id {
-                            for key in &t.keys {
+                            for key in t
+                                .keys
+                                .iter()
+                                .filter(|key| (1. ..=length as f32).contains(&key.frame))
+                            {
                                 let x = rect.left() + labelw + (key.frame - 0.5) * cell;
                                 let selected = self.studio.keys.contains(&KeySelection {
                                     bone: b.id,
@@ -390,7 +407,10 @@ impl ReboneApp {
                                 .flat_map(|t| {
                                     t.keys
                                         .iter()
-                                        .filter(|k| (k.frame - frame).abs() * cell < 7.)
+                                        .filter(|k| {
+                                            (1. ..=length as f32).contains(&k.frame)
+                                                && (k.frame - frame).abs() * cell < 7.
+                                        })
                                         .map(|k| KeySelection {
                                             bone: t.bone,
                                             channel: t.channel,
@@ -482,6 +502,7 @@ impl ReboneApp {
     }
     fn curve_editor(&mut self, ui: &mut egui::Ui) {
         ui.label(RichText::new("Animation curves").strong());
+        let visible_length = self.project.rig.active_clip().length as f32;
         let Some(id) = self.selected else {
             ui.label("Select a bone to edit its curves.");
             return;
@@ -520,7 +541,12 @@ impl ReboneApp {
                     .tracks
                     .iter()
                     .filter(|t| t.bone == id && t.channel == self.studio.channel)
-                    .flat_map(|t| t.keys.iter().map(|k| k.value))
+                    .flat_map(|t| {
+                        t.keys
+                            .iter()
+                            .filter(move |k| (1. ..=visible_length).contains(&k.frame))
+                            .map(|k| k.value)
+                    })
                     .collect();
                 if !values.is_empty() {
                     let min = values.iter().copied().fold(f32::INFINITY, f32::min);
@@ -602,7 +628,7 @@ impl ReboneApp {
             let y = screen(1., value).y;
             p.line_segment(
                 [Pos2::new(rect.left(), y), Pos2::new(rect.right(), y)],
-                Stroke::new(1., Color32::from_rgb(36, 45, 53)),
+                Stroke::new(1.0_f32, Color32::from_rgb(36, 45, 53)),
             );
             p.text(
                 Pos2::new(rect.left() + 3., y),
@@ -619,9 +645,13 @@ impl ReboneApp {
                     screen(f, clip.value(track, f))
                 })
                 .collect();
-            p.add(egui::Shape::line(points, Stroke::new(1.5, ACCENT)));
+            p.add(egui::Shape::line(points, Stroke::new(1.5_f32, ACCENT)));
             let mut handles = vec![];
-            for key in &track.keys {
+            for key in track
+                .keys
+                .iter()
+                .filter(|key| (1. ..=visible_length).contains(&key.frame))
+            {
                 let point = screen(key.frame, key.value);
                 p.circle_filled(point, 4., ACCENT);
                 handles.push((
@@ -642,7 +672,7 @@ impl ReboneApp {
                         [(-1, -1., key.tangent_in), (1, 1., key.tangent_out)]
                     {
                         let pos = screen(key.frame + sign * 2., key.value + sign * 2. * tangent);
-                        p.line_segment([point, pos], Stroke::new(1., Color32::YELLOW));
+                        p.line_segment([point, pos], Stroke::new(1.0_f32, Color32::YELLOW));
                         p.circle_filled(pos, 3., Color32::YELLOW);
                         handles.push((
                             pos,
@@ -808,7 +838,12 @@ impl ReboneApp {
 }
 fn replace_key(rig: &mut Rig, old: KeySelection, key: Keyframe) -> Result<(), String> {
     let mut candidate = rig.clone();
-    let looped = candidate.active_clip().looped;
+    candidate.active_clip_mut().release_hold(key.frame)?;
+    let clip = candidate.active_clip();
+    let looped = clip
+        .source
+        .as_ref()
+        .map_or(clip.looped, |source| source.looped);
     let track = candidate
         .active_clip_mut()
         .tracks
@@ -924,6 +959,54 @@ mod interaction_tests {
         let clip = app.project.rig.active_clip();
         assert_eq!(clip.tracks[0].keys[0].easing, Ease::Cubic);
         assert!((clip.value(&clip.tracks[0], 5.) - before).abs() > 1.);
+    }
+    #[test]
+    fn curve_edits_release_held_time_and_use_the_retained_curve_loop() {
+        use rebonebase::production::{ClipEdit, edit_clip};
+        let (mut app, _, id) = app();
+        app.project.rig.active_clip_mut().looped = true;
+        app.project
+            .rig
+            .active_clip_mut()
+            .set_key(id, Channel::Rotation, 6., 80.)
+            .unwrap();
+        for length in [3, 7] {
+            edit_clip(&mut app.project, ClipEdit::Resize { index: 0, length }).unwrap();
+        }
+        app.project.rig.active_clip_mut().looped = false;
+        let mut first = app.project.rig.active_clip().tracks[0].keys[0].clone();
+        first.tangent_in = 20.;
+        replace_key(
+            &mut app.project.rig,
+            KeySelection {
+                bone: id,
+                channel: Channel::Rotation,
+                frame: 1.,
+            },
+            first,
+        )
+        .unwrap();
+        assert_eq!(
+            app.project.rig.active_clip().tracks[0].keys[1].easing,
+            Ease::Cubic
+        );
+        assert_eq!(app.project.rig.active_clip().evaluation_frame(6.), 3.);
+        let mut later = app.project.rig.active_clip().tracks[0].keys[1].clone();
+        later.value = 45.;
+        replace_key(
+            &mut app.project.rig,
+            KeySelection {
+                bone: id,
+                channel: Channel::Rotation,
+                frame: 6.,
+            },
+            later,
+        )
+        .unwrap();
+        assert_eq!(app.project.rig.active_clip().evaluation_frame(6.), 6.);
+        assert_eq!(app.project.rig.active_clip().sample(6.)[&id].rotation, 45.);
+        assert_eq!(app.project.rig.active_clip().tracks[0].keys.len(), 2);
+        app.project.validate().unwrap();
     }
     fn pass(
         app: &mut ReboneApp,

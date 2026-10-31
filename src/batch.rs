@@ -182,14 +182,14 @@ pub fn export(
                 let file = format!("{base}.png");
                 let cols = preset.columns.min(sequence.len() as u32).max(1);
                 for (i, f) in sequence.iter().enumerate() {
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"frame":{"x":i as u32%cols*rig.width,"y":i as u32/cols*rig.height,"w":rig.width,"h":rig.height},"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"frame":{"x":i as u32%cols*rig.width,"y":i as u32/cols*rig.height,"w":rig.width,"h":rig.height},"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
                 }
                 let bytes = if preset.format == ExportFormat::IndexedSheet {
                     indexed_png(&img, &p.extras.palette)?
                 } else {
                     png_bytes(&img)?
                 };
-                planned.push((folder.join(file), bytes));
+                planned.push((PathBuf::from(file), bytes));
             }
             ExportFormat::Gif | ExportFormat::Aseprite => {
                 let extension = if preset.format == ExportFormat::Gif {
@@ -204,16 +204,16 @@ pub fn export(
                     crate::aseprite::encode_project(&p, false)?
                 };
                 for f in &sequence {
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
                 }
-                planned.push((folder.join(file), bytes));
+                planned.push((PathBuf::from(file), bytes));
             }
             ExportFormat::Frames => {
                 for (i, f) in sequence.iter().enumerate() {
-                    let img = p.render_at(*f as f32);
+                    let img = p.try_render_at(*f as f32)?;
                     let file = format!("{base}-{:03}.png", i + 1);
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
-                    planned.push((folder.join(file), png_bytes(&img)?));
+                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    planned.push((PathBuf::from(file), png_bytes(&img)?));
                 }
             }
         }
@@ -224,25 +224,14 @@ pub fn export(
         );
     }
     planned.push((
-        folder.join("atlas.json"),
+        PathBuf::from("atlas.json"),
         serde_json::to_vec_pretty(&serde_json::json!({"app":"ReBoneBase","clips":clips}))?,
     ));
     ensure!(
         planned.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
         "Export files and metadata exceed memory budget"
     );
-    if !overwrite {
-        ensure!(
-            planned.iter().all(|(p, _)| !p.exists()),
-            "Export would replace existing files; enable Replace existing files or choose a new directory"
-        );
-    }
-    std::fs::create_dir_all(folder)?;
-    let mut files = vec![];
-    for (path, bytes) in planned {
-        project::atomic_write(&path, &bytes)?;
-        files.push(path);
-    }
+    let files = crate::export_transaction::publish(folder, planned, overwrite)?;
     Ok(ExportReport { files })
 }
 fn frame_events(project: &Project, frame: u32) -> Vec<&crate::production::EventMarker> {
