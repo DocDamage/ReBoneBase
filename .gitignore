@@ -5,3 +5,5 @@ __pycache__/
 *.py[cod]
 .godot/
 /docs/evidence/native-*/
+
+/native-workspace-shots/

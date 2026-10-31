@@ -1,12 +1,76 @@
 use super::*;
-use rebonebase::workspace::{self, Action, Dock, PanelLayout};
-#[derive(Clone, Copy)]
+use rebonebase::workspace::{self, Action, Dock, PanelLayout, Workspace, WorkspacePreset};
+
+pub(super) struct WorkspaceUi {
+    palette_index: usize,
+    palette_query: String,
+    palette_scroll: bool,
+    pending_layout: bool,
+    hidden_docks: [Option<Dock>; 4],
+}
+impl Default for WorkspaceUi {
+    fn default() -> Self {
+        Self {
+            palette_index: 0,
+            palette_query: String::new(),
+            palette_scroll: true,
+            pending_layout: true,
+            hidden_docks: [None; 4],
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Panel {
     Skeleton,
     Inspector,
     Timeline,
     Production,
 }
+impl Panel {
+    const ALL: [Self; 4] = [
+        Self::Skeleton,
+        Self::Inspector,
+        Self::Timeline,
+        Self::Production,
+    ];
+
+    fn index(self) -> usize {
+        match self {
+            Self::Skeleton => 0,
+            Self::Inspector => 1,
+            Self::Timeline => 2,
+            Self::Production => 3,
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Skeleton => "Skeleton",
+            Self::Inspector => "Inspector",
+            Self::Timeline => "Timeline",
+            Self::Production => "Production tools",
+        }
+    }
+}
+
+mod navigation;
+mod palette;
+#[cfg(test)]
+mod tests;
+
+#[derive(Clone, Copy)]
+enum PaletteCommand {
+    Action(Action),
+    SavedLayout(usize),
+}
+
+struct PaletteEntry {
+    command: PaletteCommand,
+    label: String,
+    shortcut: String,
+}
+
 impl ReboneApp {
     pub(super) fn production_workspace(&mut self, ui: &mut egui::Ui) {
         ui.heading("Docking, saved layouts and keyboard commands");
@@ -35,7 +99,7 @@ impl ReboneApp {
                                 .selectable_value(&mut panel.dock, dock, format!("{dock:?}"))
                                 .clicked()
                             {
-                                self.production.apply_layout = true;
+                                self.workspace_ui.pending_layout = true;
                             }
                         }
                     });
@@ -43,6 +107,7 @@ impl ReboneApp {
         }
         ui.horizontal_wrapped(|ui| {
             if ui.button("Save current layout").clicked() {
+                self.studio.preferences.workspace.production_open = self.production.open;
                 let layout = self.studio.preferences.workspace.clone();
                 if let Some(i) = self
                     .studio
@@ -58,8 +123,10 @@ impl ReboneApp {
                 self.save_preferences();
             }
             if ui.button("Reset panel layout").clicked() {
-                self.studio.preferences.workspace = Default::default();
-                self.production.apply_layout = true;
+                self.apply_workspace_layout(Workspace::default());
+            }
+            if ui.button("Recover hidden and floating panels").clicked() {
+                self.recover_workspace_panels();
             }
         });
         egui::ComboBox::from_label("Saved layout")
@@ -83,8 +150,7 @@ impl ReboneApp {
                 .get(self.production.layout_index)
                 .cloned()
         {
-            self.studio.preferences.workspace = layout;
-            self.production.apply_layout = true;
+            self.apply_workspace_layout(layout);
             self.save_preferences();
         }
         ui.separator();
@@ -101,18 +167,24 @@ impl ReboneApp {
                     );
                 }
             });
-        if previous != self.production.binding_action
-            && let Some(b) = self
+        if previous != self.production.binding_action {
+            if let Some(b) = self
                 .studio
                 .preferences
                 .bindings
                 .iter()
                 .find(|b| b.action == self.production.binding_action)
-        {
-            self.production.binding_key = b.key.clone();
-            self.production.binding_ctrl = b.ctrl;
-            self.production.binding_shift = b.shift;
-            self.production.binding_alt = b.alt;
+            {
+                self.production.binding_key = b.key.clone();
+                self.production.binding_ctrl = b.ctrl;
+                self.production.binding_shift = b.shift;
+                self.production.binding_alt = b.alt;
+            } else {
+                self.production.binding_key.clear();
+                self.production.binding_ctrl = false;
+                self.production.binding_shift = false;
+                self.production.binding_alt = false;
+            }
         }
         ui.horizontal_wrapped(|ui| {
             ui.add(
@@ -162,163 +234,6 @@ impl ReboneApp {
             });
         if ui.button("Open command palette").clicked() {
             self.run_action(Action::CommandPalette);
-        }
-    }
-    pub(super) fn run_action(&mut self, action: Action) {
-        match action {
-            Action::New => self.request(Pending::New),
-            Action::Open => self.choose_open(),
-            Action::Save => {
-                self.save(false);
-            }
-            Action::SaveAs => {
-                self.save(true);
-            }
-            Action::Undo => self.undo(),
-            Action::Redo => self.redo(),
-            Action::Play => self.toggle_play(),
-            Action::Delete => {
-                if self.studio.keys.is_empty() {
-                    self.delete();
-                } else {
-                    self.record();
-                    rebonebase::editing::delete_keys(
-                        self.project.rig.active_clip_mut(),
-                        &self.studio.keys,
-                    );
-                    self.studio.keys.clear();
-                }
-            }
-            Action::Fit => self.fit = true,
-            Action::Bone => {
-                self.mode = Mode::Rest;
-                self.tool = Tool::Bone;
-                self.changed();
-            }
-            Action::Select => self.tool = Tool::Select,
-            Action::MoveRig => self.tool = Tool::MoveRig,
-            Action::IK => {
-                self.mode = Mode::Pose;
-                self.tool = Tool::IK;
-                self.changed();
-            }
-            Action::Radius => {
-                self.mode = Mode::Rest;
-                self.tool = Tool::Radius;
-                self.changed();
-            }
-            Action::NextFrame => {
-                self.frame = (self.frame + 1.).min(self.project.rig.active_clip().length as f32);
-                self.mode = Mode::Pose;
-                self.changed();
-            }
-            Action::PreviousFrame => {
-                self.frame = (self.frame - 1.).max(1.);
-                self.mode = Mode::Pose;
-                self.changed();
-            }
-            Action::KeyPose => self.key_selected(),
-            Action::CopyKeys => self.copy_timeline_keys(),
-            Action::PasteKeys => self.paste_timeline_keys(true),
-            Action::CyclePick => {
-                if !self.studio.pick_ids.is_empty() {
-                    self.studio.pick_cycle =
-                        (self.studio.pick_cycle + 1) % self.studio.pick_ids.len();
-                    self.select_bone(self.studio.pick_ids[self.studio.pick_cycle], false);
-                }
-            }
-            Action::Studio => self.studio.open = !self.studio.open,
-            Action::Production => {
-                if self.studio.preferences.workspace.production.dock == Dock::Hidden {
-                    self.studio.preferences.workspace.production.dock = Dock::Floating;
-                    self.production.open = true;
-                } else {
-                    self.production.open = !self.production.open;
-                }
-            }
-            Action::CommandPalette => {
-                self.production.palette_open = true;
-                self.production.palette_focus = true;
-                self.production.palette_query.clear();
-            }
-            Action::Paint => {
-                self.mode = Mode::Pose;
-                self.tool = Tool::Pixel;
-                self.changed();
-            }
-            Action::Boxes => {
-                self.mode = Mode::Pose;
-                self.tool = Tool::Box;
-                self.changed();
-            }
-            Action::Cancel => {
-                if let Some(g) = self.gesture.take() {
-                    self.project = g.base;
-                    self.changed();
-                }
-                self.playing = false;
-                self.production.player.stop();
-                self.production.palette_open = false;
-                self.studio.key_drag = None;
-                self.studio.curve_drag = None;
-                self.studio.marquee = None;
-            }
-        }
-    }
-    pub(super) fn command_palette(&mut self, ctx: &egui::Context) {
-        if !self.production.palette_open {
-            return;
-        }
-        let mut open = true;
-        let mut dismiss = false;
-        let mut action = None;
-        egui::Window::new("Commands")
-            .open(&mut open)
-            .default_width(470.)
-            .resizable(false)
-            .collapsible(false)
-            .show(ctx, |ui| {
-                let input = ui.add(
-                    egui::TextEdit::singleline(&mut self.production.palette_query)
-                        .hint_text("Search commands…")
-                        .desired_width(f32::INFINITY),
-                );
-                if self.production.palette_focus {
-                    input.request_focus();
-                    self.production.palette_focus = false;
-                }
-                let query = self.production.palette_query.to_lowercase();
-                let commands: Vec<_> = Action::ALL
-                    .into_iter()
-                    .filter(|a| a.label().to_lowercase().contains(&query))
-                    .collect();
-                if ui.input(|i| i.key_pressed(egui::Key::Escape)) {
-                    dismiss = true;
-                }
-                if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                    action = commands.first().copied();
-                }
-                egui::ScrollArea::vertical()
-                    .max_height(360.)
-                    .show(ui, |ui| {
-                        for a in commands {
-                            let key = self
-                                .studio
-                                .preferences
-                                .bindings
-                                .iter()
-                                .find(|b| b.action == a)
-                                .map_or(String::new(), |b| b.chord());
-                            if ui.button(format!("{}    {}", a.label(), key)).clicked() {
-                                action = Some(a);
-                            }
-                        }
-                    });
-            });
-        self.production.palette_open = open && !dismiss;
-        if let Some(a) = action {
-            self.production.palette_open = false;
-            self.run_action(a);
         }
     }
     fn layout(&self, panel: Panel) -> PanelLayout {
@@ -379,6 +294,7 @@ impl ReboneApp {
                     layout.height = rect.height().max(120.);
                 }
                 if !open {
+                    self.workspace_ui.hidden_docks[panel.index()] = Some(Dock::Floating);
                     layout.dock = Dock::Hidden;
                 }
             }

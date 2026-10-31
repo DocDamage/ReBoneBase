@@ -29,9 +29,7 @@ impl ReboneApp {
                         self.production.animation_strength,
                     ) {
                         Ok(_) => {
-                            self.mode = Mode::Pose;
-                            self.frame = 1.;
-                            self.studio.keys.clear();
+                            self.activate_clip(self.project.rig.active_clip);
                             self.production.transition_preview = false;
                             self.status = "Animation template added as an editable clip".into();
                         }
@@ -108,9 +106,7 @@ impl ReboneApp {
                 if ui.button("Generate editable gait clip").clicked() {
                     match motion::generate_walk(&mut self.project.rig, &self.production.gait) {
                         Ok(_) => {
-                            self.mode = Mode::Pose;
-                            self.frame = 1.;
-                            self.studio.keys.clear();
+                            self.activate_clip(self.project.rig.active_clip);
                             self.status = "Gait clip generated with editable joint keys".into();
                         }
                         Err(e) => self.status = e,
@@ -164,9 +160,8 @@ impl ReboneApp {
                             self.production.transition_frames,
                         ) {
                             Ok(_) => {
-                                self.frame = 1.;
+                                self.activate_clip(self.project.rig.active_clip);
                                 self.production.transition_preview = false;
-                                self.mode = Mode::Pose;
                             }
                             Err(e) => self.status = e,
                         }
@@ -434,9 +429,7 @@ if let Some(i)=remove{self.project.extras.production.motion.springs.remove(i);}u
         let index = self.project.rig.active_clip;
         match rebonebase::production::mirror_project_clip(&mut self.project, index) {
             Ok(()) => {
-                self.frame = 1.;
-                self.mode = Mode::Pose;
-                self.studio.keys.clear();
+                self.activate_clip(self.project.rig.active_clip);
             }
             Err(e) => self.status = e,
         }

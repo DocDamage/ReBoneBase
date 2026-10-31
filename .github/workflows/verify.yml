@@ -43,6 +43,22 @@ jobs:
         run: cargo clippy --locked --all-targets -- -D warnings
       - name: Verify Unreal export helper
         run: python -m unittest discover -s tests -p test_unreal_export.py
+      - name: Exercise native workspace on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb xdotool imagemagick libxkbcommon-x11-0 libgl1-mesa-dri libegl1 libglx-mesa0
+          cargo build --locked
+          xvfb-run -a -s "-screen 0 1920x1200x24" python scripts/native_workspace_smoke.py --emit-json
+      - name: Upload native workspace captures
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ReBoneBase-workspace-${{ github.sha }}
+          path: native-workspace-shots/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Build portable Windows package
         if: runner.os == 'Windows'
         shell: pwsh

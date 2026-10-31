@@ -17,7 +17,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'BONEBASE_LICENSE.txt') -Destination $outputPath
     $docsPath = Join-Path $outputPath 'docs'
     New-Item -ItemType Directory -Path $docsPath -Force | Out-Null
-    foreach ($guide in @('STUDIO_GUIDE.md', 'FEATURE_IDEAS.md', 'PRODUCTION_GUIDE.md', 'PRODUCTION_FEATURES.md', 'CHARACTERS_GUIDE.md', 'ANIMATION_IMPORT_GUIDE.md', 'RELIABILITY.md')) {
+    foreach ($guide in @('STUDIO_GUIDE.md', 'FEATURE_IDEAS.md', 'PRODUCTION_GUIDE.md', 'PRODUCTION_FEATURES.md', 'CHARACTERS_GUIDE.md', 'ANIMATION_IMPORT_GUIDE.md', 'RELIABILITY.md', 'WORKSPACE_GUIDE.md')) {
         Copy-Item -LiteralPath (Join-Path $projectRoot "docs\$guide") -Destination $docsPath
     }
     $integrationPath = Join-Path $outputPath 'integrations\unreal'

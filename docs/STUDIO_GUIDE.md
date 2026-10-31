@@ -1,10 +1,10 @@
 # ReBoneBase Studio
 
-Run the latest versioned ReBoneBase executable. Open **Studio** in the top bar for the new tools. The original 20 templates, FK/IK editor and existing `.rebone` files remain usable.
+Run the latest versioned ReBoneBase executable. Use the main [animation workspace](WORKSPACE_GUIDE.md) for common editing, or open **Studio** in the top bar for the full tool set. The original 20 templates, FK/IK editor and existing `.rebone` files remain usable.
 
 ## Rig & pins
 
-Hover a bone to highlight it. Endpoints take priority over bone bodies; a parent's tail takes priority over its child's coincident head. Alt-click or Tab cycles overlapping bones. Shift-click adds/removes a bone; drag empty canvas to box-select. Locked bones can still be selected in the skeleton tree and unlocked in Studio.
+Hover a bone to highlight it. Endpoints take priority over bone bodies; a parent's tail takes priority over its child's coincident head. Alt-click or Tab cycles overlapping bones. Shift-click adds/removes a bone; drag empty canvas to box-select. Locked bones can still be selected in the skeleton tree and unlocked in the Selection inspector or Studio.
 
 Set individual editing locks, length locks, pose rotation limits and a preferred IK bend. Rotate selected joints together. Rest joint translation and detachment are disabled for existing attached limbs; their local attachment offsets stay fixed. Root anchors are excluded from selection transforms. **Move Rig (M)** is the dedicated whole-body tool: drag anywhere to move all roots. In Animate mode it keys root movement; planted pins can keep hands/feet fixed while the body moves.
 
@@ -16,7 +16,7 @@ Existing attached bones retain their parent and attachment point. A newly author
 
 Click timeline diamonds, Shift-click to extend selection, then drag to move them. Ctrl+C copies selected keys; Ctrl+V pastes at the playhead. Delete removes selected keys before deleting a bone. Studio provides select-all, snapping, offset and time-scale controls. Retiming rejects keys outside the clip instead of silently losing them.
 
-The curve editor shows the selected bone's channel, or its group's depth/visibility channel. Add a key, drag points, adjust exact frame/value fields, and choose easing. Yellow handles edit Cubic tangents in value per frame. Editing an incoming tangent automatically enables Cubic easing on the preceding segment.
+The main Timeline **Curves** tab and Studio share the same editor. It shows the selected bone's channel, or its group's depth/visibility channel. Add a key, drag points, adjust exact frame/value fields, and choose easing. Yellow handles edit Cubic tangents in value per frame. Editing an incoming tangent automatically enables Cubic easing on the preceding segment.
 
 Duplicate, delete, reorder, trim and split clips. Trim/split preserve sparse keys, interpolation, live controllers and spring history, including fractional-frame poses. Keys outside the visible range are retained for evaluation but hidden from the dope sheet and curve handles. Extending a clip holds its prior endpoint. Adding or editing a key later resumes the entire clip's retained motion through that frame; audio and reference time keep advancing during holds. Explicit FK baking is still available in Production. See [clip timing details](RELIABILITY.md#editable-clip-windows).
 

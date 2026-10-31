@@ -317,11 +317,7 @@ impl ReboneApp {
         candidate.validate().map_err(|e| e.to_string())?;
         self.history.record(&self.project);
         self.project = candidate;
-        self.mode = Mode::Pose;
-        self.frame = 1.;
-        self.playing = false;
-        self.studio.playback_ms = 0.;
-        self.changed();
+        self.activate_clip(self.project.rig.active_clip);
         self.status = format!(
             "Imported {} animation(s) · {} / {} joints mapped",
             prepared.count, prepared.mapped, prepared.total

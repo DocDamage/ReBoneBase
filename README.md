@@ -14,7 +14,11 @@ cargo run --release
 
 You can pass a `.rebone` project or `.bbrig` rig as the first command-line argument. The executable contains its templates and fonts and can run from any folder.
 
-For a portable Windows package, run `scripts/package.ps1`, then open `dist/ReBoneBase-0.2.0/ReBoneBase-0.2.0.exe`. The package includes guides, samples and an executable SHA-256 checksum. The [Verify ReBoneBase workflow](https://github.com/DocDamage/ReBoneBase/actions/workflows/verify.yml) also builds a Windows package after its checks pass.
+For a portable Windows package, run `scripts/package.ps1`, then open `dist/ReBoneBase-0.3.0/ReBoneBase-0.3.0.exe`. The package includes guides, samples and an executable SHA-256 checksum. The [Verify ReBoneBase workflow](https://github.com/DocDamage/ReBoneBase/actions/workflows/verify.yml) also builds a Windows package after its checks pass.
+
+## Animation workspace in 0.3.0
+
+The main window now has searchable, collapsible bone navigation; a contextual inspector; a dope-sheet/curve Timeline with explicit track filters, zoom and key navigation; and a keyboard-operable command palette. The Workspace menu exposes built-in layouts, saved layouts, panel recovery and direct tool destinations. Frame seeking consistently stops playback and synchronizes the animation clock. The header shows save state and honors custom shortcuts. See the [workspace guide](docs/WORKSPACE_GUIDE.md).
 
 ## Reliability changes in 0.2.0
 
@@ -27,7 +31,7 @@ Trim, split and resize preserve sparse animation keys, easing, live controllers 
 3. In **Animate**, drag bones for FK, use the IK tool on a lower limb, and scrub the dope sheet. Pose edits create keys automatically. Multiple clips, eight easing modes including Cubic tangents, and a pose library are included.
 
 Whole-body translation uses **Move Rig (M)**: select it and drag in the canvas. It moves all skeleton roots together; in Animate mode it keys their movement. Ordinary root grabs stay locked, loose-limb body drags rotate at their joint, and IK only acts on connected limb ends without driving the root. Middle/right dragging moves the camera.
-4. Import a reference image from File. Adjust its position, scale, and opacity in the inspector.
+4. Import a reference image from File. Adjust its position, scale, and opacity in Inspector → Project → Reference image.
 5. Import FBX, BVH, glTF, GLB or text Unity `.anim` skeletal motion from File for a 2D rig, or Production → 3D characters for an existing 3D model. Preview joint mapping and import selected clips; the 3D dialog can drive both targets together. Unreal `.uasset` and binary/Humanoid-only Unity clips require an engine FBX export.
 6. Save `.rebone` projects. Export transparent PNG frames, PNG sprite sheets, GIF animation, or layered Aseprite animation.
 
@@ -69,7 +73,7 @@ python -m unittest discover -s tests -p test_unreal_export.py
 
 The Lua dependency is development-only: tests execute the original trusted source as an oracle for transforms, animation, IK, rasterization, and serialized legacy rigs. It is absent from the application's runtime dependency graph. `cargo run --example extract_templates` regenerates native template data from the supplied source.
 
-Historical animation-import acceptance, before 0.2.0: **270 Rust tests passed**, including two optional real-FFmpeg checks, with **87.79% source line coverage** (examples and test-only source files excluded). Two local Unreal-helper API mock tests also passed; actual Unity/Unreal Editor execution was not performed. Formatting and Clippy with warnings denied passed. These earlier coverage and release details are in `docs/evidence/coverage-motion.json` and `docs/evidence/release-motion.json`; they do not measure the changes in 0.2.0. The earlier packaged Windows app passed native file import, mapping, shared 2D/3D preview, scrubbing and undo checks. The sample in `examples/output/Wave.rebone` has matching PNG, GIF, sprite-sheet and layered Aseprite exports.
+Historical animation-import acceptance, before 0.2.0: **270 Rust tests passed**, including two optional real-FFmpeg checks, with **87.79% source line coverage** (examples and test-only source files excluded). Two local Unreal-helper API mock tests also passed; actual Unity/Unreal Editor execution was not performed. Formatting and Clippy with warnings denied passed. These earlier coverage and release details are in `docs/evidence/coverage-motion.json` and `docs/evidence/release-motion.json`; they do not measure the changes in 0.2.0 or 0.3.0. The earlier packaged Windows app passed native file import, mapping, shared 2D/3D preview, scrubbing and undo checks. The sample in `examples/output/Wave.rebone` has matching PNG, GIF, sprite-sheet and layered Aseprite exports.
 
 Current pull requests run Rust tests, formatting, Clippy and the Unreal helper tests on Linux and Windows with Rust 1.99.1. Additional regression tests exercise editable clip windows, schema migration, interrupted recovery, failed export publication and held-frame authoring. Interactive Windows acceptance and optional FFmpeg checks remain separate from this automated workflow.
 
