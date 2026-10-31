@@ -75,10 +75,7 @@ impl ReboneApp {
         next.validate().map_err(|e| e.to_string())?;
         self.history.record(&self.project);
         self.project = next;
-        self.frame = 1.;
-        self.playing = false;
-        self.mode = Mode::Pose;
-        self.changed();
+        self.activate_clip(self.project.rig.active_clip);
         self.fit = true;
         self.status = "Imported animation clips · choose a timeline clip and press Play".into();
         Ok(())

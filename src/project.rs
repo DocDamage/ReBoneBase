@@ -430,6 +430,12 @@ pub struct History {
     redo: Vec<Project>,
 }
 impl History {
+    pub fn can_undo(&self) -> bool {
+        !self.undo.is_empty()
+    }
+    pub fn can_redo(&self) -> bool {
+        !self.redo.is_empty()
+    }
     pub fn record(&mut self, p: &Project) {
         if self.undo.back() != Some(p) {
             self.undo.push_back(p.clone());

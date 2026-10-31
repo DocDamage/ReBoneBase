@@ -15,6 +15,11 @@ mod animation_import_ui;
 mod canvas_ui;
 mod characters_ui;
 mod import_ui;
+mod editor_panels;
+mod inspector;
+mod inspector_project;
+mod shell;
+mod timeline;
 mod picking;
 mod production_assets;
 mod production_motion;
@@ -129,6 +134,9 @@ pub struct ReboneApp {
     studio: Studio,
     production: production_ui::ProductionUi,
     canvas_snapshot: Option<Project>,
+    timeline: timeline::TimelineUi,
+    workspace_ui: workspaces::WorkspaceUi,
+    panels: editor_panels::EditorPanels,
 }
 impl ReboneApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -193,6 +201,9 @@ impl ReboneApp {
             studio: Default::default(),
             production: Default::default(),
             canvas_snapshot: None,
+            timeline: Default::default(),
+            workspace_ui: Default::default(),
+            panels: Default::default(),
         }
     }
     fn dirty(&self) -> bool {
@@ -409,7 +420,7 @@ impl ReboneApp {
                     .min(self.project.rig.height as f32 / r.height as f32);
                 self.project.reference = Some(r);
                 self.ref_tex = None;
-                self.status = "Reference image added · adjust it in the inspector".into();
+                self.status = "Reference image added · adjust it in Inspector → Project".into();
             }
             Err(e) => self.status = format!("Image import failed: {e}"),
         }
@@ -440,7 +451,10 @@ impl ReboneApp {
             self.selected = self
                 .selected
                 .filter(|id| self.project.rig.bone(*id).is_some());
-            self.frame = self.frame.min(self.project.rig.active_clip().length as f32);
+            let (mode, tool) = (self.mode, self.tool);
+            self.seek_frame(self.frame);
+            self.mode = mode;
+            self.tool = tool;
             self.ref_tex = None;
             self.changed();
         }
@@ -453,7 +467,10 @@ impl ReboneApp {
         self.studio.curve_drag = None;
         if self.history.redo(&mut self.project) {
             self.rebase_canvas_camera(previous_center);
-            self.frame = self.frame.min(self.project.rig.active_clip().length as f32);
+            let (mode, tool) = (self.mode, self.tool);
+            self.seek_frame(self.frame);
+            self.mode = mode;
+            self.tool = tool;
             self.ref_tex = None;
             self.changed();
         }
@@ -500,7 +517,7 @@ impl ReboneApp {
         let editing_text = ctx
             .memory(|m| m.focused())
             .is_some_and(|id| egui::TextEdit::load_state(ctx, id).is_some());
-        if self.pending.is_some() || self.motion_setup.is_some() || editing_text {
+        if self.pending.is_some() || self.motion_setup.is_some() || self.production.palette_open || editing_text {
             return;
         }
         let keys = ctx.input(|i| i.events.clone());
@@ -525,25 +542,6 @@ impl ReboneApp {
         }
     }
 
-    fn toggle_play(&mut self) {
-        self.production.player.stop();
-        self.production.audio_until = None;
-        self.production.audio_error = false;
-        self.playing = !self.playing;
-        self.mode = Mode::Pose;
-        self.last_tick = Instant::now();
-        let clip = self.project.rig.active_clip();
-        if clip.playback == rebonebase::animation::Playback::Reverse && self.frame <= 1. {
-            self.frame = clip.length as f32;
-        }
-        self.studio.playback_ms = clip
-            .frame_sequence()
-            .into_iter()
-            .take_while(|f| *f != self.frame as u32)
-            .map(|f| clip.duration_ms(f) as f64)
-            .sum();
-        self.changed();
-    }
     fn key_selected(&mut self) {
         if let Some(id) = self.selected {
             if self.project.rig.bone(id).is_some_and(|b| b.locked) {
@@ -574,485 +572,6 @@ impl ReboneApp {
             self.status = format!("Pose keyed at frame {}", self.frame as u32);
         }
     }
-    fn top(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::top("header").show(ctx, |ui| {
-            ui.add_space(7.);
-            ui.horizontal(|ui| {
-                ui.label(RichText::new("RE").size(22.).color(ACCENT).strong());
-                ui.label(RichText::new("BONEBASE").size(22.).strong());
-                ui.label(RichText::new("NATIVE STUDIO").size(10.).color(DIM));
-                ui.separator();
-                ui.menu_button("File", |ui| {
-                    if ui.button("New project       Ctrl+N").clicked() {
-                        self.request(Pending::New);
-                        ui.close();
-                    }
-                    if ui.button("Open…                 Ctrl+O").clicked() {
-                        self.choose_open();
-                        ui.close();
-                    }
-                    if ui.button("Save                    Ctrl+S").clicked() {
-                        self.save(false);
-                        ui.close();
-                    }
-                    if ui.button("Save as…").clicked() {
-                        self.save(true);
-                        ui.close();
-                    }
-                    ui.separator();
-                    if ui.button("Import reference image…").clicked() {
-                        self.import_reference();
-                        ui.close();
-                    }
-                    if ui.button("Import animation for 2D rig…").clicked() {
-                        self.import_motion();
-                        ui.close();
-                    }
-                    if ui
-                        .add_enabled(
-                            self.production.character.is_some(),
-                            egui::Button::new("Import animation for 3D character…"),
-                        )
-                        .clicked()
-                    {
-                        self.import_character_animation();
-                        ui.close();
-                    }
-                    if ui.button("Import 3D character…").clicked() {
-                        self.import_character3d();
-                        ui.close();
-                    }
-                });
-                if ui.button("Undo").clicked() {
-                    self.undo();
-                }
-                if ui.button("Redo").clicked() {
-                    self.redo();
-                }
-                if ui.button(RichText::new("Studio").color(ACCENT)).clicked() {
-                    self.studio.open = !self.studio.open;
-                }
-                if ui
-                    .button(RichText::new("Production").color(ACCENT))
-                    .clicked()
-                {
-                    self.run_action(rebonebase::workspace::Action::Production);
-                }
-                if ui.button("Commands").clicked() {
-                    self.run_action(rebonebase::workspace::Action::CommandPalette);
-                }
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.menu_button(RichText::new("Export  ↗").color(ACCENT), |ui| {
-                        if ui.button("Current frame · PNG").clicked() {
-                            self.export("frame");
-                            ui.close();
-                        }
-                        if ui.button("Current frame · indexed PNG").clicked() {
-                            self.export("indexed");
-                            ui.close();
-                        }
-                        if ui.button("Sprite sheet · PNG").clicked() {
-                            self.export("sheet");
-                            ui.close();
-                        }
-                        if ui.button("Animation · GIF").clicked() {
-                            self.export("gif");
-                            ui.close();
-                        }
-                        if ui.button("Layered animation · Aseprite").clicked() {
-                            self.export("aseprite");
-                            ui.close();
-                        }
-                        if ui.button("All clips · Aseprite tags").clicked() {
-                            self.export("aseall");
-                            ui.close();
-                        }
-                        if ui.button("Batch export presets…").clicked() {
-                            self.studio.open = true;
-                            self.studio.tab = studio::Tab::Export;
-                            ui.close();
-                        }
-                        ui.horizontal(|ui| {
-                            ui.label("Sheet columns");
-                            ui.add(egui::DragValue::new(&mut self.sheet_cols).range(1..=32));
-                        });
-                    });
-                    if ui.button("Save project").clicked() {
-                        self.save(false);
-                    }
-                    if ui.button("Help").clicked() {
-                        self.help = true;
-                    }
-                    ui.label(
-                        RichText::new(format!(
-                            "{}{}",
-                            self.project.rig.name,
-                            if self.dirty() { " •" } else { "" }
-                        ))
-                        .color(DIM),
-                    );
-                });
-            });
-            ui.add_space(7.);
-        });
-        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label(RichText::new(&self.status).small().color(DIM));
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.label(
-                        RichText::new(format!(
-                            "{} × {} px   ·   {} bones   ·   {:.0}%",
-                            self.project.rig.width,
-                            self.project.rig.height,
-                            self.project.rig.bones.len(),
-                            self.zoom * 100.
-                        ))
-                        .small()
-                        .color(DIM),
-                    );
-                });
-            });
-        });
-    }
-    fn left(&mut self, ctx: &egui::Context) {
-        self.dock_panel(ctx, workspaces::Panel::Skeleton, Self::left_ui);
-    }
-    fn left_ui(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(10.);
-        ui.label(RichText::new("PROJECT").small().color(ACCENT).strong());
-        ui.add_space(6.);
-        let old_name = self.project.rig.name.clone();
-        if ui
-            .text_edit_singleline(&mut self.project.rig.name)
-            .changed()
-        {
-            let mut old = self.project.clone();
-            old.rig.name = old_name;
-            self.history.record(&old);
-        }
-        ui.add_space(12.);
-        egui::CollapsingHeader::new("Starter rigs · 20 templates")
-            .default_open(false)
-            .show(ui, |ui| {
-                for i in 0..self.templates.len() {
-                    if ui
-                        .selectable_label(false, &self.templates[i].name)
-                        .clicked()
-                    {
-                        self.request(Pending::Template(i));
-                    }
-                }
-            });
-        ui.add_space(8.);
-        ui.separator();
-        ui.add_space(8.);
-        ui.horizontal(|ui| {
-            ui.label(RichText::new("SKELETON").small().color(ACCENT).strong());
-            ui.label(
-                RichText::new(format!("{}", self.project.rig.bones.len()))
-                    .small()
-                    .color(DIM),
-            );
-        });
-        ui.label(
-            RichText::new("Select a bone to edit its properties")
-                .small()
-                .color(DIM),
-        );
-        ui.add_space(8.);
-        egui::ScrollArea::vertical()
-            .id_salt("hierarchy")
-            .max_height((ui.available_height() - 180.).max(100.))
-            .show(ui, |ui| {
-                for b in self.project.rig.bones.clone() {
-                    let mut depth = 0;
-                    let mut p = b.parent;
-                    while let Some(id) = p {
-                        depth += 1;
-                        p = self.project.rig.bone(id).and_then(|b| b.parent);
-                        if depth > 24 {
-                            break;
-                        }
-                    }
-                    ui.horizontal(|ui| {
-                        ui.add_space(depth as f32 * 9.);
-                        ui.label(RichText::new("◇").color(if self.selected == Some(b.id) {
-                            ACCENT
-                        } else {
-                            DIM
-                        }));
-                        if ui
-                            .selectable_label(
-                                self.selected == Some(b.id)
-                                    || self.studio.selection.contains(&b.id),
-                                format!("{}{}", if b.locked { "[L] " } else { "" }, b.name),
-                            )
-                            .clicked()
-                        {
-                            self.select_bone(b.id, ui.input(|i| i.modifiers.shift));
-                        }
-                    });
-                }
-            });
-        ui.separator();
-        if ui.button("+ Draw bones   B").clicked() {
-            self.mode = Mode::Rest;
-            self.tool = Tool::Bone;
-            self.changed();
-        }
-        if ui
-            .add_enabled(
-                self.selected.is_some(),
-                egui::Button::new("Remove selected"),
-            )
-            .clicked()
-        {
-            self.delete();
-        }
-        ui.add_space(10.);
-        ui.label(RichText::new("VIEW").small().color(ACCENT).strong());
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.grid, "Grid");
-            ui.checkbox(&mut self.bones, "Bones");
-        });
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.show_skin, "Skin");
-            if ui.checkbox(&mut self.onion, "Onion skin").changed() {
-                self.changed();
-            }
-        });
-    }
-    fn inspector(&mut self, ctx: &egui::Context) {
-        self.dock_panel(ctx, workspaces::Panel::Inspector, Self::inspector_ui);
-    }
-    fn inspector_ui(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(10.);
-        ui.label(RichText::new("INSPECTOR").small().color(ACCENT).strong());
-        ui.add_space(8.);
-        egui::ScrollArea::vertical().show(ui,|ui| {
-                if let Some(id)=self.selected {
-                    if let Some(b)=self.project.rig.bone(id).cloned() {
-                        let before=self.project.clone();let mut new=b.clone();
-                        ui.label(RichText::new("Bone properties").size(18.).strong());ui.add_space(6.);
-                        ui.text_edit_singleline(&mut new.name);
-                        ui.label(RichText::new(format!("ID {}   ·   {}",id,if b.connected {"Connected"}else if b.parent.is_some(){"Anchored joint"}else{"Root"})).small().color(DIM));
-                        if b.parent.is_none(){ui.label(RichText::new("Root anchor · use Move Rig (M) to change position").small().color(ACCENT));}
-                        ui.add_space(10.);
-                        ui.add_enabled_ui(!b.locked,|ui|{
-                        if self.mode==Mode::Rest {
-                            ui.add_enabled_ui(!b.length_locked,|ui|row(ui,"Length",&mut new.length,1. ..=512.));
-                            row(ui,"Angle",&mut new.angle,-360. ..=360.);
-                            row(ui,"Head radius",&mut new.radius_head,0. ..=64.);
-                            row(ui,"Tail radius",&mut new.radius_tail,0. ..=64.);
-                            if !new.connected {ui.add_enabled_ui(false,|ui|{row(ui,"Head X",&mut new.x,-4096. ..=4096.);row(ui,"Head Y",&mut new.y,-4096. ..=4096.);});}
-                            egui::ComboBox::from_label("Group").selected_text(self.project.rig.parts.iter().find(|p|p.id==new.part).map_or("None",|p|p.name.as_str())).show_ui(ui,|ui| {
-                                ui.selectable_value(&mut new.part,0,"None");for p in &self.project.rig.parts {ui.selectable_value(&mut new.part,p.id,&p.name);}
-                            });
-                            if new!=b {self.history.record(&before);*self.project.rig.bone_mut(id).unwrap()=new;self.changed();}
-                        } else {
-                            if new.name!=b.name {self.history.record(&before);self.project.rig.bone_mut(id).unwrap().name=new.name.clone();}
-                            let pose=self.project.rig.active_clip().sample(self.frame);let original=pose.get(&id).copied().unwrap_or_default();let mut p=original;
-                            row(ui,"Rotation",&mut p.rotation,b.rotation_min.unwrap_or(-720.)..=b.rotation_max.unwrap_or(720.));ui.add_enabled_ui(false,|ui|{row(ui,"Offset X",&mut p.x,-4096. ..=4096.);row(ui,"Offset Y",&mut p.y,-4096. ..=4096.);});ui.add_enabled_ui(!b.length_locked,|ui|row(ui,"Scale",&mut p.scale,0.1..=4.));p.rotation=b.clamp_rotation(p.rotation);p.scale=b.clamp_scale(p.scale);
-                            if p!=original {self.history.record(&before);for (ch,v,old) in [(Channel::Rotation,p.rotation,original.rotation),(Channel::X,p.x,original.x),(Channel::Y,p.y,original.y),(Channel::Scale,p.scale,original.scale)] {if v!=old {let _=self.project.rig.active_clip_mut().set_key(id,ch,self.frame,v);}}self.changed();}
-                            if ui.button("Key current pose   K").clicked() {self.key_selected();}
-                            if ui.button("Reset pose at this frame").clicked() {self.record();for (ch,v) in [(Channel::Rotation,0.),(Channel::X,0.),(Channel::Y,0.),(Channel::Scale,1.)] {let _=self.project.rig.active_clip_mut().set_key(id,ch,self.frame,v);}}
-                            ui.label(RichText::new("Pose edits automatically create keyframes.").small().color(DIM));
-                        }
-                        if !b.bulges_left.is_empty() || !b.bulges_right.is_empty() {
-                            ui.separator();ui.label("Skin bulges");
-                            let mut left=b.bulges_left.clone();let mut right=b.bulges_right.clone();
-                            for (label,list) in [("L",&mut left),("R",&mut right)] {for (i,bulge) in list.iter_mut().enumerate() {ui.horizontal(|ui| {ui.label(format!("{label}{}",i+1));ui.add(egui::DragValue::new(&mut bulge.t).range(0.01..=0.99).speed(0.01));ui.add(egui::DragValue::new(&mut bulge.d).range(-64. ..=64.).speed(0.1));});}list.sort_by(|a,b|a.t.total_cmp(&b.t));}
-                            if left!=b.bulges_left || right!=b.bulges_right {self.record();let bone=self.project.rig.bone_mut(id).unwrap();bone.bulges_left=left;bone.bulges_right=right;}
-                            if ui.button("Clear bulges").clicked(){self.record();let bone=self.project.rig.bone_mut(id).unwrap();bone.bulges_left.clear();bone.bulges_right.clear();}
-                        }
-                        });
-                    }
-                } else {ui.label(RichText::new("Shape your next character.").size(18.).strong());ui.label(RichText::new("Pick a bone in the canvas or skeleton tree. Drag its end to change the rig.").color(DIM));}
-                ui.add_space(14.);ui.separator();
-                egui::CollapsingHeader::new("Groups & colors").default_open(true).show(ui,|ui| {
-                    let before=self.project.clone();
-                    for p in &mut self.project.rig.parts {ui.horizontal(|ui|{ui.color_edit_button_srgba_unmultiplied(&mut p.color);ui.add(egui::TextEdit::singleline(&mut p.name).desired_width(90.));ui.add(egui::DragValue::new(&mut p.z).prefix("z ").range(-100..=100));});}
-                    if before!=self.project {self.history.record(&before);self.changed();}
-                    if ui.button("+ New group").clicked() && self.project.rig.parts.len()<256 {self.record();let id=self.project.rig.add_part("New group",[119,225,187,255]);if let Some(b)=self.selected.and_then(|id|self.project.rig.bone_mut(id)){b.part=id;}}
-                });
-                ui.separator();egui::CollapsingHeader::new("Canvas & symmetry").show(ui,|ui| {
-                    let before=self.project.clone();ui.checkbox(&mut self.project.extras.auto_canvas,"Grow canvas with character");let(mut width,mut height)=(self.project.rig.width,self.project.rig.height);ui.add_enabled_ui(!self.project.extras.auto_canvas,|ui|{ui.horizontal(|ui|{ui.label("Pixels");ui.add(egui::DragValue::new(&mut width).range(1..=4096));ui.label("×");ui.add(egui::DragValue::new(&mut height).range(1..=4096));});});if (width,height)!=(self.project.rig.width,self.project.rig.height){let origin=self.project.extras.canvas_origin;if let Err(e)=rebonebase::canvas::set_bounds(&mut self.project,origin,width,height){self.status=e.to_string();}}
-                    ui.checkbox(&mut self.project.rig.mirror.on,"Mirror rest-pose gestures");row(ui,"Mirror X",&mut self.project.rig.mirror.x,-4096. ..=4096.);
-                    if before!=self.project {self.history.record(&before);self.changed();}
-                    if ui.button("Fit canvas    F").clicked(){self.fit=true;}
-                });
-                ui.separator();egui::CollapsingHeader::new("Pose library").show(ui,|ui| {
-                    if ui.button("+ Capture current frame").clicked() {self.record();let name=format!("Pose {}",self.project.poses.len()+1);match self.project.capture_pose(name,self.frame) {Ok(())=>self.status="Pose captured".into(),Err(e)=>self.status=e.to_string()}}
-                    for i in 0..self.project.poses.len() {
-                        let old=self.project.clone();ui.text_edit_singleline(&mut self.project.poses[i].name);if old!=self.project{self.history.record(&old);}
-                        ui.horizontal(|ui| {
-                            for (label,mirror) in [("Apply",false),("Mirror",true)] {if ui.small_button(label).clicked() {self.record();self.mode=Mode::Pose;match self.project.apply_pose(i,self.frame,mirror){Ok(())=>self.status="Saved pose applied".into(),Err(e)=>self.status=e.to_string()}}}
-                        });
-                    }
-                    if !self.project.poses.is_empty() && ui.button("Remove last pose").clicked(){self.record();self.project.poses.pop();}
-                });
-                ui.separator();egui::CollapsingHeader::new("Reference image").show(ui,|ui| {
-                    if ui.button("Import image…").clicked() {self.import_reference();}
-                    let before=self.project.clone();
-                    if let Some(r)=&mut self.project.reference {row(ui,"X",&mut r.x,-4096. ..=4096.);row(ui,"Y",&mut r.y,-4096. ..=4096.);row(ui,"Scale",&mut r.scale,0.001..=100.);row(ui,"Opacity",&mut r.opacity,0. ..=1.);if ui.button("Remove reference").clicked(){self.project.reference=None;self.ref_tex=None;}}
-                    if before!=self.project {self.history.record(&before);}
-                });
-            });
-    }
-    fn timeline(&mut self, ctx: &egui::Context) {
-        self.dock_panel(ctx, workspaces::Panel::Timeline, Self::timeline_ui);
-    }
-    fn timeline_ui(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            if ui
-                .button(if self.playing { "Pause" } else { "Play  ▷" })
-                .clicked()
-            {
-                self.toggle_play();
-            }
-            if ui.small_button("|◁").clicked() {
-                self.frame = 1.;
-                self.mode = Mode::Pose;
-                self.changed();
-            }
-            ui.label(
-                RichText::new(format!(
-                    "{:03} / {:03}",
-                    self.frame as u32,
-                    self.project.rig.active_clip().length
-                ))
-                .monospace()
-                .color(ACCENT),
-            );
-            let old = self.project.rig.active_clip;
-            egui::ComboBox::from_id_salt("clip")
-                .selected_text(&self.project.rig.active_clip().name)
-                .show_ui(ui, |ui| {
-                    for (i, c) in self.project.rig.clips.iter().enumerate() {
-                        ui.selectable_value(&mut self.project.rig.active_clip, i, &c.name);
-                    }
-                });
-            if self.project.rig.active_clip != old {
-                self.studio.keys.clear();
-                self.studio.key_drag = None;
-                self.playing = false;
-                let mut before = self.project.clone();
-                before.rig.active_clip = old;
-                self.history.record(&before);
-                self.frame = 1.;
-                self.changed();
-            }
-            if ui.small_button("+ Clip").clicked() && self.project.rig.clips.len() < 32 {
-                self.record();
-                let n = self.project.rig.clips.len() + 1;
-                self.project.rig.clips.push(Clip {
-                    name: format!("Clip {n}"),
-                    ..Default::default()
-                });
-                self.project.rig.active_clip = n - 1;
-                self.frame = 1.;
-            }
-            let before = self.project.clone();
-            let c = self.project.rig.active_clip_mut();
-            ui.add(egui::TextEdit::singleline(&mut c.name).desired_width(100.));
-            ui.add(
-                egui::DragValue::new(&mut c.fps)
-                    .range(1. / 60. ..=240.)
-                    .prefix("FPS "),
-            );
-            let oldlen = c.length;
-            let mut newlen = oldlen;
-            ui.add(
-                egui::DragValue::new(&mut newlen)
-                    .range(1..=240)
-                    .prefix("Frames "),
-            );
-            ui.checkbox(&mut c.looped, "Loop");
-            if newlen != oldlen {
-                let index = self.project.rig.active_clip;
-                match rebonebase::production::edit_clip(
-                    &mut self.project,
-                    rebonebase::production::ClipEdit::Resize {
-                        index,
-                        length: newlen,
-                    },
-                ) {
-                    Ok(()) => {
-                        self.frame = self.frame.min(newlen as f32);
-                        self.studio.keys.clear();
-                    }
-                    Err(e) => self.status = e,
-                }
-            }
-            if before != self.project {
-                self.history.record(&before);
-                self.changed();
-            }
-        });
-        ui.horizontal_wrapped(|ui| {
-            ui.label(RichText::new("DOPE SHEET").small().color(DIM));
-            if ui.button("Animation templates…").clicked() {
-                self.production.open = true;
-                self.production.tab = production_ui::Tab::Motion;
-                if self.studio.preferences.workspace.production.dock
-                    == rebonebase::workspace::Dock::Hidden
-                {
-                    self.studio.preferences.workspace.production.dock =
-                        rebonebase::workspace::Dock::Floating;
-                }
-            }
-            if ui
-                .add_enabled(self.selected.is_some(), egui::Button::new("+ Key pose"))
-                .clicked()
-            {
-                self.key_selected();
-            }
-            if ui
-                .add_enabled(
-                    self.selected.is_some(),
-                    egui::Button::new("Remove keys here"),
-                )
-                .clicked()
-            {
-                self.record();
-                let id = self.selected.unwrap();
-                let frame = self.frame;
-                for t in &mut self.project.rig.active_clip_mut().tracks {
-                    if t.bone == id {
-                        t.keys.retain(|k| (k.frame - frame).abs() > 0.01);
-                    }
-                }
-            }
-            egui::ComboBox::from_id_salt("easing")
-                .selected_text(format!("{:?}", self.easing))
-                .show_ui(ui, |ui| {
-                    for e in [
-                        Ease::Linear,
-                        Ease::Ease,
-                        Ease::EaseIn,
-                        Ease::EaseOut,
-                        Ease::Back,
-                        Ease::Bounce,
-                        Ease::Step,
-                    ] {
-                        ui.selectable_value(&mut self.easing, e, format!("{e:?}"));
-                    }
-                });
-            if ui.button("Apply easing to keys here").clicked() {
-                self.record();
-                for t in &mut self.project.rig.active_clip_mut().tracks {
-                    if self.selected.is_none_or(|id| id == t.bone) {
-                        for k in &mut t.keys {
-                            if (k.frame - self.frame).abs() < 0.01 {
-                                k.easing = self.easing;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        self.editable_dope(ui);
-    }
     fn canvas(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE.fill(Color32::from_rgb(18, 23, 29)))
@@ -1065,8 +584,8 @@ impl ReboneApp {
                             .selectable_label(self.mode == m, RichText::new(label).strong())
                             .clicked()
                         {
+                            self.seek_frame(self.frame);
                             self.mode = m;
-                            self.playing = false;
                             self.tool = Tool::Select;
                             self.changed();
                         }
@@ -1937,6 +1456,10 @@ impl ReboneApp {
     }
 }
 impl eframe::App for ReboneApp {
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.studio.preferences.workspace.production_open = self.production.open;
+        self.save_preferences();
+    }
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if ctx.input(|i| i.viewport().close_requested()) && !self.allow_close {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
@@ -1972,6 +1495,10 @@ impl eframe::App for ReboneApp {
 }
 impl ReboneApp {
     fn show(&mut self, ctx: &egui::Context) {
+        if !ctx.input(|input| input.pointer.primary_down()) {
+            self.studio.key_drag = None;
+            self.studio.curve_drag = None;
+        }
         if self.studio.last_primary != self.selected {
             self.studio.selection.clear();
             self.studio.selection.extend(self.selected);
@@ -1982,9 +1509,15 @@ impl ReboneApp {
                 .and_then(|b| b.parent);
         }
         self.top(ctx);
+        let bottom_timeline = self.studio.preferences.workspace.timeline.dock == rebonebase::workspace::Dock::Bottom;
+        if bottom_timeline {
+            self.timeline(ctx);
+        }
         self.left(ctx);
         self.inspector(ctx);
-        self.timeline(ctx);
+        if !bottom_timeline {
+            self.timeline(ctx);
+        }
         self.production_dock(ctx);
         if let Err(e) = self.project.validate() {
             if !self.history.undo(&mut self.project) {
@@ -1996,6 +1529,7 @@ impl ReboneApp {
         }
         self.canvas(ctx);
         self.dialogs(ctx);
+        self.studio.preferences.workspace.production_open = self.production.open;
         self.production.apply_layout = false;
     }
 }
@@ -2005,7 +1539,7 @@ fn unit_rect() -> Rect {
 fn row(ui: &mut egui::Ui, label: &str, value: &mut f32, range: std::ops::RangeInclusive<f32>) {
     ui.horizontal(|ui| {
         ui.add_sized([95., 22.], egui::Label::new(label));
-        ui.add(egui::DragValue::new(value).range(range).speed(0.1));
+        ui.add(egui::DragValue::new(value).range(range).clamp_existing_to_range(false).speed(0.1));
     });
 }
 

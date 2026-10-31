@@ -58,9 +58,11 @@ Game packages use the same staged publication, rollback and recovery behavior as
 
 ## Workspace and shortcuts
 
-**Workspace:** choose Left, Right, Bottom, Floating or Hidden for the skeleton, inspector, timeline and Production panels. Resize dividers/windows, then save the layout under a name. Load saved layouts or reset to defaults. Layouts and shortcut preferences are local application state.
+The main **Workspace** menu provides Rigging, Animation and Scene layouts, panel visibility/recovery, saved layouts and direct tool destinations. See the [workspace guide](WORKSPACE_GUIDE.md).
 
-Choose an action, enter a key name such as `M`, `Space`, `ArrowRight` or `F3`, set modifiers and apply. Duplicate chords are rejected. Restore defaults if needed. **Commands / Ctrl+P** opens a searchable command palette; Enter executes and Escape closes it. Shortcuts respect active text input.
+**Production → Workspace:** choose Left, Right, Bottom, Floating or Hidden for the skeleton, inspector, timeline and Production panels. Resize dividers/windows, then save the layout under a name. Load saved layouts or reset to defaults. Layouts and shortcut preferences are local application state.
+
+Choose an action, enter a key name such as `M`, `Space`, `ArrowRight` or `F3`, set modifiers and apply. Duplicate chords are rejected. Restore defaults if needed. **Commands / Ctrl+P** opens a searchable command palette; Up/Down selects a result, Enter executes the highlighted result, and Escape closes it. Shortcuts respect active text input.
 
 ## Files and limits
 

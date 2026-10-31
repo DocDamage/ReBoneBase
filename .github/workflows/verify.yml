@@ -36,13 +36,66 @@ jobs:
           rustup toolchain install 1.99.1 --profile minimal --component rustfmt,clippy
           rustup default 1.99.1
       - name: Check formatting
+        id: fmt
+        continue-on-error: true
         run: cargo fmt --all -- --check
       - name: Run Rust tests
+        id: tests
+        continue-on-error: true
         run: cargo test --locked --all-targets
       - name: Check lints
+        id: lints
+        continue-on-error: true
         run: cargo clippy --locked --all-targets -- -D warnings
       - name: Verify Unreal export helper
+        id: unreal
+        continue-on-error: true
         run: python -m unittest discover -s tests -p test_unreal_export.py
+      - name: Collect formatting recovery output
+        if: always() && runner.os == 'Linux' && steps.fmt.outcome == 'failure'
+        shell: bash
+        run: |
+          cargo fmt --all || true
+          python - <<'PY'
+          import base64, json, pathlib, subprocess
+          paths = subprocess.check_output(['git', 'diff', '--name-only', '--', '*.rs'], text=True).splitlines()
+          for name in paths:
+              data = base64.b64encode(pathlib.Path(name).read_bytes()).decode('ascii')
+              parts = [data[i:i+6000] for i in range(0, len(data), 6000)]
+              for index, chunk in enumerate(parts):
+                  print('REBONE_FORMAT ' + json.dumps({'path': name, 'index': index, 'total': len(parts), 'data': chunk}))
+          PY
+      - name: Enforce all verification results
+        if: always()
+        shell: bash
+        env:
+          FORMAT_RESULT: ${{ steps.fmt.outcome }}
+          TEST_RESULT: ${{ steps.tests.outcome }}
+          LINT_RESULT: ${{ steps.lints.outcome }}
+          UNREAL_RESULT: ${{ steps.unreal.outcome }}
+        run: |
+          python - <<'PY'
+          import os, sys
+          results = {name: os.environ[name] for name in ['FORMAT_RESULT', 'TEST_RESULT', 'LINT_RESULT', 'UNREAL_RESULT']}
+          print(results)
+          sys.exit(0 if all(value == 'success' for value in results.values()) else 1)
+          PY
+      - name: Exercise native workspace on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb xdotool imagemagick
+          cargo build --locked
+          xvfb-run -a -s "-screen 0 1920x1200x24" python scripts/native_workspace_smoke.py --emit-json
+      - name: Upload native workspace captures
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ReBoneBase-workspace-${{ github.sha }}
+          path: native-workspace-shots/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Build portable Windows package
         if: runner.os == 'Windows'
         shell: pwsh

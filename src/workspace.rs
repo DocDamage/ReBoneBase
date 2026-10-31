@@ -37,6 +37,8 @@ pub struct Workspace {
     pub inspector: PanelLayout,
     pub timeline: PanelLayout,
     pub production: PanelLayout,
+    #[serde(default)]
+    pub production_open: bool,
 }
 impl Default for Workspace {
     fn default() -> Self {
@@ -50,7 +52,7 @@ impl Default for Workspace {
             },
             timeline: PanelLayout {
                 dock: Dock::Bottom,
-                height: 190.,
+                height: 280.,
                 ..Default::default()
             },
             production: PanelLayout {
@@ -60,6 +62,7 @@ impl Default for Workspace {
                 x: 240.,
                 y: 70.,
             },
+            production_open: false,
         }
     }
 }
@@ -84,6 +87,50 @@ impl Workspace {
         Ok(())
     }
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkspacePreset {
+    Rigging,
+    Animation,
+    Scene,
+}
+impl WorkspacePreset {
+    pub const ALL: [Self; 3] = [Self::Rigging, Self::Animation, Self::Scene];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Rigging => "Rigging",
+            Self::Animation => "Animation",
+            Self::Scene => "Scene",
+        }
+    }
+
+    pub fn layout(self) -> Workspace {
+        let mut layout = Workspace {
+            name: self.label().into(),
+            ..Workspace::default()
+        };
+        match self {
+            Self::Rigging => {
+                layout.skeleton.width = 250.;
+                layout.inspector.width = 310.;
+                layout.timeline.dock = Dock::Hidden;
+            }
+            Self::Animation => {
+                layout.inspector.width = 290.;
+                layout.timeline.height = 300.;
+            }
+            Self::Scene => {
+                layout.skeleton.dock = Dock::Hidden;
+                layout.inspector.dock = Dock::Hidden;
+                layout.timeline.height = 230.;
+                layout.production.dock = Dock::Left;
+                layout.production.width = 380.;
+                layout.production_open = true;
+            }
+        }
+        layout
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Action {
     New,
@@ -102,6 +149,10 @@ pub enum Action {
     Radius,
     NextFrame,
     PreviousFrame,
+    FirstFrame,
+    LastFrame,
+    NextKey,
+    PreviousKey,
     KeyPose,
     Cancel,
     CopyKeys,
@@ -112,9 +163,35 @@ pub enum Action {
     CommandPalette,
     Paint,
     Boxes,
+    ShowSkeleton,
+    ShowInspector,
+    ShowTimeline,
+    RecoverPanels,
+    ResetLayout,
+    RiggingWorkspace,
+    AnimationWorkspace,
+    SceneWorkspace,
+    RigTools,
+    AnimationTools,
+    AppearanceTools,
+    AssetLibrary,
+    ReferenceTools,
+    RecoveryTools,
+    BatchExport,
+    MotionTools,
+    CharacterTools,
+    PropTools,
+    MeshTools,
+    OutfitTools,
+    FaceTools,
+    SceneTools,
+    AudioTools,
+    PixelBoxTools,
+    GameExport,
+    WorkspaceSettings,
 }
 impl Action {
-    pub const ALL: [Self; 26] = [
+    pub const ALL: [Self; 56] = [
         Self::New,
         Self::Open,
         Self::Save,
@@ -131,6 +208,10 @@ impl Action {
         Self::Radius,
         Self::NextFrame,
         Self::PreviousFrame,
+        Self::FirstFrame,
+        Self::LastFrame,
+        Self::NextKey,
+        Self::PreviousKey,
         Self::KeyPose,
         Self::Cancel,
         Self::CopyKeys,
@@ -141,6 +222,32 @@ impl Action {
         Self::CommandPalette,
         Self::Paint,
         Self::Boxes,
+        Self::ShowSkeleton,
+        Self::ShowInspector,
+        Self::ShowTimeline,
+        Self::RecoverPanels,
+        Self::ResetLayout,
+        Self::RiggingWorkspace,
+        Self::AnimationWorkspace,
+        Self::SceneWorkspace,
+        Self::RigTools,
+        Self::AnimationTools,
+        Self::AppearanceTools,
+        Self::AssetLibrary,
+        Self::ReferenceTools,
+        Self::RecoveryTools,
+        Self::BatchExport,
+        Self::MotionTools,
+        Self::CharacterTools,
+        Self::PropTools,
+        Self::MeshTools,
+        Self::OutfitTools,
+        Self::FaceTools,
+        Self::SceneTools,
+        Self::AudioTools,
+        Self::PixelBoxTools,
+        Self::GameExport,
+        Self::WorkspaceSettings,
     ];
     pub fn label(self) -> &'static str {
         match self {
@@ -160,6 +267,10 @@ impl Action {
             Self::Radius => "Radius tool",
             Self::NextFrame => "Next frame",
             Self::PreviousFrame => "Previous frame",
+            Self::FirstFrame => "First frame",
+            Self::LastFrame => "Last frame",
+            Self::NextKey => "Next keyed frame",
+            Self::PreviousKey => "Previous keyed frame",
             Self::KeyPose => "Key selected bone",
             Self::Cancel => "Cancel gesture / playback",
             Self::CopyKeys => "Copy selected keys",
@@ -170,6 +281,32 @@ impl Action {
             Self::CommandPalette => "Search commands",
             Self::Paint => "Pixel correction brush",
             Self::Boxes => "Draw collision region",
+            Self::ShowSkeleton => "Show skeleton panel",
+            Self::ShowInspector => "Show inspector panel",
+            Self::ShowTimeline => "Show timeline panel",
+            Self::RecoverPanels => "Recover hidden and floating panels",
+            Self::ResetLayout => "Reset panel layout",
+            Self::RiggingWorkspace => "Switch workspace to Rigging",
+            Self::AnimationWorkspace => "Switch workspace to Animation",
+            Self::SceneWorkspace => "Switch workspace to Scene",
+            Self::RigTools => "Studio: Rig and pins",
+            Self::AnimationTools => "Studio: Animation and curves",
+            Self::AppearanceTools => "Studio: Appearance",
+            Self::AssetLibrary => "Studio: Asset library",
+            Self::ReferenceTools => "Studio: References",
+            Self::RecoveryTools => "Studio: Recovery and files",
+            Self::BatchExport => "Studio: Batch export",
+            Self::MotionTools => "Production: Motion and animation templates",
+            Self::CharacterTools => "Production: 3D characters",
+            Self::PropTools => "Production: Props",
+            Self::MeshTools => "Production: Meshes",
+            Self::OutfitTools => "Production: Outfits",
+            Self::FaceTools => "Production: Face",
+            Self::SceneTools => "Production: Scene",
+            Self::AudioTools => "Production: Audio and events",
+            Self::PixelBoxTools => "Production: Pixels and boxes",
+            Self::GameExport => "Production: Game export",
+            Self::WorkspaceSettings => "Workspace settings and shortcuts",
         }
     }
 }
@@ -219,6 +356,10 @@ pub fn default_bindings() -> Vec<Binding> {
         (Radius, "R", false, false),
         (NextFrame, "ArrowRight", false, false),
         (PreviousFrame, "ArrowLeft", false, false),
+        (FirstFrame, "Home", false, false),
+        (LastFrame, "End", false, false),
+        (NextKey, "ArrowRight", false, true),
+        (PreviousKey, "ArrowLeft", false, true),
         (KeyPose, "K", false, false),
         (Cancel, "Escape", false, false),
         (CopyKeys, "C", true, false),
@@ -240,6 +381,35 @@ pub fn default_bindings() -> Vec<Binding> {
     })
     .collect()
 }
+
+/// Add newly introduced transport shortcuts without replacing a user's bindings.
+/// An occupied default chord or an already configured action is left untouched.
+pub fn upgrade_navigation_bindings(bindings: &mut Vec<Binding>) -> bool {
+    let previous_len = bindings.len();
+    for binding in default_bindings().into_iter().filter(|binding| {
+        matches!(
+            binding.action,
+            Action::FirstFrame | Action::LastFrame | Action::NextKey | Action::PreviousKey
+        )
+    }) {
+        if bindings.len() >= 128 {
+            break;
+        }
+        let key = eframe::egui::Key::from_name(&binding.key);
+        let occupied = bindings.iter().any(|existing| {
+            existing.action == binding.action
+                || (eframe::egui::Key::from_name(&existing.key) == key
+                    && existing.ctrl == binding.ctrl
+                    && existing.shift == binding.shift
+                    && existing.alt == binding.alt)
+        });
+        if !occupied {
+            bindings.push(binding);
+        }
+    }
+    bindings.len() != previous_len
+}
+
 pub fn validate_bindings(bindings: &[Binding]) -> Result<()> {
     ensure!(bindings.len() <= 128, "Too many shortcuts");
     let mut chords = std::collections::HashSet::new();

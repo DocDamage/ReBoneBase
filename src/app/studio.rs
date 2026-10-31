@@ -198,6 +198,8 @@ impl ReboneApp {
         if rebonebase::workspace::validate_bindings(&self.studio.preferences.bindings).is_err() {
             self.studio.preferences.bindings = rebonebase::workspace::default_bindings();
         }
+        rebonebase::workspace::upgrade_navigation_bindings(&mut self.studio.preferences.bindings);
+        self.production.open = self.studio.preferences.workspace.production_open;
         match store.recoveries_report() {
             Ok(report) => {
                 self.studio.recoveries = report.recoveries;
@@ -255,6 +257,8 @@ impl ReboneApp {
         }
     }
     pub(super) fn reset_studio_document(&mut self) {
+        self.panels = Default::default();
+        self.timeline = Default::default();
         self.studio.selection.clear();
         self.studio.last_primary = None;
         self.studio.keys.clear();
