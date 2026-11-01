@@ -1,6 +1,7 @@
 //! Embedded, bounded native 3D character data and CPU pixel rendering.
 //! Imported files are normalized into owned Rust arrays; no native importer
 //! pointers or external files are retained in project/history snapshots.
+pub mod cleanup;
 mod gltf;
 mod native;
 pub mod tracks;
@@ -616,6 +617,16 @@ impl Character {
         (c, time_ms * f64::from(b.speed) + b.offset_ms)
     }
     fn matrices(&self, time_ms: f64) -> Result<Vec<Mat4>> {
+        self.model.world(&self.local_pose(time_ms, true)?)
+    }
+    /// Model-space joint matrices for a local pose from [`Self::local_pose`].
+    pub fn world_pose(&self, local: &[Transform3d]) -> Result<Vec<Mat4>> {
+        ensure!(local.len() == self.model.nodes.len(), "Pose size mismatch");
+        self.model.world(local)
+    }
+    /// Local joint transforms at a motion time: imported motion and whole-clip
+    /// offsets, plus the keyed corrections of `sample` when `keyed` is set.
+    pub fn local_pose(&self, time_ms: f64, keyed: bool) -> Result<Vec<Transform3d>> {
         ensure!(time_ms.is_finite(), "Invalid3D animation time");
         let mut local = self
             .model
@@ -647,6 +658,7 @@ impl Character {
         }
         let keyed = self
             .sample
+            .filter(|_| keyed)
             .map_or_else(Vec::new, |(clip, frame)| self.corrections(clip, frame));
         let offsets = self.joints.iter().map(|(i, e)| (*i, tracks::quat(*e)));
         // Imported motion, then the whole-clip offset, then the keyed correction.
@@ -658,7 +670,7 @@ impl Character {
                 .normalize()
                 .to_array();
         }
-        self.model.world(&local)
+        Ok(local)
     }
     fn camera(&self, v: Vec3) -> Vec3 {
         let q = Quat::from_rotation_x(self.pitch.to_radians())

@@ -20,6 +20,7 @@ mod export_ui;
 mod import_ui;
 mod inspector;
 mod inspector_project;
+mod motion_cleanup_ui;
 mod picking;
 mod preview_cache;
 mod production_assets;

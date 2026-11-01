@@ -515,3 +515,40 @@ fn keyed_3d_joint_corrections_edit_in_inspector_and_timeline_with_undo() {
     panel(&mut app, &ctx, vec![]);
     assert_eq!(app.project, keyed);
 }
+#[test]
+fn motion_cleanup_previews_before_applying_as_one_undo_step() {
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src/character3d/fixtures/textured_skin.glb");
+    app.add_character3d(rebonebase::character3d::load(&path).unwrap())
+        .unwrap();
+    let id = app.project.extras.characters3d[0].id;
+    app.project.extras.characters3d[0].clips.insert(
+        0,
+        rebonebase::character3d::Playback3d {
+            animation: Some(0),
+            ..Default::default()
+        },
+    );
+    app.project.rig.active_clip_mut().length = 12;
+    app.production.tab = production_ui::Tab::Characters;
+    app.production.character = Some(id);
+    app.production.character_joint = 1;
+    let before = app.project.clone();
+    click(&mut app, &ctx, "Clean up motion");
+    click(&mut app, &ctx, "Whole clip");
+    assert_eq!(
+        (app.production.cleanup.start, app.production.cleanup.end),
+        (1, 12)
+    );
+    click(&mut app, &ctx, "Preview cleanup");
+    assert!(app.production.cleanup.preview.is_some(), "{}", app.status);
+    assert_eq!(app.project, before, "preview does not change the project");
+    click(&mut app, &ctx, "Apply cleanup");
+    let keys = app.project.extras.characters3d[0].joint_keys(0, 1).len();
+    assert_eq!(keys, 12);
+    assert_eq!(app.project.rig, before.rig, "timing is unchanged");
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project, before);
+}

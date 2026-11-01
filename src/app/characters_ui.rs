@@ -339,6 +339,7 @@ impl ReboneApp {
             self.production.character = None;
             self.production.move_character = false;
         }
+        self.motion_cleanup_ui(ui);
         self.art_preview(ui);
     }
 }
