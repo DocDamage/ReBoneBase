@@ -1,5 +1,6 @@
 use super::*;
 use crate::{
+    atlas::{self, AtlasOptions},
     jobs::Progress,
     sprite_package::{self, Offset, PageKind, SpritePackage},
 };
@@ -30,10 +31,20 @@ pub fn export_package_with(
     progress.commit("Writing files")?;
     crate::export_transaction::publish(folder, files, overwrite)
 }
-/// Render the whole package in memory without touching the destination.
+/// Render the whole package, one grid sheet per clip, in memory without
+/// touching the destination.
 pub fn plan_package(
     project: &Project,
     engine: EngineTarget,
+    progress: &Progress,
+) -> Result<Vec<(PathBuf, Vec<u8>)>> {
+    plan_package_with(project, engine, &AtlasOptions::default(), progress)
+}
+/// [`plan_package`] with a chosen page layout.
+pub fn plan_package_with(
+    project: &Project,
+    engine: EngineTarget,
+    layout: &AtlasOptions,
     progress: &Progress,
 ) -> Result<Vec<(PathBuf, Vec<u8>)>> {
     progress.set_stage("Preparing canvas");
@@ -47,6 +58,8 @@ pub fn plan_package(
         .sum();
     crate::project::project_export_budget(project, total_frames)?;
     let mut files: Vec<(PathBuf, Vec<u8>)> = vec![];
+    let mut packer = atlas::Packer::new(*layout)?;
+    let mut pending = atlas::Pending::default();
     let mut package = SpritePackage::new(project, "ReBoneBase Production");
     let animations =
         sprite_package::unique_names(project.rig.clips.iter().map(|c| c.name.as_str()));
@@ -62,21 +75,33 @@ pub fn plan_package(
             clip.name
         ));
         let sequence = clip.frame_sequence();
-        let columns = 8u32.min(sequence.len() as u32).max(1);
-        let sheet = crate::project::render_sheet(&p, columns, progress)?;
-        let file = format!("clip-{:02}.png", i + 1);
-        let page = package.add_page(&file, PageKind::Atlas, sheet.width(), sheet.height());
-        let mut bytes = std::io::Cursor::new(Vec::new());
-        sheet.write_to(&mut bytes, image::ImageFormat::Png)?;
-        files.push((PathBuf::from(&file), bytes.into_inner()));
-        let frames = sequence
-            .iter()
-            .enumerate()
-            .map(|(j, source)| {
-                let rect = sprite_package::grid_rect(j, columns, p.rig.width, p.rig.height);
-                sprite_package::frame_in_active(&p, *source, page, Some(rect), Offset::default())
-            })
-            .collect();
+        let frames = if layout.packed {
+            pending.add_clip(&mut packer, &p, i, &sequence, progress)?;
+            sequence
+                .iter()
+                .map(|f| atlas::unplaced_frame(&p, *f))
+                .collect()
+        } else {
+            let columns = 8u32.min(sequence.len() as u32).max(1);
+            let sheet = crate::project::render_sheet(&p, columns, progress)?;
+            let file = format!("clip-{:02}.png", i + 1);
+            let page = package.add_page(&file, PageKind::Atlas, sheet.width(), sheet.height());
+            files.push((PathBuf::from(&file), png(&sheet)?));
+            sequence
+                .iter()
+                .enumerate()
+                .map(|(j, source)| {
+                    let rect = sprite_package::grid_rect(j, columns, p.rig.width, p.rig.height);
+                    sprite_package::frame_in_active(
+                        &p,
+                        *source,
+                        page,
+                        Some(rect),
+                        Offset::default(),
+                    )
+                })
+                .collect()
+        };
         package.clips.push(sprite_package::Clip {
             id: format!("clip-{:02}", i + 1),
             animation,
@@ -87,6 +112,15 @@ pub fn plan_package(
             playback: clip.playback,
             frames,
         });
+    }
+    if layout.packed {
+        files.extend(pending.place(
+            packer,
+            &mut package,
+            |i| format!("atlas-{:02}.png", i + 1),
+            png,
+            progress,
+        )?);
     }
     if let Some(audio) = project.extras.production.audio.as_ref() {
         files.push((
@@ -128,6 +162,11 @@ pub fn plan_package(
         "Game package exceeds 128 MB"
     );
     Ok(files)
+}
+fn png(image: &image::RgbaImage) -> Result<Vec<u8>> {
+    let mut bytes = std::io::Cursor::new(Vec::new());
+    image.write_to(&mut bytes, image::ImageFormat::Png)?;
+    Ok(bytes.into_inner())
 }
 const GODOT: &str = r#"extends AnimatedSprite2D
 signal marker(name: String, payload: String)

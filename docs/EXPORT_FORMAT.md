@@ -57,4 +57,14 @@ Pixels, top-left origin, y down; angles are degrees clockwise. A frame's **sourc
 
 To draw a frame, copy `rect` from its page to `trim` inside a transparent `source_size` canvas, then place that canvas so `pivot` lands on the actor's position.
 
+## Packed pages
+
+By default each clip is one full-frame grid sheet. With **Pack frames into atlas pages** (batch sheet presets and engine packages), frames from every clip share `atlas-NN.png` pages:
+
+- **Trim** removes fully transparent rows and columns; `trim` records the removed top-left space. A fully transparent frame becomes one transparent pixel, never an empty rectangle, because engines read an empty region as the whole texture.
+- **Reuse** stores identical images once.
+- **Padding** leaves transparent pixels between images; **extrude** repeats each image's edge pixels outward to prevent filtering seams. `rect` always excludes the extruded border.
+- **Maximum texture size** (up to 4096) bounds every page; frames that do not fit continue on additional pages. A single page is shrunk to the smallest square that holds it.
+- Rotation is never used.
+
 Several frames may point to the same page pixels. Each frame entry still carries its own timing, events and regions; consumers must never merge entries because their images match.

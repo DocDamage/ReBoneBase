@@ -162,7 +162,7 @@ fn cancelled_exports_write_nothing() {
             columns: 8,
             indexed: false,
         },
-        Target::Engine(EngineTarget::Unity),
+        Target::Engine(EngineTarget::Unity, Default::default()),
     ] {
         let destination = if target.writes_folder() {
             folder.join("package")
@@ -247,7 +247,7 @@ fn frame_counts_describe_the_rendered_sequence() {
     assert_eq!(Target::Aseprite { all_clips: false }.frame_count(&p), 12);
     assert_eq!(Target::Aseprite { all_clips: true }.frame_count(&p), 36);
     assert_eq!(
-        Target::Engine(EngineTarget::Generic).frame_count(&p),
+        Target::Engine(EngineTarget::Generic, Default::default()).frame_count(&p),
         12 + 22 + 12
     );
     assert_eq!(Target::Frame { indexed: true }.frame_count(&p), 1);

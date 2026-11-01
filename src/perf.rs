@@ -104,7 +104,7 @@ fn time<T>(runs: usize, mut f: impl FnMut() -> Result<T>) -> Result<(f64, f64, T
 /// Run every check `runs` times on a project of the given scale.
 pub fn run(scale: Scale, runs: usize) -> Result<Report> {
     let project = large_project(scale)?;
-    let frames = Target::Engine(EngineTarget::Generic).frame_count(&project);
+    let frames = Target::Engine(EngineTarget::Generic, Default::default()).frame_count(&project);
     let mut checks = vec![];
     let mut push = |name: &str, (median_ms, max_ms, detail): (f64, f64, String)| {
         checks.push(CheckResult {

@@ -225,6 +225,32 @@ fn appearance_library_and_presets_are_usable_across_projects() {
         &mut app,
         &ctx,
         studio::Tab::Export,
+        "Pack frames into atlas pages",
+    );
+    assert!(app.studio.batch.atlas.packed);
+    click(
+        &mut app,
+        &ctx,
+        studio::Tab::Export,
+        "Reuse identical frames",
+    );
+    assert!(!app.studio.batch.atlas.reuse);
+    app.studio.batch.atlas.max_size = 512;
+    click(&mut app, &ctx, studio::Tab::Export, "Save / replace preset");
+    let saved = app.studio.preferences.presets[1].atlas;
+    assert!(saved.packed && !saved.reuse && saved.max_size == 512);
+    let reloaded: studio::Preferences =
+        serde_json::from_value(serde_json::to_value(&app.studio.preferences).unwrap()).unwrap();
+    assert_eq!(reloaded.presets[1].atlas, saved);
+    app.studio.preferences.engine_atlas.packed = true;
+    match app.export_target(export_ui::Kind::Engine) {
+        rebonebase::export::Target::Engine(_, layout) => assert!(layout.packed),
+        other => panic!("unexpected target {other:?}"),
+    }
+    click(
+        &mut app,
+        &ctx,
+        studio::Tab::Export,
         "Reset to game-asset preset",
     );
     assert_eq!(app.studio.batch.columns, 8);

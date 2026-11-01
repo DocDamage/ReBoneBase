@@ -3,6 +3,7 @@ pub mod animation;
 pub mod animation_import;
 pub mod animation_templates;
 pub mod aseprite;
+pub mod atlas;
 pub mod batch;
 pub mod canvas;
 pub mod character3d;

@@ -5,6 +5,7 @@
 //! cancellation or failure never leaves a partial export behind.
 use crate::{
     animation::Pose,
+    atlas::AtlasOptions,
     batch::{self, ExportFormat, ExportPreset},
     jobs::Progress,
     production::engine_export::{self, EngineTarget},
@@ -31,7 +32,8 @@ pub enum Target {
     },
     /// A preset folder export with an atlas manifest.
     Batch(ExportPreset),
-    Engine(EngineTarget),
+    /// A game engine package with its page layout.
+    Engine(EngineTarget, AtlasOptions),
 }
 impl Default for Target {
     fn default() -> Self {
@@ -52,19 +54,19 @@ impl Target {
             Self::Aseprite { all_clips: false } => "Layered animation · Aseprite".into(),
             Self::Aseprite { all_clips: true } => "All clips · Aseprite tags".into(),
             Self::Batch(p) => format!("Batch preset · {}", p.name),
-            Self::Engine(e) => format!("Game package · {e:?}"),
+            Self::Engine(e, _) => format!("Game package · {e:?}"),
         }
     }
     /// Folder targets publish several files through a recoverable transaction.
     pub fn writes_folder(&self) -> bool {
-        matches!(self, Self::Batch(_) | Self::Engine(_))
+        matches!(self, Self::Batch(_) | Self::Engine(..))
     }
     pub fn extension(&self) -> Option<&'static str> {
         match self {
             Self::Frame { .. } | Self::Sheet { .. } => Some("png"),
             Self::Gif => Some("gif"),
             Self::Aseprite { .. } => Some("aseprite"),
-            Self::Batch(_) | Self::Engine(_) => None,
+            Self::Batch(_) | Self::Engine(..) => None,
         }
     }
     /// Frames this target renders, before any reuse of repeated frames.
@@ -85,7 +87,7 @@ impl Target {
             Self::Aseprite { all_clips: true } => clips.iter().map(|c| c.length as u64).sum(),
             Self::Batch(p) if p.all_clips => all(),
             Self::Batch(_) => active(),
-            Self::Engine(_) => all(),
+            Self::Engine(..) => all(),
         }
     }
 }
@@ -137,7 +139,9 @@ pub fn render(
     let single = |bytes: Vec<u8>| Ok(vec![(request.destination.clone(), bytes)]);
     match &request.target {
         Target::Batch(preset) => batch::plan(project, preset, progress),
-        Target::Engine(engine) => engine_export::plan_package(project, *engine, progress),
+        Target::Engine(engine, layout) => {
+            engine_export::plan_package_with(project, *engine, layout, progress)
+        }
         target => {
             progress.set_stage("Preparing canvas");
             let mut prepared = project::prepare_export(project)?;
@@ -162,7 +166,7 @@ pub fn render(
                 Target::Aseprite { all_clips } => single(crate::aseprite::encode_prepared(
                     &prepared, *all_clips, progress,
                 )?),
-                Target::Batch(_) | Target::Engine(_) => unreachable!("handled above"),
+                Target::Batch(_) | Target::Engine(..) => unreachable!("handled above"),
             }
         }
     }

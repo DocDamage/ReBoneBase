@@ -1,4 +1,5 @@
 use crate::{
+    atlas::{self, AtlasOptions},
     jobs::Progress,
     project::{self, Project},
     sprite_package::{self, Offset, PageKind, SpritePackage},
@@ -24,6 +25,8 @@ pub struct ExportPreset {
     pub prefix: String,
     pub suffix: String,
     pub all_clips: bool,
+    /// Sheet formats only: packed, trimmed pages instead of per-clip grids.
+    pub atlas: AtlasOptions,
 }
 impl Default for ExportPreset {
     fn default() -> Self {
@@ -34,6 +37,7 @@ impl Default for ExportPreset {
             prefix: String::new(),
             suffix: String::new(),
             all_clips: true,
+            atlas: AtlasOptions::default(),
         }
     }
 }
@@ -173,6 +177,13 @@ pub fn plan(
         .map(|i| project.rig.clips[*i].frame_sequence().len() as u64)
         .sum();
     project::project_export_budget(project, total_frames)?;
+    let sheet = matches!(
+        preset.format,
+        ExportFormat::Sheet | ExportFormat::IndexedSheet
+    );
+    let packed = sheet && preset.atlas.packed;
+    let mut packer = atlas::Packer::new(preset.atlas)?;
+    let mut pending = atlas::Pending::default();
     let mut planned = Vec::<(PathBuf, Vec<u8>)>::new();
     let mut package = SpritePackage::new(project, "ReBoneBase Batch");
     let animations =
@@ -209,6 +220,13 @@ pub fn plan(
         let full = Offset::default();
         let mut frames = vec![];
         match preset.format {
+            _ if packed => {
+                pending.add_clip(&mut packer, &p, package.clips.len(), &sequence, progress)?;
+                frames = sequence
+                    .iter()
+                    .map(|f| atlas::unplaced_frame(&p, *f))
+                    .collect();
+            }
             ExportFormat::Sheet | ExportFormat::IndexedSheet => {
                 let img = project::render_sheet(&p, preset.columns, progress)?;
                 let file = format!("{base}.png");
@@ -282,6 +300,24 @@ pub fn plan(
             planned.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
             "Export files exceed memory budget"
         );
+    }
+    if packed {
+        let affix = |s: &str| if s.is_empty() { String::new() } else { name(s) };
+        let (prefix, suffix) = (affix(&preset.prefix), affix(&preset.suffix));
+        let palette = &project.extras.palette;
+        planned.extend(pending.place(
+            packer,
+            &mut package,
+            |i| format!("{prefix}atlas-{:02}{suffix}.png", i + 1),
+            |page| {
+                if preset.format == ExportFormat::IndexedSheet {
+                    indexed_png(page, palette)
+                } else {
+                    png_bytes(page)
+                }
+            },
+            progress,
+        )?);
     }
     package.validate()?;
     planned.push((PathBuf::from("atlas.json"), package.to_json()?));
