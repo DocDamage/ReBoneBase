@@ -1,4 +1,5 @@
 //! Bounded skeleton motion import and rest-relative 2D / 3D retargeting.
+pub mod calibration;
 mod fbx;
 mod retarget3d;
 mod unity;

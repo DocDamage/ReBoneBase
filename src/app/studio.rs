@@ -106,6 +106,7 @@ pub(super) struct Studio {
     pub library_tags: String,
     pub thumbnails: HashMap<String, egui::TextureHandle>,
     pub profiles: Vec<RetargetProfile>,
+    pub calibrations: Vec<rebonebase::motion::calibration::Calibration3d>,
     pub batch: ExportPreset,
     pub preset_index: usize,
     pub job: Option<Job>,
@@ -168,6 +169,7 @@ impl Default for Studio {
             library_tags: String::new(),
             thumbnails: HashMap::new(),
             profiles: vec![],
+            calibrations: vec![],
             batch: Default::default(),
             preset_index: 0,
             job: None,
@@ -213,6 +215,12 @@ impl ReboneApp {
             Err(error) => self.status = format!("Recovery discovery failed: {error:#}"),
         }
         self.studio.profiles = store.read_records("profiles").unwrap_or_default();
+        self.studio.calibrations = store
+            .read_records::<rebonebase::motion::calibration::Calibration3d>("calibrations")
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|c| c.validate().is_ok())
+            .collect();
         if !self.studio.recoveries.is_empty() {
             self.studio.open = true;
             self.studio.tab = Tab::Files;

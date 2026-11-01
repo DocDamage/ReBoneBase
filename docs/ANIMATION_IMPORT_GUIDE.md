@@ -10,7 +10,20 @@ Run the latest versioned ReBoneBase executable. Existing characters, attached jo
 
 Imported 3D motions are embedded in the project. Each main timeline clip stores its own model animation, speed, looping and time offset. Selecting a different timeline restores that clip's playback settings. Trim/split preserve the displayed time, including authored frame durations; speed edits keep a trimmed clip's start pose, and duplicate/reorder/delete keep the correct motion assignments. Use **Create timeline for 3D animation** for clips already included in a model. Save/load and Undo include the imported animation data.
 
-Limbs keep the target skeleton's rest positions and proportions. 3D retargeting transfers rest-relative rotations. 3D root travel is off by default and can be enabled explicitly; the simultaneous 2D import retains the existing planar root-motion behavior; the Move Rig tool still controls manual whole-character placement. If source and target use different bone naming, inspect and correct the automatic mapping. Additional twist/finger/accessory joints may need manual mapping. Check the preview before importing a large batch.
+Limbs keep the target skeleton's rest positions and proportions. 3D retargeting transfers rest-relative rotations. 3D root travel is off by default and is set by the calibration (below); the simultaneous 2D import retains the existing planar root-motion behavior; the Move Rig tool still controls manual whole-character placement. If source and target use different bone naming, inspect and correct the automatic mapping. Additional twist/finger/accessory joints may need manual mapping. Check the preview before importing a large batch.
+
+## Calibrate a 3D source once
+
+The 3D dialog keeps its settings as a **calibration**. Save one with **Save calibration** for each source skeleton (for example one Mixamo export or one mocap rig), then choose it under **Saved calibration** for later imports. It is stored with your user data, not in the project.
+
+- **Joint mapping** is saved by name (target joint → source joint), so the same calibration works for every clip of that source even when a file lists its joints in a different order. **Automatic name matching** starts a fresh calibration from the built-in name rules.
+- The summary line counts mapped, unmapped, missing (mapped source joint absent from this file) and ambiguous (a name used by more than one joint) joints; **Joint report** names them. Saved target joints that the model no longer has are listed too. Joints that cannot be resolved are left unmapped. An import fails without changing the project only when no joint maps.
+- Under **Calibration settings**:
+  - **Source reference pose** selects the source pose that matches the target's rest pose: the source rest pose, or a frame of each clip, such as a leading T-pose. A clip shorter than that frame uses its last frame.
+  - **Source up axis** (Y or Z) and **Facing °** turn the source into the target's space. They affect both rotations and root travel.
+  - **Offset X°/Y°/Z°** adds a fixed rotation to the chosen target joint, in that joint's own frame.
+  - **Root travel**: Off; Ground (horizontal only); Vertical (keeps bounce for in-place cycles); or Full. **Fixed root scale** replaces the automatic skeleton-size ratio with an explicit number of target units per source unit.
+- Preview and every clip in the batch use the same calibration. Calibration changes only rotations and root travel. Target limb lengths and attachment positions always come from the model.
 
 ## File formats
 
