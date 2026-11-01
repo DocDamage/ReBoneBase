@@ -1,8 +1,10 @@
 //! Embedded, bounded native 3D character data and CPU pixel rendering.
 //! Imported files are normalized into owned Rust arrays; no native importer
 //! pointers or external files are retained in project/history snapshots.
+pub mod cleanup;
 mod gltf;
 mod native;
+pub mod tracks;
 use crate::model::Vec2;
 use anyhow::{Result, bail, ensure};
 use glam::{EulerRot, Mat4, Quat, Vec3, Vec4};
@@ -13,6 +15,7 @@ use std::{
     path::{Component, Path},
     sync::Arc,
 };
+pub use tracks::{JointClipboard, JointKey, JointKeyRef, JointTracks};
 const MAX_BYTES: usize = 64 * 1024 * 1024;
 const MAX_VERTICES: usize = 100_000;
 const MAX_TRIANGLES: usize = 100_000;
@@ -137,9 +140,15 @@ pub struct Character {
     pub looped: bool,
     #[serde(default)]
     pub clips: BTreeMap<usize, Playback3d>,
+    /// Whole-clip joint offsets in XYZ degrees.
     pub joints: BTreeMap<usize, [f32; 3]>,
+    /// Keyed joint corrections per timeline clip.
+    pub tracks: BTreeMap<usize, JointTracks>,
     #[serde(with = "shared")]
     pub model: Arc<Model3d>,
+    /// Timeline clip and frame whose keyed corrections apply; set by `for_clip`.
+    #[serde(skip)]
+    pub sample: Option<(usize, f32)>,
 }
 pub type Character3d = Character;
 /// Playback belongs to a project timeline; offsets preserve trimmed/split motion.
@@ -176,7 +185,9 @@ impl Default for Character {
             looped: true,
             clips: BTreeMap::new(),
             joints: BTreeMap::new(),
+            tracks: BTreeMap::new(),
             model: Arc::new(Model3d::default()),
+            sample: None,
         }
     }
 }
@@ -571,7 +582,7 @@ impl Character {
                     .all(|(i, r)| *i < self.model.nodes.len() && r.iter().copied().all(finite)),
             "Invalid3D character pose/camera"
         );
-        Ok(())
+        self.validate_tracks()
     }
     pub fn validate_render(&self, width: u32, height: u32) -> Result<()> {
         self.validate()?;
@@ -594,15 +605,28 @@ impl Character {
             offset_ms: 0.,
         })
     }
-    pub fn for_clip(&self, clip: usize, time_ms: f64) -> (Self, f64) {
+    /// The character as seen in timeline `clip` at its evaluation `frame`, and
+    /// the motion time for the clip's project time `time_ms`.
+    pub fn for_clip(&self, clip: usize, frame: f32, time_ms: f64) -> (Self, f64) {
         let b = self.playback(clip);
         let mut c = self.clone();
         c.animation = b.animation;
         c.speed = 1.;
         c.looped = b.looped;
+        c.sample = Some((clip, frame));
         (c, time_ms * f64::from(b.speed) + b.offset_ms)
     }
     fn matrices(&self, time_ms: f64) -> Result<Vec<Mat4>> {
+        self.model.world(&self.local_pose(time_ms, true)?)
+    }
+    /// Model-space joint matrices for a local pose from [`Self::local_pose`].
+    pub fn world_pose(&self, local: &[Transform3d]) -> Result<Vec<Mat4>> {
+        ensure!(local.len() == self.model.nodes.len(), "Pose size mismatch");
+        self.model.world(local)
+    }
+    /// Local joint transforms at a motion time: imported motion and whole-clip
+    /// offsets, plus the keyed corrections of `sample` when `keyed` is set.
+    pub fn local_pose(&self, time_ms: f64, keyed: bool) -> Result<Vec<Transform3d>> {
         ensure!(time_ms.is_finite(), "Invalid3D animation time");
         let mut local = self
             .model
@@ -632,21 +656,21 @@ impl Character {
                 *target = interpolate(&a.frames[start][i], &a.frames[end][i], u);
             }
         }
-        for (i, euler) in &self.joints {
+        let keyed = self
+            .sample
+            .filter(|_| keyed)
+            .map_or_else(Vec::new, |(clip, frame)| self.corrections(clip, frame));
+        let offsets = self.joints.iter().map(|(i, e)| (*i, tracks::quat(*e)));
+        // Imported motion, then the whole-clip offset, then the keyed correction.
+        for (i, q) in offsets.chain(keyed) {
             let p = local
-                .get_mut(*i)
+                .get_mut(i)
                 .ok_or_else(|| anyhow::anyhow!("Unknown joint"))?;
-            let q = Quat::from_euler(
-                EulerRot::XYZ,
-                euler[0].to_radians(),
-                euler[1].to_radians(),
-                euler[2].to_radians(),
-            );
             p.rotation = (Quat::from_array(p.rotation).normalize() * q)
                 .normalize()
                 .to_array();
         }
-        self.model.world(&local)
+        Ok(local)
     }
     fn camera(&self, v: Vec3) -> Vec3 {
         let q = Quat::from_rotation_x(self.pitch.to_radians())

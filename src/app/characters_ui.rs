@@ -1,5 +1,5 @@
 use super::*;
-use rebonebase::character3d::{self, Character};
+use rebonebase::character3d::{self, Character, JointKeyRef};
 impl ReboneApp {
     pub(super) fn import_character3d(&mut self) {
         let Some(path) = rfd::FileDialog::new()
@@ -126,6 +126,7 @@ impl ReboneApp {
         let clip_index = self.project.rig.active_clip;
         let mut remove = None;
         let mut make_timeline = None;
+        let mut seek = None;
         if let Some(c) = self.production.character.and_then(|id| {
             self.project
                 .extras
@@ -217,14 +218,19 @@ impl ReboneApp {
                 });
             if !c.model.nodes.is_empty() {
                 let index = self.production.character_joint;
-                let mut rot = c.joints.get(&index).copied().unwrap_or([0.; 3]);
+                let frame = self.frame.round().max(1.);
+                let keyed = c.key_at(clip_index, index, frame).is_some();
+                let mut rot = c.sample_joint(clip_index, index, frame);
                 let old = rot;
+                ui.label(format!(
+                    "Keyed correction at frame {frame:.0}{}",
+                    if keyed { " ◆" } else { "" }
+                ));
                 ui.horizontal_wrapped(|ui| {
-                    for (i, label) in ["Joint X° ", "Joint Y° ", "Joint Z° "]
-                        .into_iter()
-                        .enumerate()
-                    {
-                        ui.add(
+                    let editable = keyed || self.production.auto_key_3d;
+                    for (i, label) in ["Key X° ", "Key Y° ", "Key Z° "].into_iter().enumerate() {
+                        ui.add_enabled(
+                            editable,
                             egui::DragValue::new(&mut rot[i])
                                 .range(-180. ..=180.)
                                 .speed(1.)
@@ -232,8 +238,58 @@ impl ReboneApp {
                         );
                     }
                 });
-                if rot != old {
-                    c.joints.insert(index, rot);
+                if rot != old
+                    && let Err(e) = c.set_joint_key(clip_index, index, frame, rot)
+                {
+                    self.status = e;
+                }
+                ui.horizontal_wrapped(|ui| {
+                    ui.checkbox(&mut self.production.auto_key_3d, "Auto-key")
+                        .on_hover_text("Editing a correction keys the current frame. Off: only existing keys can be edited.");
+                    if ui.button("Set key").clicked()
+                        && let Err(e) = c.set_joint_key(clip_index, index, frame, rot)
+                    {
+                        self.status = e;
+                    }
+                    if ui.add_enabled(keyed, egui::Button::new("Delete key")).clicked() {
+                        c.delete_joint_keys(clip_index, &[JointKeyRef { joint: index, frame }]);
+                    }
+                    let keys = c.joint_keys(clip_index, index);
+                    if let Some(k) = keys.iter().rev().find(|k| k.frame < frame - 0.001)
+                        && ui.button("◀ Key").on_hover_text("Previous key").clicked()
+                    {
+                        seek = Some(k.frame);
+                    }
+                    if let Some(k) = keys.iter().find(|k| k.frame > frame + 0.001)
+                        && ui.button("Key ▶").on_hover_text("Next key").clicked()
+                    {
+                        seek = Some(k.frame);
+                    }
+                    if ui
+                        .add_enabled(!keys.is_empty(), egui::Button::new("Clear joint keys"))
+                        .clicked()
+                    {
+                        c.clear_joint_track(clip_index, index);
+                    }
+                });
+                ui.label("Whole-clip offset (every frame of every clip)");
+                let mut offset = c.joints.get(&index).copied().unwrap_or([0.; 3]);
+                let old = offset;
+                ui.horizontal_wrapped(|ui| {
+                    for (i, label) in ["Joint X° ", "Joint Y° ", "Joint Z° "]
+                        .into_iter()
+                        .enumerate()
+                    {
+                        ui.add(
+                            egui::DragValue::new(&mut offset[i])
+                                .range(-180. ..=180.)
+                                .speed(1.)
+                                .prefix(label),
+                        );
+                    }
+                });
+                if offset != old {
+                    c.joints.insert(index, offset);
                 }
                 if ui.button("Reset selected joint").clicked() {
                     c.joints.remove(&index);
@@ -242,7 +298,7 @@ impl ReboneApp {
                     c.joints.clear();
                 }
             }
-            ui.label("Joint rotations are additive pose overrides. Joint positions stay attached to their parents; imported animation supplies the motion.");
+            ui.label("Keyed corrections add to imported motion at chosen frames and blend between keys; the whole-clip offset applies everywhere. Only rotation changes, so joints stay attached to their parents.");
             for warning in &c.model.warnings {
                 ui.label(RichText::new(warning).color(Color32::YELLOW));
             }
@@ -275,11 +331,15 @@ impl ReboneApp {
                 self.status = "A project supports at most 32 clips".into();
             }
         }
+        if let Some(frame) = seek {
+            self.seek_frame(frame);
+        }
         if let Some(id) = remove {
             self.project.extras.characters3d.retain(|c| c.id != id);
             self.production.character = None;
             self.production.move_character = false;
         }
+        self.motion_cleanup_ui(ui);
         self.art_preview(ui);
     }
 }

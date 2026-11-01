@@ -62,6 +62,8 @@ pub(super) struct ProductionUi {
     pub character: Option<u64>,
     pub character_joint: usize,
     pub move_character: bool,
+    pub auto_key_3d: bool,
+    pub cleanup: super::motion_cleanup_ui::CleanupUi,
     pub character_job:
         Option<std::sync::mpsc::Receiver<Result<rebonebase::character3d::Character, String>>>,
     pub animation_preset: rebonebase::animation_templates::Preset,
@@ -129,6 +131,8 @@ impl Default for ProductionUi {
             character: None,
             character_joint: 0,
             move_character: false,
+            auto_key_3d: true,
+            cleanup: Default::default(),
             character_job: None,
             animation_source: None,
             animation_dialog: None,

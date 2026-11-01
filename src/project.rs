@@ -201,6 +201,9 @@ impl Project {
         for c in &x.characters3d {
             n += map::<usize, [f32; 3]>(c.joints.len())
                 + map::<usize, crate::character3d::Playback3d>(c.clips.len());
+            for t in c.tracks.values() {
+                n += 32 + t.values().map(|k| list(k) + 32).sum::<usize>();
+            }
         }
         n += x.references.as_ref().map_or(0, |r| list(&r.frames));
         let art = &x.production;

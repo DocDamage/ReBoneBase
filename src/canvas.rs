@@ -190,7 +190,11 @@ pub fn content_bounds(p: &Project, frame: f32, pose: Option<&Pose>) -> Bounds {
     }
     let time = production::timeline_ms(&p.rig, frame) as f64;
     for c in &p.extras.characters3d {
-        let (c, time) = c.for_clip(p.rig.active_clip, time);
+        let (c, time) = c.for_clip(
+            p.rig.active_clip,
+            p.rig.active_clip().evaluation_frame(frame),
+            time,
+        );
         if c.enabled
             && let Some((min, max)) = c.bounds(time)
         {

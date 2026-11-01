@@ -443,3 +443,112 @@ fn pixel_strokes_are_undoable_and_collisions_export_as_metadata() {
     app.undo();
     assert_eq!(app.project, before);
 }
+#[test]
+fn keyed_3d_joint_corrections_edit_in_inspector_and_timeline_with_undo() {
+    use rebonebase::character3d::JointKeyRef;
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src/character3d/fixtures/textured_skin.glb");
+    app.add_character3d(rebonebase::character3d::load(&path).unwrap())
+        .unwrap();
+    app.project.rig.active_clip_mut().length = 8;
+    app.production.tab = production_ui::Tab::Characters;
+    app.production.character = Some(app.project.extras.characters3d[0].id);
+    app.production.character_joint = 1;
+    app.frame = 3.;
+    let empty = app.project.clone();
+    click(&mut app, &ctx, "Set key");
+    let c = &app.project.extras.characters3d[0];
+    assert_eq!(c.joint_keys(0, 1).len(), 1);
+    assert_eq!(c.joint_keys(0, 1)[0].frame, 3.);
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project, empty);
+    // Timeline rows list the selected joint and its keys.
+    app.project.extras.characters3d[0]
+        .set_joint_key(0, 1, 3., [0., 0., 30.])
+        .unwrap();
+    let keyed = app.project.clone();
+    assert!(app.joint_rows().iter().any(|(j, _)| *j == 1));
+    app.select_all_timeline_keys();
+    assert_eq!(
+        app.studio.joint_keys,
+        [JointKeyRef {
+            joint: 1,
+            frame: 3.
+        }]
+    );
+    // Dragging moves the key in one undo step.
+    app.press_joint_keys(app.studio.joint_keys.clone(), false, true, 3.);
+    app.drag_joint_keys(4.);
+    app.drag_joint_keys(5.);
+    app.studio.joint_drag = None;
+    assert_eq!(
+        app.project.extras.characters3d[0].joint_keys(0, 1)[0].frame,
+        5.
+    );
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project, keyed);
+    // Copy, paste at the playhead, and delete.
+    app.studio.joint_keys = vec![JointKeyRef {
+        joint: 1,
+        frame: 3.,
+    }];
+    app.copy_timeline_keys();
+    app.frame = 6.;
+    app.paste_timeline_keys(true);
+    let frames: Vec<_> = app.project.extras.characters3d[0]
+        .joint_keys(0, 1)
+        .iter()
+        .map(|k| k.frame)
+        .collect();
+    assert_eq!(frames, [3., 6.]);
+    app.delete_timeline_keys(true);
+    assert_eq!(app.project.extras.characters3d[0].joint_keys(0, 1).len(), 1);
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project.extras.characters3d[0].joint_keys(0, 1).len(), 2);
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project, keyed);
+    // With auto-key off, an unkeyed frame cannot be edited by accident.
+    app.production.auto_key_3d = false;
+    app.frame = 7.;
+    panel(&mut app, &ctx, vec![]);
+    assert_eq!(app.project, keyed);
+}
+#[test]
+fn motion_cleanup_previews_before_applying_as_one_undo_step() {
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src/character3d/fixtures/textured_skin.glb");
+    app.add_character3d(rebonebase::character3d::load(&path).unwrap())
+        .unwrap();
+    let id = app.project.extras.characters3d[0].id;
+    app.project.extras.characters3d[0].clips.insert(
+        0,
+        rebonebase::character3d::Playback3d {
+            animation: Some(0),
+            ..Default::default()
+        },
+    );
+    app.project.rig.active_clip_mut().length = 12;
+    app.production.tab = production_ui::Tab::Characters;
+    app.production.character = Some(id);
+    app.production.character_joint = 1;
+    let before = app.project.clone();
+    click(&mut app, &ctx, "Clean up motion");
+    click(&mut app, &ctx, "Whole clip");
+    assert_eq!(
+        (app.production.cleanup.start, app.production.cleanup.end),
+        (1, 12)
+    );
+    click(&mut app, &ctx, "Preview cleanup");
+    assert!(app.production.cleanup.preview.is_some(), "{}", app.status);
+    assert_eq!(app.project, before, "preview does not change the project");
+    click(&mut app, &ctx, "Apply cleanup");
+    let keys = app.project.extras.characters3d[0].joint_keys(0, 1).len();
+    assert_eq!(keys, 12);
+    assert_eq!(app.project.rig, before.rig, "timing is unchanged");
+    assert!(app.history.undo(&mut app.project));
+    assert_eq!(app.project, before);
+}

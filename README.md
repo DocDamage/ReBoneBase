@@ -14,7 +14,11 @@ cargo run --release
 
 You can pass a `.rebone` project or `.bbrig` rig as the first command-line argument. The executable contains its templates and fonts and can run from any folder.
 
-For a portable Windows package, run `scripts/package.ps1`, then open `dist/ReBoneBase-0.3.0/ReBoneBase-0.3.0.exe`. The package includes guides, samples and an executable SHA-256 checksum. The [Verify ReBoneBase workflow](https://github.com/DocDamage/ReBoneBase/actions/workflows/verify.yml) also builds a Windows package after its checks pass.
+For a portable Windows package, run `scripts/package.ps1`, then open `dist/ReBoneBase-0.4.0/ReBoneBase-0.4.0.exe`. The package includes guides, samples and an executable SHA-256 checksum. The [Verify ReBoneBase workflow](https://github.com/DocDamage/ReBoneBase/actions/workflows/verify.yml) also builds a Windows package after its checks pass.
+
+## Export pipeline in 0.4.0
+
+Batch atlases and engine packages share one versioned `rebonebase-sprites` v2 format ([export format](docs/EXPORT_FORMAT.md)). Atlases can be packed, trimmed, deduplicated and split across pages. Clips export as four- or eight-direction sets, from rotated 3D cameras or authored/mirrored 2D clips. Unreal packages include a Paper2D importer and plugin ([Unreal guide](docs/UNREAL_GUIDE.md)), and one diagnostic fixture verifies playback in Godot, Unity and Unreal ([engine verification](docs/ENGINE_VERIFICATION.md)).
 
 ## Animation workspace in 0.3.0
 
