@@ -15,12 +15,12 @@ Choose **Unreal** as the engine in **Export → Game engine package** (or a dire
 Run `ReBoneImport.py` from the exported folder: **Tools → Execute Python Script…** in the editor, or headless:
 
 ```
-UnrealEditor-Cmd.exe <Project>.uproject -run=pythonscript -script="<package>/ReBoneImport.py"
+UnrealEditor-Cmd.exe <Project>.uproject -run=pythonscript -script="<package>/ReBoneImport.py [/Game/Destination]"
 ```
 
 Use forward slashes in that path; Unreal treats backslashes as escapes when a script has arguments.
 
-The importer writes to `/Game/ReBoneBase/<rig name>`:
+The importer writes to `/Game/ReBoneBase/<export folder name>`, or to the destination given after the script path. Packages exported to different folders, such as a character's clips and its directional set, therefore never replace each other. Asset names come from the rig name:
 
 | Asset | Contents |
 | --- | --- |
@@ -30,7 +30,7 @@ The importer writes to `/Game/ReBoneBase/<rig name>`:
 | `DA_<name>` | `ReBoneAnimationSet`: clips with flipbook, looping, direction, per-frame markers, regions and holds, plus pivot and audio. |
 | `Audio/A_<name>` | The reference WAV, when the package has one. |
 
-Every generated asset carries the metadata tag `ReBoneBaseGenerated`. Importing again updates the same assets in place. Generated assets the new package no longer needs are deleted; anything without the tag is never touched. An asset still referenced elsewhere is kept and reported in the log.
+Every generated asset carries the metadata tag `ReBoneBaseGenerated` with its destination folder. Importing again updates the same assets in place. Generated assets of that destination the new package no longer needs are deleted; anything without the tag, or generated for another destination, is never touched. An asset still referenced elsewhere is kept and reported in the log.
 
 Identical images share one sprite, but every exported frame keeps its own key frame and its own marker and region data.
 
@@ -42,7 +42,8 @@ Add a **ReBoneFlipbookComponent** (a `PaperFlipbookComponent`) to an actor and s
 - `PlayDirection(Name, Direction)` plays a directional set's clip (`e`, `se`, `s`, …). Changing only the direction keeps the current frame and time and does not re-fire markers.
 - `OnMarker(Name, Payload, Frame)` fires for every marker of every frame entered, in order. Frames passed within one long tick still fire, in order.
 - Collision regions use a pool of reused `BoxComponent`s (profile `OverlapAllDynamic` by default). They are tagged with the region kind and name and moved as frames change, never recreated per frame. Unused boxes have collision disabled.
-- Pause, resume and play rate use the standard flipbook component functions.
+- `PausePlayback()` and `ResumePlayback()` pause and continue the animation together with its audio. Play rate uses the standard flipbook functions.
+- Audio: the data asset's reference sound plays through an `AudioComponent` at the frame's retained source time plus the time spent in the frame, minus the track start; it is silent before the track starts. The sound runs freely while frames follow each other on the source timeline and is started or sought again only where the timeline jumps: play, restart, resume, a loop wrap, or a frame whose source time does not continue from the previous one (as in ping-pong clips).
 
 Sprites lie in the X–Z plane; one pixel is one Unreal unit (`PixelsPerUnit` in the data asset). Regions are converted from the package's y-down pixels: X right and Z up from the pivot.
 
@@ -52,7 +53,6 @@ Sprites lie in the X–Z plane; one pixel is one Unreal unit (`PixelsPerUnit` in
 - Paper2D flipbooks do not store looping. The data asset stores each clip's looping, and `ReBoneFlipbookComponent` applies it. A plain `PaperFlipbookComponent` shows the art and holds, but not markers, regions or per-clip looping.
 - Reverse and ping-pong playback are already expanded into frame order by the export. Playing with a negative rate shows the right frames but does not fire markers.
 - When several frames pass in one tick, every marker fires in order, but only the last frame's regions are applied that tick.
-- The reference audio is imported and linked from the data asset with its start time and volume; starting the sound is left to your game.
 - Unreal has no project-independent equivalent of the Godot and Unity helper scripts, so the runtime is a C++ plugin. It must be compiled once per engine version.
 
 ## Verification

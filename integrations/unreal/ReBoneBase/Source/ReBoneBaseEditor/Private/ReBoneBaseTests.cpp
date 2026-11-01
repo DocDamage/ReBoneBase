@@ -88,6 +88,38 @@ namespace ReBoneTests
 		return Clip.Frames.Num() - 1;
 	}
 
+	FString Describe(const TArray<FFired>& Markers)
+	{
+		TArray<FString> Parts;
+		for (const FFired& M : Markers)
+		{
+			Parts.Add(FString::Printf(TEXT("%d:%s"), M.Frame, *M.Name));
+		}
+		return FString::Join(Parts, TEXT(","));
+	}
+
+	/** Start time (from 0) of the frame shown at `Seconds`. */
+	double FrameStartAt(const FReBoneClip& Clip, double Seconds)
+	{
+		double Total = 0.0;
+		for (const FReBoneFrame& Frame : Clip.Frames)
+		{
+			Total += Frame.DurationMs / 1000.0;
+		}
+		const double Time = Clip.bLooped ? FMath::Fmod(Seconds, Total) : FMath::Min(Seconds, Total - 1e-9);
+		double Start = 0.0;
+		for (const FReBoneFrame& Frame : Clip.Frames)
+		{
+			const double End = Start + Frame.DurationMs / 1000.0;
+			if (Time < End)
+			{
+				break;
+			}
+			Start = End;
+		}
+		return Seconds - Time + Start;
+	}
+
 	UReBoneFlipbookComponent* NewPlayer(UReBoneAnimationSet* Set, TArray<FFired>& Fired)
 	{
 		UReBoneFlipbookComponent* Player = NewObject<UReBoneFlipbookComponent>(GetTransientPackage());
@@ -184,15 +216,38 @@ bool FReBonePlayback::RunTest(const FString&)
 						Pool.Add(Box);
 					}
 				}
-				Player->Advance(Step);
+				if (Set->Audio && Margin > 0.0005)
+				{
+					// The audio clock is the frame's source time plus time in the frame minus the track start.
+					const double InFrame = Time - FrameStartAt(Clip, Time);
+					const double Target = Frame.SourceTimeMs / 1000.0 + InFrame - Set->AudioStartMs / 1000.0;
+					TestEqual(*FString::Printf(TEXT("%s audio target at %.4f s"), *What, Time), static_cast<double>(Player->GetAudioTarget()), Target, 1e-3);
+					// Audio starts or stops on the first tick after it becomes due or ends.
+					if (FMath::Abs(Target) > Step && FMath::Abs(Target - Set->Audio->GetDuration()) > Step)
+					{
+						const bool bDue = Target >= 0.0 && Target < Set->Audio->GetDuration() && Player->IsPlaying();
+						TestEqual(*FString::Printf(TEXT("%s audio on at %.4f s"), *What, Time), Player->GetLastAudioStart() >= 0.f, bDue);
+					}
+				}
+				const int32 StartsBefore = Player->GetAudioStarts();
+				const int32 FrameBefore = Player->GetCurrentFrameIndex();
+				const bool bAudioBefore = Player->GetLastAudioStart() >= 0.f;
+				Player->Advance(static_cast<float>(Step));
 				Advanced += Step;
+				if (Player->GetAudioStarts() != StartsBefore && Player->GetLastAudioStart() >= 0.f)
+				{
+					TestEqual(*(What + TEXT(" audio starts at its target")), Player->GetLastAudioStart(), FMath::Max(Player->GetAudioTarget(), 0.f), 1e-3f);
+					const int32 Now = Player->GetCurrentFrameIndex();
+					const bool bContinuous = Now == FrameBefore + 1 && Clip.Frames[FrameBefore].SourceTimeMs + Clip.Frames[FrameBefore].DurationMs == Clip.Frames[Now].SourceTimeMs;
+					TestFalse(*(What + TEXT(" audio restarts only where the timeline jumps")), bContinuous && bAudioBefore);
+				}
 			}
 			// Region boxes are reused, never recreated, after the pool has grown.
 			for (int32 I = 0; I < Pool.Num(); ++I)
 			{
 				TestTrue(*(What + TEXT(" reuses region boxes")), Player->GetRegionBoxes().IsValidIndex(I) && Player->GetRegionBoxes()[I] == Pool[I]);
 			}
-			TestTrue(*(What + TEXT(" markers in order")), Fired == Expected(Clip, Advanced));
+			TestTrue(*FString::Printf(TEXT("%s markers in order after %.4f s: %s vs %s"), *What, Advanced, *Describe(Fired), *Describe(Expected(Clip, Advanced))), Fired == Expected(Clip, Advanced));
 
 			// One large step still fires every passed frame's markers, in order.
 			TArray<FFired> Burst;
@@ -201,6 +256,33 @@ bool FReBonePlayback::RunTest(const FString&)
 			Fast->Advance(static_cast<float>(Total * 1.5));
 			TestTrue(*(What + TEXT(" markers in one long tick")), Burst == Expected(Clip, Total * 1.5));
 			TestEqual(*(What + TEXT(" looping")), Fast->IsPlaying(), Clip.bLooped);
+
+			// Pause holds frame, time and audio; resume continues and resynchronises audio.
+			{
+				TArray<FFired> Paused;
+				UReBoneFlipbookComponent* Hold = NewPlayer(Set, Paused);
+				Hold->PlayAnimation(Clip.Animation);
+				Hold->Advance(static_cast<float>(Total * 0.6));
+				const int32 Frame = Hold->GetCurrentFrameIndex();
+				const float Position = Hold->GetPlaybackPosition();
+				Paused.Reset();
+				Hold->PausePlayback();
+				Hold->Advance(0.5f);
+				TestEqual(*(What + TEXT(" pause holds frame")), Hold->GetCurrentFrameIndex(), Frame);
+				TestEqual(*(What + TEXT(" pause holds time")), Hold->GetPlaybackPosition(), Position, 1e-5f);
+				TestEqual(*(What + TEXT(" pause fires nothing")), Paused.Num(), 0);
+				TestTrue(*(What + TEXT(" pause pauses audio")), Hold->IsAudioPaused());
+				const int32 Starts = Hold->GetAudioStarts();
+				Hold->ResumePlayback();
+				TestTrue(*(What + TEXT(" resume plays")), Hold->IsPlaying() || !Clip.bLooped);
+				TestFalse(*(What + TEXT(" resume unpauses audio")), Hold->IsAudioPaused());
+				const float Target = Hold->GetAudioTarget();
+				if (Set->Audio && Target >= 0.f && Target < Set->Audio->GetDuration() && Hold->IsPlaying())
+				{
+					TestEqual(*(What + TEXT(" resume resynchronises audio")), Hold->GetAudioStarts(), Starts + 1);
+					TestEqual(*(What + TEXT(" resume audio position")), Hold->GetLastAudioStart(), Target, 1e-3f);
+				}
+			}
 
 			// Restart returns to frame zero and fires it again.
 			Burst.Reset();

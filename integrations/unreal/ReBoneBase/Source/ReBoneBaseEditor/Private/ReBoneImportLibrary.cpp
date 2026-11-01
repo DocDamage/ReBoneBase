@@ -23,6 +23,11 @@ bool UReBoneImportLibrary::ConfigureSprite(UPaperSprite* Sprite, UTexture2D* Tex
 	{
 		Collision->SetPropertyValue_InContainer(Sprite, static_cast<uint8>(ESpriteCollisionMode::None));
 	}
+	// Keep the exported pivot exactly; snapping would move fractional anchors by up to half a pixel.
+	if (FBoolProperty* Snap = FindFProperty<FBoolProperty>(UPaperSprite::StaticClass(), TEXT("bSnapPivotToPixelGrid")))
+	{
+		Snap->SetPropertyValue_InContainer(Sprite, false);
+	}
 	Sprite->SetPivotMode(ESpritePivotMode::Custom, TexturePivot, true);
 	Sprite->PostEditChange();
 	Sprite->MarkPackageDirty();

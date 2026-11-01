@@ -1,0 +1,145 @@
+{
+  "fixture": "examples/create_engine_fixture.rs",
+  "date": "2026-11-01",
+  "driver": "scripts/engine_check.py",
+  "results": {
+    "godot": [
+      {
+        "audio_drift": {},
+        "checks": 9727,
+        "clips": 6,
+        "dt": 0.00416666666666667,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": false,
+        "package": "main",
+        "mode": "fixed 240 fps",
+        "exit": 0,
+        "seconds": 1.0,
+        "failed": []
+      },
+      {
+        "audio_drift": {},
+        "checks": 182,
+        "clips": 6,
+        "dt": 0.1,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": false,
+        "package": "main",
+        "mode": "fixed 10 fps",
+        "exit": 0,
+        "seconds": 0.9,
+        "failed": []
+      },
+      {
+        "audio_drift": {
+          "max_ms": 101.905934782982,
+          "median_ms": 44.7139537220001,
+          "p90_ms": 81.3489388637543,
+          "samples": 430
+        },
+        "checks": 176,
+        "clips": 6,
+        "dt": 0.0166666666666667,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": true,
+        "package": "main",
+        "mode": "real time",
+        "exit": 0,
+        "seconds": 9.9,
+        "failed": []
+      },
+      {
+        "audio_drift": {},
+        "checks": 3514,
+        "clips": 4,
+        "dt": 0.00416666666666667,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": false,
+        "package": "directions",
+        "mode": "fixed 240 fps",
+        "exit": 0,
+        "seconds": 0.3,
+        "failed": []
+      },
+      {
+        "audio_drift": {},
+        "checks": 98,
+        "clips": 4,
+        "dt": 0.1,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": false,
+        "package": "directions",
+        "mode": "fixed 10 fps",
+        "exit": 0,
+        "seconds": 0.3,
+        "failed": []
+      },
+      {
+        "audio_drift": {
+          "max_ms": 77.0939997138977,
+          "median_ms": 40.4726886973381,
+          "p90_ms": 74.3489920420349,
+          "samples": 142
+        },
+        "checks": 95,
+        "clips": 4,
+        "dt": 0.0166666666666667,
+        "engine": "4.7.1-stable (official)",
+        "failures": 0,
+        "realtime": true,
+        "package": "directions",
+        "mode": "real time",
+        "exit": 0,
+        "seconds": 4.8,
+        "failed": []
+      }
+    ],
+    "unreal": [
+      {
+        "step": "import main",
+        "exit": 0,
+        "result": "ReBoneBase imported 6 clips, 21 sprites, 4 textures into /Game/ReBoneBase/main; removed 0 stale assets",
+        "failures": 0,
+        "engine": "Unreal Engine 5.8.3"
+      },
+      {
+        "step": "import directions",
+        "exit": 0,
+        "result": "ReBoneBase imported 4 clips, 14 sprites, 3 textures into /Game/ReBoneBase/directions; removed 0 stale assets",
+        "failures": 0,
+        "engine": "Unreal Engine 5.8.3"
+      },
+      {
+        "step": "asset comparison",
+        "result": [
+          "VERIFY OK /Game/ReBoneBase/main: 6 clips, 31 frames, 0 problems",
+          "VERIFY OK /Game/ReBoneBase/directions: 4 clips, 16 frames, 0 problems"
+        ],
+        "failures": 0,
+        "engine": "Unreal Engine 5.8.3"
+      },
+      {
+        "step": "automation",
+        "result": [
+          "Test Completed. Result={Success} Name={ImportedAssets} Path={ReBoneBase.ImportedAssets}",
+          "Test Completed. Result={Success} Name={Playback} Path={ReBoneBase.Playback}"
+        ],
+        "failures": 0,
+        "errors": [],
+        "engine": "Unreal Engine 5.8.3"
+      }
+    ],
+    "unity": [
+      {
+        "engine": "Unity 6000.4.6f1",
+        "failures": null,
+        "error": "not run: no active Unity Editor license on this machine (batch mode exits with 'No valid Unity Editor license found')"
+      }
+    ]
+  }
+}

@@ -3,7 +3,10 @@
 Run in the Unreal Editor (Tools > Execute Python Script) from inside an exported
 package folder, or headless:
 
-    UnrealEditor-Cmd.exe Project.uproject -run=pythonscript -script="<package>/ReBoneImport.py"
+    UnrealEditor-Cmd.exe Project.uproject -run=pythonscript -script="<package>/ReBoneImport.py [/Game/Destination]"
+
+Assets go to /Game/ReBoneBase/<export folder name> unless a destination is given,
+so packages exported to different folders never replace each other.
 
 Requires the ReBoneBase plugin (shipped in the package's Plugin folder) and the
 Paper2D, Python Editor Script and Editor Scripting Utilities plugins.
@@ -46,10 +49,11 @@ def flipbook_timing(durations_ms):
     return 1000.0 / step, [h // step for h in holds]
 
 
-def plan(package, destination=None):
+def plan(package, destination=None, folder=None):
     """Asset names and contents for a package, independent of Unreal."""
     name = asset_name(package.get("name"), "Sprites")
-    root = destination or "/Game/ReBoneBase/" + name
+    label = asset_name(os.path.basename(os.path.normpath(folder)), name) if folder else name
+    root = destination or "/Game/ReBoneBase/" + label
     pivot = package["pivot"]
     textures = [
         {"file": page["file"], "asset": "T_%s_%02d" % (name, i + 1)}
@@ -96,14 +100,14 @@ def import_package(folder=None, destination=None):
 
     folder = os.path.abspath(folder or os.path.dirname(os.path.abspath(__file__)))
     package = load_package(folder)
-    layout = plan(package, destination)
+    layout = plan(package, destination, folder)
     root = layout["root"]
     lib = unreal.EditorAssetLibrary
     tools = unreal.AssetToolsHelpers.get_asset_tools()
     made = set()
 
     def mark(asset):
-        lib.set_metadata_tag(asset, GENERATED_TAG, layout["name"])
+        lib.set_metadata_tag(asset, GENERATED_TAG, root)
         made.add(asset.get_path_name().split(".")[0])
         return asset
 
@@ -205,7 +209,7 @@ def import_package(folder=None, destination=None):
         if path in made:
             continue
         asset = lib.load_asset(path)
-        if asset is not None and lib.get_metadata_tag(asset, GENERATED_TAG) == layout["name"]:
+        if asset is not None and lib.get_metadata_tag(asset, GENERATED_TAG) == root:
             if lib.delete_asset(path):
                 removed.append(path)
             else:
@@ -217,4 +221,5 @@ def import_package(folder=None, destination=None):
 
 
 if __name__ == "__main__":
-    import_package()
+    import sys
+    import_package(destination=sys.argv[1] if len(sys.argv) > 1 else None)

@@ -8,6 +8,7 @@
 #include "ReBoneAnimationSet.h"
 #include "ReBoneFlipbookComponent.generated.h"
 
+class UAudioComponent;
 class UBoxComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReBoneMarkerSignature, const FString&, Name, const FString&, Payload, int32, Frame);
@@ -39,6 +40,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReBoneBase")
 	float RegionThickness = 8.f;
 
+	/** Play the set's reference audio in sync with each frame's retained source time. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReBoneBase")
+	bool bPlayAudio = true;
+
 	/** Fired for every marker of every frame entered, in frame order, including frames passed within one tick. */
 	UPROPERTY(BlueprintAssignable, Category = "ReBoneBase")
 	FReBoneMarkerSignature OnMarker;
@@ -56,6 +61,26 @@ public:
 	/** Return to the first frame, firing its markers, and play. */
 	UFUNCTION(BlueprintCallable, Category = "ReBoneBase")
 	void Restart();
+
+	/** Pause the animation and its audio. */
+	UFUNCTION(BlueprintCallable, Category = "ReBoneBase")
+	void PausePlayback();
+
+	/** Continue from the current frame, resynchronising audio. */
+	UFUNCTION(BlueprintCallable, Category = "ReBoneBase")
+	void ResumePlayback();
+
+	/** Where the audio should be now, in seconds: frame source time plus time in the frame minus the track start. Negative before the track starts. */
+	UFUNCTION(BlueprintPure, Category = "ReBoneBase")
+	float GetAudioTarget() const;
+
+	UFUNCTION(BlueprintPure, Category = "ReBoneBase")
+	UAudioComponent* GetAudioComponent() const { return AudioComponent; }
+
+	/** Position the audio was last started or sought to; -1 when stopped. For tests and diagnostics. */
+	float GetLastAudioStart() const { return LastAudioStart; }
+	int32 GetAudioStarts() const { return AudioStarts; }
+	bool IsAudioPaused() const { return bAudioPaused; }
 
 	UFUNCTION(BlueprintPure, Category = "ReBoneBase")
 	int32 GetCurrentFrameIndex() const { return FrameIndex; }
@@ -82,6 +107,8 @@ private:
 	void EnterFrame(int32 Index, bool bFireMarkers);
 	void ApplyRegions(const FReBoneFrame& Frame);
 	float FrameEnd(int32 Index) const;
+	void SyncAudio(bool bForce, int32 Previous);
+	void UpdateAudio();
 
 	int32 ClipIndex = INDEX_NONE;
 	int32 FrameIndex = INDEX_NONE;
@@ -89,4 +116,11 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UBoxComponent>> RegionBoxes;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UAudioComponent> AudioComponent;
+
+	float LastAudioStart = -1.f;
+	int32 AudioStarts = 0;
+	bool bAudioPaused = false;
 };

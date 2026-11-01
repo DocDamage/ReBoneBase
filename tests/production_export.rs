@@ -137,3 +137,25 @@ fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     }
     out
 }
+
+#[test]
+fn unity_packages_ship_the_repository_scripts() {
+    use rebonebase::{jobs::Progress, production::engine_export::plan_package};
+    let p = Project::new(Rig::new("Unity", 8, 8));
+    let files: std::collections::HashMap<_, _> =
+        plan_package(&p, EngineTarget::Unity, &Progress::default())
+            .unwrap()
+            .into_iter()
+            .collect();
+    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("integrations/unity");
+    for (shipped, source) in [
+        ("ReBonePlayer.cs", "ReBonePlayer.cs"),
+        ("Editor/ReBoneImporter.cs", "Editor/ReBoneImporter.cs"),
+    ] {
+        assert_eq!(
+            files[&std::path::PathBuf::from(shipped)],
+            std::fs::read(repo.join(source)).unwrap(),
+            "{shipped}"
+        );
+    }
+}

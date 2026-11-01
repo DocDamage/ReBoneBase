@@ -9,6 +9,7 @@ def check(cond, msg):
         problems.append(msg)
 
 def verify(folder, root):
+    del problems[:]
     package = json.load(open(os.path.join(folder, "package.json"), encoding="utf-8"))
     name = [a for a in lib.list_assets(root, recursive=False) if "/DA_" in a][0].split(".")[0]
     data = lib.load_asset(name)
@@ -34,7 +35,9 @@ def verify(folder, root):
             check(sprite.get_editor_property("source_dimension") == unreal.Vector2D(r["w"], r["h"]), "%s %d size" % (want["animation"], i))
             check(sprite.get_editor_property("pivot_mode") == unreal.SpritePivotMode.CUSTOM, "pivot mode")
             pivot = sprite.get_editor_property("custom_pivot_point")
-            check(abs(pivot.x - (r["x"] - t["x"] + p["x"])) < 1e-3 and abs(pivot.y - (r["y"] - t["y"] + p["y"])) < 1e-3, "%s %d pivot" % (want["animation"], i))
+            expected = (r["x"] - t["x"] + p["x"], r["y"] - t["y"] + p["y"])
+            check(abs(pivot.x - expected[0]) < 1e-3 and abs(pivot.y - expected[1]) < 1e-3,
+                  "%s %d pivot (%.4f, %.4f) vs (%.4f, %.4f)" % (want["animation"], i, pivot.x, pivot.y, expected[0], expected[1]))
             tex = sprite.get_editor_property("source_texture")
             page = package["pages"][f["page"]]
             check(tex.get_name().endswith("_%02d" % (f["page"] + 1)), "page")

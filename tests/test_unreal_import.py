@@ -70,6 +70,14 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(importer.plan(PACKAGE), importer.plan(json.loads(json.dumps(PACKAGE))))
         self.assertEqual(importer.plan(PACKAGE, "/Game/Characters/Hero")["root"], "/Game/Characters/Hero")
 
+    def test_export_folders_keep_packages_apart(self):
+        main = importer.plan(PACKAGE, folder="C:/exports/Hero main/")
+        dirs = importer.plan(PACKAGE, folder="C:/exports/Hero-directions")
+        self.assertEqual(main["root"], "/Game/ReBoneBase/Hero_main")
+        self.assertEqual(dirs["root"], "/Game/ReBoneBase/Hero_directions")
+        # Asset names still come from the rig, so both sets read naturally.
+        self.assertEqual(main["data"], dirs["data"])
+
     def test_only_supported_packages_load(self):
         with tempfile.TemporaryDirectory() as folder:
             path = pathlib.Path(folder) / "package.json"
