@@ -3,6 +3,8 @@ use rebonebase::editing::{self, KeySelection};
 
 mod clip_controls;
 mod dope;
+mod joint_keys;
+pub(super) use joint_keys::JointDrag;
 #[cfg(test)]
 mod tests;
 
@@ -153,8 +155,9 @@ impl ReboneApp {
         });
     }
     fn timeline_key_actions(&mut self, ui: &mut egui::Ui) {
-        let selected = !self.studio.keys.is_empty();
-        ui.menu_button(format!("Keys · {}", self.studio.keys.len()), |ui| {
+        let selected = !self.studio.keys.is_empty() || !self.studio.joint_keys.is_empty();
+        let count = self.studio.keys.len() + self.studio.joint_keys.len();
+        ui.menu_button(format!("Keys · {count}"), |ui| {
             if ui.button("Select all visible keys").clicked() {
                 self.select_all_timeline_keys();
                 ui.close();
@@ -164,6 +167,7 @@ impl ReboneApp {
                 .clicked()
             {
                 self.studio.keys.clear();
+                self.studio.joint_keys.clear();
                 ui.close();
             }
             ui.separator();
@@ -209,6 +213,16 @@ impl ReboneApp {
                         }
                     }
                 }
+                let (clip, joint_keys) = (self.project.rig.active_clip, &self.studio.joint_keys);
+                if let Some(c) = self.production.character.and_then(|id| {
+                    self.project
+                        .extras
+                        .characters3d
+                        .iter_mut()
+                        .find(|c| c.id == id)
+                }) {
+                    c.set_joint_easing(clip, joint_keys, self.easing);
+                }
                 if before != self.project {
                     self.history.record(&before);
                     self.changed();
@@ -249,7 +263,8 @@ impl ReboneApp {
                 self.studio
                     .clipboard
                     .as_ref()
-                    .is_some_and(|c| !c.keys.is_empty()),
+                    .is_some_and(|c| !c.keys.is_empty())
+                    || self.studio.joint_clipboard.is_some(),
                 egui::Button::new("Paste").small(),
             )
             .on_hover_text("Paste keys at the playhead")
@@ -339,6 +354,7 @@ impl ReboneApp {
                     })
             })
             .collect();
+        self.select_all_joint_keys();
     }
     pub(super) fn delete_timeline_keys(&mut self, record: bool) {
         let before = self.project.clone();
@@ -346,6 +362,7 @@ impl ReboneApp {
         self.studio.keys.clear();
         self.studio.key_drag = None;
         self.studio.curve_drag = None;
+        self.delete_joint_keys();
         if before != self.project {
             if record {
                 self.history.record(&before);

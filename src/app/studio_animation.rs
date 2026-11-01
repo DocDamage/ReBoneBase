@@ -223,14 +223,36 @@ impl ReboneApp {
             self.project.rig.active_clip(),
             &self.studio.keys,
         ));
+        let joints = self.copy_joint_keys();
         self.status = format!(
             "Copied {} keys",
-            self.studio.clipboard.as_ref().unwrap().keys.len()
+            self.studio.clipboard.as_ref().unwrap().keys.len() + joints
         );
     }
     pub(super) fn paste_timeline_keys(&mut self, record: bool) {
+        let before = self.project.clone();
+        let pasted = match self.paste_joint_keys() {
+            Ok(pasted) => pasted,
+            Err(e) => {
+                self.status = e;
+                return;
+            }
+        };
+        if pasted
+            && self
+                .studio
+                .clipboard
+                .as_ref()
+                .is_none_or(|c| c.keys.is_empty())
+        {
+            if record && self.project != before {
+                self.history.record(&before);
+            }
+            self.changed();
+            self.status = "Timeline keys pasted".into();
+            return;
+        }
         if let Some(clipboard) = &self.studio.clipboard {
-            let before = self.project.clone();
             match editing::paste_keys(self.project.rig.active_clip_mut(), clipboard, self.frame) {
                 Ok(()) => {
                     if record && self.project != before {
@@ -239,7 +261,11 @@ impl ReboneApp {
                     self.seek_frame(self.frame);
                     self.status = "Timeline keys pasted".into();
                 }
-                Err(e) => self.status = e,
+                Err(e) => {
+                    self.project = before;
+                    self.studio.joint_keys.clear();
+                    self.status = e;
+                }
             }
         }
     }

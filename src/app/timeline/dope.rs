@@ -8,6 +8,8 @@ struct Row {
     id: u32,
     name: String,
     group: bool,
+    /// A keyed 3D joint of the selected character.
+    joint: Option<usize>,
 }
 #[derive(Clone, Copy)]
 struct TimeScale {
@@ -59,6 +61,7 @@ impl ReboneApp {
                 id: b.id,
                 name: b.name.clone(),
                 group: false,
+                joint: None,
             })
             .collect();
         rows.extend(
@@ -82,8 +85,15 @@ impl ReboneApp {
                     id: p.id,
                     name: format!("Group · {}", p.name),
                     group: true,
+                    joint: None,
                 }),
         );
+        rows.extend(self.joint_rows().into_iter().map(|(joint, name)| Row {
+            id: u32::MAX,
+            name,
+            group: false,
+            joint: Some(joint),
+        }));
         rows
     }
     pub(in crate::app) fn editable_dope(&mut self, ui: &mut egui::Ui) {
@@ -254,7 +264,10 @@ impl ReboneApp {
             if row_rect.height() <= 0. {
                 continue;
             }
-            let selected = self.studio.selection.contains(&row.id) || self.selected == Some(row.id);
+            let selected = match row.joint {
+                Some(j) => j == self.production.character_joint,
+                None => self.studio.selection.contains(&row.id) || self.selected == Some(row.id),
+            };
             if selected {
                 lp.rect_filled(row_rect, 0., Color32::from_rgb(39, 74, 65));
                 p.rect_filled(
@@ -274,6 +287,8 @@ impl ReboneApp {
                 egui::FontId::proportional(11.),
                 if row.group {
                     Color32::from_rgb(224, 185, 113)
+                } else if row.joint.is_some() {
+                    Color32::from_rgb(132, 186, 255)
                 } else if selected {
                     ACCENT
                 } else {
@@ -291,6 +306,37 @@ impl ReboneApp {
             );
             if row.group {
                 label_response.on_hover_text("Group visibility / depth tracks");
+            } else if let Some(joint) = row.joint {
+                if label_response
+                    .on_hover_text("Keyed 3D joint correction · Click to edit in the Inspector")
+                    .clicked()
+                {
+                    self.production.character_joint = joint;
+                }
+                for frame in self.joint_key_frames(joint) {
+                    let x = scale.x(frame);
+                    if !(1. ..=scale.length as f32).contains(&frame)
+                        || x < time_clip.left() - 5.
+                        || x > time_clip.right() + 5.
+                    {
+                        continue;
+                    }
+                    p.add(egui::Shape::convex_polygon(
+                        vec![
+                            Pos2::new(x, center_y - 4.),
+                            Pos2::new(x + 4., center_y),
+                            Pos2::new(x, center_y + 4.),
+                            Pos2::new(x - 4., center_y),
+                        ],
+                        if self.joint_key_selected(joint, frame) {
+                            Color32::from_rgb(255, 209, 105)
+                        } else {
+                            Color32::from_rgb(132, 186, 255)
+                        },
+                        Stroke::NONE,
+                    ));
+                }
+                continue;
             } else if label_response
                 .on_hover_text(format!(
                     "{} · Click to select; Shift-click to add or remove",
@@ -366,6 +412,21 @@ impl ReboneApp {
             } else {
                 None
             };
+            if let Some(joint) = row.and_then(|r| r.joint) {
+                let hits = self
+                    .joint_key_frames(joint)
+                    .into_iter()
+                    .filter(|f| {
+                        (1. ..=scale.length as f32).contains(f)
+                            && (scale.x(*f) - origin.x).abs() < 7.
+                    })
+                    .map(|frame| rebonebase::character3d::JointKeyRef { joint, frame })
+                    .collect();
+                let shift = ui.input(|i| i.modifiers.shift);
+                self.press_joint_keys(hits, shift, response.drag_started(), frame);
+                self.seek_frame(frame.round());
+                return;
+            }
             let hits: Vec<_> = row.map_or_else(Vec::new, |row| {
                 self.project
                     .rig
@@ -392,6 +453,7 @@ impl ReboneApp {
                 let shift = ui.input(|i| i.modifiers.shift);
                 if !shift {
                     self.studio.keys.clear();
+                    self.studio.joint_keys.clear();
                 }
                 for hit in &hits {
                     if shift && self.studio.keys.contains(hit) {
@@ -447,13 +509,21 @@ impl ReboneApp {
             self.studio.key_drag = Some(drag);
         }
         if response.dragged()
+            && self.studio.joint_drag.is_some()
+            && let Some(pos) = at
+        {
+            self.drag_joint_keys(scale.frame(pos.x));
+        }
+        if response.dragged()
             && self.studio.key_drag.is_none()
+            && self.studio.joint_drag.is_none()
             && let Some(pos) = at
         {
             self.seek_frame(scale.bounded_frame(pos.x));
         }
         if response.drag_stopped() {
             self.studio.key_drag = None;
+            self.studio.joint_drag = None;
         }
     }
 }

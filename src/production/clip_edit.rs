@@ -536,6 +536,13 @@ fn edit_character_clips(source: &Project, target: &mut Project, operation: ClipE
     }
     for c in &mut target.extras.characters3d {
         if let Some(old) = source.extras.characters3d.iter().find(|v| v.id == c.id) {
+            c.tracks = crate::character3d::tracks::remap_clips(
+                &old.tracks,
+                ranges.iter().map(|&(new, index, start)| {
+                    let shift = source.rig.clips[index].evaluation_frame(start as f32) - 1.;
+                    (new, index, shift)
+                }),
+            );
             c.clips = ranges
                 .iter()
                 .map(|&(new, index, start)| {

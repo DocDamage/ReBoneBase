@@ -115,7 +115,11 @@ pub(crate) fn try_render_project(
     for (_, layer) in layers {
         match layer {
             Layer::Character(c) => {
-                let (c, time) = c.for_clip(rig.active_clip, timeline_ms(&rig, frame) as f64);
+                let (c, time) = c.for_clip(
+                    rig.active_clip,
+                    rig.active_clip().evaluation_frame(frame),
+                    timeline_ms(&rig, frame) as f64,
+                );
                 let image = c
                     .render(out.width(), out.height(), origin, time)
                     .with_context(|| {

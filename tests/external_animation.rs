@@ -155,7 +155,7 @@ fn imported_open_motion_keeps_its_final_sample_on_the_timeline() {
         !binding.looped,
         "Timeline looping should control repeated playback"
     );
-    let (c, _) = p.extras.characters3d[0].for_clip(p.rig.active_clip, 0.);
+    let (c, _) = p.extras.characters3d[0].for_clip(p.rig.active_clip, 1., 0.);
     let duration = c.model.animations[binding.animation.unwrap()].duration as f64 * 1000.;
     let expected = c
         .render(p.rig.width, p.rig.height, p.extras.canvas_origin, duration)
