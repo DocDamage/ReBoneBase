@@ -13,6 +13,7 @@ pub enum EngineTarget {
     #[default]
     Godot,
     Unity,
+    Unreal,
     Generic,
 }
 pub fn export_package(
@@ -201,6 +202,12 @@ pub(crate) fn plan_jobs(
             ));
             "Copy this folder under Assets in Unity. Select package.json and choose Assets/ReBoneBase/Create Actor. The editor helper imports textures with point filtering and creates a ReBonePlayer with SpriteRenderer. Set Pixels Per Unit as needed; marker is a UnityEvent(name,payload). Trigger colliders follow exported boxes. Audio WAV and its timing are in the manifest for your AudioSource. The player also reads version 1 packages."
         }
+        EngineTarget::Unreal => {
+            for (path, text) in UNREAL {
+                files.push((PathBuf::from(path), text.as_bytes().to_vec()));
+            }
+            "Unreal Engine 5.8 (tested 5.8.3) with Paper2D. Once per project: copy Plugin/ReBoneBase into the project's Plugins folder and open the project so Unreal builds it (Visual Studio 2022 is required for that build). Then, each time you export: run ReBoneImport.py from this folder with Tools > Execute Python Script, or headless with UnrealEditor-Cmd <Project>.uproject -run=pythonscript -script=\"<this folder>/ReBoneImport.py\". It imports pages as nearest-filtered, uncompressed textures without mipmaps, creates one Paper2D sprite per distinct frame image with the exported pivot, one flipbook per animation and a ReBoneAnimationSet data asset under /Game/ReBoneBase/<name>. Running it again updates those assets in place and removes generated assets the package no longer needs. Add a ReBoneFlipbookComponent, set its Animation Set, and bind OnMarker(Name, Payload, Frame). It plays clips with their looping, fires markers in order, keeps one reused box component per collision region, and offers PlayAnimation, PlayDirection(Name, Direction) and Restart. Timing: each flipbook runs at 1000/gcd(holds) frames per second with whole runs, so holds are exact to the millisecond. Flipbooks do not store looping; the component applies each clip's setting. A plain PaperFlipbookComponent plays the art and holds but not markers, regions or looping choices. Audio is imported as a SoundWave referenced by the data asset with its start time; scheduling it is left to your game."
+        }
         EngineTarget::Generic => {
             "Read package.json (format rebonebase-sprites, format_version 2). pages lists the PNG files. Each clip has a stable id, a unique animation name, an optional direction and ordered frames. A frame names its page and rect inside that page, its untrimmed source_size, and trim: where rect's top-left sits inside the untrimmed frame. pivot (pixels) and every frame's boxes are in untrimmed source-frame space, top-left origin, y down. Reverse/ping-pong playback is already expanded into frame order; duration_ms is each frame's hold. source_time_ms aligns audio and references with retained source timing after trimming or splitting. audio, when present, names the WAV with start_ms and volume."
         }
@@ -235,6 +242,81 @@ pub(crate) fn mirror_region(region: &mut CollisionShape, width: f32) {
     // A reflection reverses winding; reversing the corners restores it.
     region.corners.reverse();
 }
+/// Unreal importer and plugin, shipped verbatim with every Unreal package.
+const UNREAL: &[(&str, &str)] = &[
+    (
+        "ReBoneImport.py",
+        include_str!("../../integrations/unreal/ReBoneImport.py"),
+    ),
+    (
+        "Plugin/ReBoneBase/ReBoneBase.uplugin",
+        include_str!("../../integrations/unreal/ReBoneBase/ReBoneBase.uplugin"),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/ReBoneBase.Build.cs",
+        include_str!("../../integrations/unreal/ReBoneBase/Source/ReBoneBase/ReBoneBase.Build.cs"),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/Public/ReBoneAnimationSet.h",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBase/Public/ReBoneAnimationSet.h"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/Public/ReBoneFlipbookComponent.h",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBase/Public/ReBoneFlipbookComponent.h"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/Private/ReBoneBase.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBase/Private/ReBoneBase.cpp"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/Private/ReBoneAnimationSet.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBase/Private/ReBoneAnimationSet.cpp"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBase/Private/ReBoneFlipbookComponent.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBase/Private/ReBoneFlipbookComponent.cpp"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBaseEditor/ReBoneBaseEditor.Build.cs",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBaseEditor/ReBoneBaseEditor.Build.cs"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBaseEditor/Public/ReBoneImportLibrary.h",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBaseEditor/Public/ReBoneImportLibrary.h"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneBaseEditor.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneBaseEditor.cpp"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneImportLibrary.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneImportLibrary.cpp"
+        ),
+    ),
+    (
+        "Plugin/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneBaseTests.cpp",
+        include_str!(
+            "../../integrations/unreal/ReBoneBase/Source/ReBoneBaseEditor/Private/ReBoneBaseTests.cpp"
+        ),
+    ),
+];
 fn png(image: &image::RgbaImage) -> Result<Vec<u8>> {
     let mut bytes = std::io::Cursor::new(Vec::new());
     image.write_to(&mut bytes, image::ImageFormat::Png)?;

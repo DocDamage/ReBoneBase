@@ -313,6 +313,7 @@ impl ReboneApp {
             for engine in [
                 EngineTarget::Godot,
                 EngineTarget::Unity,
+                EngineTarget::Unreal,
                 EngineTarget::Generic,
             ] {
                 ui.selectable_value(&mut self.production.engine, engine, format!("{engine:?}"));

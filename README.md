@@ -41,7 +41,7 @@ Shortcuts: **B** draw bones, **V** select, **M** move rig, **R** radius, **I** I
 
 External animation can drive existing rigged 3D characters and 2D skeletons with attached sprite artwork. Model animation choices, speed, looping and offsets belong to individual timeline clips and survive save/load, undo, trim, split and reorder. Native animation-only FBX files do not need a mesh. Each import batch commits only after all clips validate.
 
-See the [Animation import guide](docs/ANIMATION_IMPORT_GUIDE.md) for formats, mapping, projections and engine exports. `integrations/unreal/export_animations.py` helps export selected Unreal Animation Sequences as FBX. A standalone `.uasset`, binary `.anim`, Animator Controller or Animation Blueprint needs the owning engine project to bake/export its evaluated skeleton motion. Unrigged PNGs and static unskinned models need rigging before articulated motion can drive them.
+See the [Animation import guide](docs/ANIMATION_IMPORT_GUIDE.md) for formats, mapping, projections and engine exports. `integrations/unreal/export_animations.py` helps export selected Unreal Animation Sequences as FBX. In the other direction, **Unreal** game packages import finished sprite animation as Paper2D assets; see the [Unreal guide](docs/UNREAL_GUIDE.md). A standalone `.uasset`, binary `.anim`, Animator Controller or Animation Blueprint needs the owning engine project to bake/export its evaluated skeleton motion. Unrigged PNGs and static unskinned models need rigging before articulated motion can drive them.
 
 ## Canvas, attachments, 3D and animation templates
 

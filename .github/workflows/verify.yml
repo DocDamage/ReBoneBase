@@ -44,8 +44,8 @@ jobs:
       - name: Check large-project performance budgets
         if: runner.os == 'Linux'
         run: cargo run --release --locked --example perf_check -- --check perf/budgets.json
-      - name: Verify Unreal export helper
-        run: python -m unittest discover -s tests -p test_unreal_export.py
+      - name: Verify Unreal helpers
+        run: python -m unittest discover -s tests -p "test_unreal_*.py"
       - name: Exercise native workspace on Linux
         if: runner.os == 'Linux'
         shell: bash
