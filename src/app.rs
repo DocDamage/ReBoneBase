@@ -15,10 +15,12 @@ mod animation_import_ui;
 mod canvas_ui;
 mod characters_ui;
 mod editor_panels;
+mod export_ui;
 mod import_ui;
 mod inspector;
 mod inspector_project;
 mod picking;
+mod preview_cache;
 mod production_assets;
 mod production_motion;
 mod production_scene;
@@ -102,6 +104,7 @@ pub struct ReboneApp {
     project: Project,
     saved: Project,
     history: History,
+    exports: export_ui::Exports,
     path: Option<PathBuf>,
     templates: Vec<Rig>,
     selected: Option<u32>,
@@ -118,6 +121,7 @@ pub struct ReboneApp {
     show_skin: bool,
     onion: bool,
     skin_tex: Option<egui::TextureHandle>,
+    preview: preview_cache::PreviewCache,
     ref_tex: Option<egui::TextureHandle>,
     onion_tex: Option<egui::TextureHandle>,
     gesture: Option<Gesture>,
@@ -170,6 +174,7 @@ impl ReboneApp {
             project,
             templates,
             history: History::default(),
+            exports: Default::default(),
             path: None,
             selected: None,
             mode: Mode::Rest,
@@ -185,6 +190,7 @@ impl ReboneApp {
             show_skin: true,
             onion: false,
             skin_tex: None,
+            preview: Default::default(),
             ref_tex: None,
             onion_tex: None,
             gesture: None,
@@ -258,6 +264,7 @@ impl ReboneApp {
     }
     fn replace(&mut self, p: Project, path: Option<PathBuf>) {
         self.canvas_snapshot = None;
+        self.preview.clear();
         self.render_error = None;
         self.reset_production_document();
         let _ = self.studio.store.clear_recovery(&self.studio.session);
@@ -361,50 +368,6 @@ impl ReboneApp {
                 false
             }
         }
-    }
-    fn export(&mut self, kind: &str) {
-        self.sync_canvas();
-        let ext = match kind {
-            "gif" => "gif",
-            "aseprite" | "aseall" => "aseprite",
-            _ => "png",
-        };
-        let Some(path) = rfd::FileDialog::new()
-            .add_filter(ext, &[ext])
-            .set_file_name(format!("{}.{}", self.project.rig.name, ext))
-            .save_file()
-        else {
-            return;
-        };
-        let result = (|| -> anyhow::Result<()> {
-            let mut prepared = self.project.clone();
-            rebonebase::canvas::grow_all(&mut prepared)?;
-            let bytes = match kind {
-                "aseprite" => rebonebase::aseprite::encode_project(&self.project, false)?,
-                "aseall" => rebonebase::aseprite::encode_project(&self.project, true)?,
-                "gif" => project::gif_project(&self.project)?,
-                _ => {
-                    let img = if kind == "sheet" {
-                        project::sheet_project(&self.project, self.sheet_cols)?
-                    } else {
-                        prepared.try_render_pose(self.frame, self.pose().as_ref())?
-                    };
-                    if kind == "indexed" {
-                        rebonebase::batch::indexed_png(&img, &self.project.extras.palette)?
-                    } else {
-                        let mut out = std::io::Cursor::new(Vec::new());
-                        img.write_to(&mut out, image::ImageFormat::Png)?;
-                        out.into_inner()
-                    }
-                }
-            };
-            project::atomic_write(&path, &bytes)?;
-            Ok(())
-        })();
-        self.status = match result {
-            Ok(()) => format!("Exported {}", path.display()),
-            Err(e) => format!("Export failed: {e:#}"),
-        };
     }
     fn import_reference(&mut self) {
         let Some(path) = rfd::FileDialog::new()
@@ -726,7 +689,16 @@ impl ReboneApp {
                     );
                 }
                 if self.show_skin {
+                    let key = self.preview_key();
+                    if self.skin_tex.is_none()
+                        && let Some(key) = key
+                        && let Some(texture) = self.preview.texture(&self.project, key)
+                    {
+                        self.render_error = None;
+                        self.skin_tex = Some(texture);
+                    }
                     if self.skin_tex.is_none() {
+                        let mut rendered = true;
                         let img = match self.project.try_render_pose(self.frame,self.pose().as_ref()) {
                             Ok(image) => {
                                 self.render_error = None;
@@ -734,6 +706,7 @@ impl ReboneApp {
                             }
                             Err(error) => {
                                 let message = format!("{error:#}");
+                                rendered = false;
                                 self.status = format!("Render failed: {message}");
                                 self.render_error = Some(message);
                                 image::RgbaImage::from_pixel(
@@ -743,14 +716,18 @@ impl ReboneApp {
                                 )
                             }
                         };
-                        self.skin_tex = Some(ctx.load_texture(
+                        let texture = ctx.load_texture(
                             "skin",
                             egui::ColorImage::from_rgba_unmultiplied(
                                 [img.width() as usize, img.height() as usize],
                                 img.as_raw(),
                             ),
                             egui::TextureOptions::NEAREST,
-                        ));
+                        );
+                        if rendered && let Some(key) = key {
+                            self.preview.store_texture(key, texture.clone());
+                        }
+                        self.skin_tex = Some(texture);
                     }
                     p.image(
                         self.skin_tex.as_ref().unwrap().id(),
@@ -1428,6 +1405,7 @@ impl ReboneApp {
         self.animation_import_dialog(ctx);
         self.studio_window(ctx);
         self.production_window(ctx);
+        self.export_window(ctx);
         self.command_palette(ctx);
         if let Some(action) = self.pending.clone() {
             egui::Modal::new(egui::Id::new("unsaved")).show(ctx, |ui| {
@@ -1494,6 +1472,7 @@ impl eframe::App for ReboneApp {
         }
         self.show(ctx);
         self.tick_services(ctx);
+        self.poll_export(ctx);
         self.production_tick(ctx);
     }
 }

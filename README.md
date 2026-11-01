@@ -33,9 +33,9 @@ Trim, split and resize preserve sparse animation keys, easing, live controllers 
 Whole-body translation uses **Move Rig (M)**: select it and drag in the canvas. It moves all skeleton roots together; in Animate mode it keys their movement. Ordinary root grabs stay locked, loose-limb body drags rotate at their joint, and IK only acts on connected limb ends without driving the root. Middle/right dragging moves the camera.
 4. Import a reference image from File. Adjust its position, scale, and opacity in Inspector → Project → Reference image.
 5. Import FBX, BVH, glTF, GLB or text Unity `.anim` skeletal motion from File for a 2D rig, or Production → 3D characters for an existing 3D model. Preview joint mapping and import selected clips; the 3D dialog can drive both targets together. Unreal `.uasset` and binary/Humanoid-only Unity clips require an engine FBX export.
-6. Save `.rebone` projects. Export transparent PNG frames, PNG sprite sheets, GIF animation, or layered Aseprite animation.
+6. Save `.rebone` projects. **Export ↗ → Export…** (Ctrl+E) opens one Export window for transparent PNG frames, indexed PNG, sprite sheets, GIF animation, layered Aseprite animation, batch preset folders and game-engine packages. Exports render in the background with progress and **Cancel**; you can keep editing, and a cancelled export writes nothing.
 
-Shortcuts: **B** draw bones, **V** select, **M** move rig, **R** radius, **I** IK, **K** key pose, **Space** play/pause, **Left/Right** step, **F/0** fit, **Ctrl+Z** undo, **Ctrl+Shift+Z** redo, **Ctrl+S** save, **Ctrl+O** open. Middle/right drag pans; scroll zooms.
+Shortcuts: **B** draw bones, **V** select, **M** move rig, **R** radius, **I** IK, **K** key pose, **Space** play/pause, **Left/Right** step, **F/0** fit, **Ctrl+Z** undo, **Ctrl+Shift+Z** redo, **Ctrl+S** save, **Ctrl+O** open, **Ctrl+E** export. Middle/right drag pans; scroll zooms.
 
 ## Unity and Unreal animation import
 
@@ -69,6 +69,8 @@ cargo test --locked --all-targets -- --include-ignored
 cargo fmt --all -- --check
 cargo clippy --locked --all-targets -- -D warnings
 python -m unittest discover -s tests -p test_unreal_export.py
+# Large-project timings against checked-in budgets (see docs/PERFORMANCE.md):
+cargo run --release --locked --example perf_check -- --check perf/budgets.json
 ```
 
 The Lua dependency is development-only: tests execute the original trusted source as an oracle for transforms, animation, IK, rasterization, and serialized legacy rigs. It is absent from the application's runtime dependency graph. `cargo run --example extract_templates` regenerates native template data from the supplied source.

@@ -160,6 +160,89 @@ impl Project {
             .iter()
             .fold(own, |n, a| n.saturating_add(a.project.embedded_bytes()))
     }
+    /// Approximate heap bytes owned by this project but not shared with its
+    /// clones. Reference-counted images, audio and 3D models are not charged.
+    pub fn snapshot_bytes(&self) -> usize {
+        use std::mem::size_of;
+        fn list<T>(v: &[T]) -> usize {
+            size_of_val(v)
+        }
+        fn map<K, V>(len: usize) -> usize {
+            (size_of::<K>() + size_of::<V>() + 16) * len
+        }
+        let rig = &self.rig;
+        let mut n = size_of::<Project>()
+            + list(&rig.bones)
+            + list(&rig.parts)
+            + rig
+                .bones
+                .iter()
+                .map(|b| list(&b.bulges_left) + list(&b.bulges_right) + b.name.len())
+                .sum::<usize>();
+        for clip in &rig.clips {
+            n += size_of::<crate::animation::Clip>()
+                + clip.name.len()
+                + map::<u32, u32>(clip.durations.len())
+                + clip
+                    .source
+                    .as_ref()
+                    .map_or(0, |s| map::<u32, u32>(s.durations.len()));
+            for track in &clip.tracks {
+                n += size_of::<crate::animation::Track>() + list(&track.keys);
+            }
+        }
+        for pose in &self.poses {
+            n += size_of::<SavedPose>()
+                + pose.name.len()
+                + map::<u32, crate::animation::BonePose>(pose.pose.len());
+        }
+        let x = &self.extras;
+        n += list(&x.pins) + list(&x.palette) + list(&x.characters3d);
+        for c in &x.characters3d {
+            n += map::<usize, [f32; 3]>(c.joints.len())
+                + map::<usize, crate::character3d::Playback3d>(c.clips.len());
+        }
+        n += x.references.as_ref().map_or(0, |r| list(&r.frames));
+        let art = &x.production;
+        n += list(&art.assets) + list(&art.events);
+        for a in &art.attachments {
+            n += size_of_val(a)
+                + list(&a.keys)
+                + a.clip_keys.values().map(|k| list(k) + 32).sum::<usize>();
+        }
+        for m in &art.meshes {
+            n += size_of_val(m)
+                + list(&m.vertices)
+                + m.vertices.iter().map(|v| list(&v.weights)).sum::<usize>()
+                + list(&m.triangles)
+                + map::<u32, crate::production::BindTransform>(m.bind.len());
+            for key in m.keys.iter().chain(m.clip_keys.values().flatten()) {
+                n += size_of_val(key) + list(&key.offsets);
+            }
+        }
+        for look in &art.looks {
+            n += size_of_val(look)
+                + map::<u32, [u8; 4]>(look.colors.len())
+                + list(&look.attachments)
+                + list(&look.meshes);
+        }
+        for f in &art.faces {
+            n += size_of_val(f) + list(&f.keys);
+        }
+        for c in &art.corrections {
+            n += size_of_val(c) + map::<u32, [u8; 4]>(c.pixels.len());
+        }
+        for b in &art.boxes {
+            n += size_of_val(b) + list(&b.keys);
+        }
+        for a in &art.actors {
+            n += size_of_val(a)
+                + list(&a.keys)
+                + map::<usize, f64>(a.clip_time_ms.len())
+                + a.project.snapshot_bytes();
+        }
+        n
+    }
     pub fn render_work(&self) -> u64 {
         fn characters(p: &Project) -> u64 {
             p.extras
@@ -424,43 +507,90 @@ impl Project {
         Ok(())
     }
 }
-#[derive(Default)]
+/// Undo snapshots. Embedded images, audio and 3D models are reference counted,
+/// so a snapshot costs roughly its editable data; history keeps as many steps
+/// as fit a memory budget, never fewer than a small working minimum.
 pub struct History {
-    undo: VecDeque<Project>,
-    redo: Vec<Project>,
+    undo: VecDeque<(Project, usize)>,
+    redo: Vec<(Project, usize)>,
+    bytes: usize,
+    budget: usize,
+}
+impl Default for History {
+    fn default() -> Self {
+        Self::with_budget(History::DEFAULT_BUDGET)
+    }
 }
 impl History {
+    pub const DEFAULT_BUDGET: usize = 192 * 1024 * 1024;
+    pub const MAX_STEPS: usize = 200;
+    pub const MIN_STEPS: usize = 10;
+    pub fn with_budget(budget: usize) -> Self {
+        Self {
+            undo: VecDeque::new(),
+            redo: vec![],
+            bytes: 0,
+            budget,
+        }
+    }
     pub fn can_undo(&self) -> bool {
         !self.undo.is_empty()
     }
     pub fn can_redo(&self) -> bool {
         !self.redo.is_empty()
     }
+    pub fn undo_steps(&self) -> usize {
+        self.undo.len()
+    }
+    /// Estimated memory held by undo and redo snapshots.
+    pub fn bytes(&self) -> usize {
+        self.bytes
+    }
     pub fn record(&mut self, p: &Project) {
-        if self.undo.back() != Some(p) {
-            self.undo.push_back(p.clone());
-            if self.undo.len() > 60 {
-                self.undo.pop_front();
-            }
+        if self.undo.back().map(|(s, _)| s) != Some(p) {
+            self.push_undo(p.clone());
         }
-        self.redo.clear();
+        for (_, size) in self.redo.drain(..) {
+            self.bytes -= size;
+        }
+        self.trim();
     }
     pub fn undo(&mut self, p: &mut Project) -> bool {
-        if let Some(old) = self.undo.pop_back() {
-            self.redo.push(p.clone());
-            *p = old;
+        if let Some((old, size)) = self.undo.pop_back() {
+            self.bytes -= size;
+            let current = std::mem::replace(p, old);
+            let size = current.snapshot_bytes();
+            self.bytes += size;
+            self.redo.push((current, size));
             true
         } else {
             false
         }
     }
     pub fn redo(&mut self, p: &mut Project) -> bool {
-        if let Some(new) = self.redo.pop() {
-            self.undo.push_back(p.clone());
-            *p = new;
+        if let Some((new, size)) = self.redo.pop() {
+            self.bytes -= size;
+            let current = std::mem::replace(p, new);
+            self.push_undo(current);
             true
         } else {
             false
+        }
+    }
+    fn push_undo(&mut self, p: Project) {
+        let size = p.snapshot_bytes();
+        self.bytes += size;
+        self.undo.push_back((p, size));
+    }
+    /// Drop the oldest undo steps beyond the step cap or memory budget.
+    fn trim(&mut self) {
+        while self.undo.len() > Self::MAX_STEPS
+            || (self.bytes > self.budget && self.undo.len() > Self::MIN_STEPS)
+        {
+            let Some((_, size)) = self.undo.pop_front() else {
+                break;
+            };
+            self.bytes -= size;
         }
     }
 }
@@ -558,11 +688,29 @@ pub fn sheet(rig: &Rig, columns: u32) -> Result<image::RgbaImage> {
     Ok(out)
 }
 pub fn sheet_project(project: &Project, columns: u32) -> Result<image::RgbaImage> {
+    sheet_project_with(project, columns, &crate::jobs::Progress::default())
+}
+pub fn sheet_project_with(
+    project: &Project,
+    columns: u32,
+    progress: &crate::jobs::Progress,
+) -> Result<image::RgbaImage> {
+    render_sheet(&prepare_export(project)?, columns, progress)
+}
+/// Validate and grow the canvas envelope once for a whole export.
+pub(crate) fn prepare_export(project: &Project) -> Result<Project> {
     project.validate()?;
     let mut prepared = project.clone();
     crate::canvas::grow_all(&mut prepared)?;
-    let project = &prepared;
-    project.validate()?;
+    prepared.validate()?;
+    Ok(prepared)
+}
+/// Sheet of the active clip of a project already passed through [`prepare_export`].
+pub(crate) fn render_sheet(
+    project: &Project,
+    columns: u32,
+    progress: &crate::jobs::Progress,
+) -> Result<image::RgbaImage> {
     let rig = &project.rig;
     let sequence = rig.active_clip().frame_sequence();
     let n = sequence.len() as u32;
@@ -573,10 +721,11 @@ pub fn sheet_project(project: &Project, columns: u32) -> Result<image::RgbaImage
     ensure!(w * h <= MAX_PIXELS, "Sprite sheet exceeds 16 megapixels");
     project_export_budget(project, n as u64)?;
     let mut out = image::RgbaImage::new(w as u32, h as u32);
+    let mut frames = crate::frame_cache::SequenceRenderer::new(project, &sequence, progress);
     for (i, f) in sequence.iter().enumerate() {
         image::imageops::replace(
             &mut out,
-            &project.try_render_at(*f as f32)?,
+            &*frames.frame(*f)?,
             (i as u32 % cols * rig.width) as i64,
             (i as u32 / cols * rig.height) as i64,
         );
@@ -584,14 +733,16 @@ pub fn sheet_project(project: &Project, columns: u32) -> Result<image::RgbaImage
     Ok(out)
 }
 pub fn gif_project(project: &Project) -> Result<Vec<u8>> {
-    project.validate()?;
-    let mut prepared = project.clone();
-    crate::canvas::grow_all(&mut prepared)?;
-    let project = &prepared;
-    project.validate()?;
+    gif_project_with(project, &crate::jobs::Progress::default())
+}
+pub fn gif_project_with(project: &Project, progress: &crate::jobs::Progress) -> Result<Vec<u8>> {
+    render_gif(&prepare_export(project)?, progress)
+}
+pub(crate) fn render_gif(project: &Project, progress: &crate::jobs::Progress) -> Result<Vec<u8>> {
     let clip = project.rig.active_clip();
     let sequence = clip.frame_sequence();
     project_export_budget(project, sequence.len() as u64)?;
+    let mut frames = crate::frame_cache::SequenceRenderer::new(project, &sequence, progress);
     let mut bytes = vec![];
     {
         let mut encoder = image::codecs::gif::GifEncoder::new(&mut bytes);
@@ -600,7 +751,7 @@ pub fn gif_project(project: &Project) -> Result<Vec<u8>> {
         }
         for f in sequence {
             encoder.encode_frame(image::Frame::from_parts(
-                project.try_render_at(f as f32)?,
+                std::sync::Arc::unwrap_or_clone(frames.frame(f)?),
                 0,
                 0,
                 image::Delay::from_numer_denom_ms(clip.duration_ms(f), 1),

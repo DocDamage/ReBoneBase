@@ -1,6 +1,7 @@
 //! Standalone layered RGBA writer for the official Aseprite file format.
 //! Specification: https://github.com/aseprite/aseprite/blob/main/docs/ase-file-specs.md
 use crate::{
+    jobs::Progress,
     model::Rig,
     project::{self, Project},
     skin,
@@ -15,19 +16,33 @@ const MAX_WORK: u64 = 128 * 1024 * 1024;
 /// Exports the active clip, retaining one editable layer per skin group.
 /// Visibility is represented by empty cels and animated z by per-cel ordering.
 pub fn encode(rig: &Rig) -> Result<Vec<u8>> {
-    encode_indices(rig, &[rig.active_clip])
+    encode_indices(rig, &[rig.active_clip], &Progress::default())
 }
 pub fn encode_all(rig: &Rig) -> Result<Vec<u8>> {
-    encode_indices(rig, &(0..rig.clips.len()).collect::<Vec<_>>())
+    encode_indices(
+        rig,
+        &(0..rig.clips.len()).collect::<Vec<_>>(),
+        &Progress::default(),
+    )
 }
 /// Export the displayed project. Pure skin projects retain editable group
 /// layers; artwork projects retain the exact composited scene as an RGBA layer.
 pub fn encode_project(project: &Project, all_clips: bool) -> Result<Vec<u8>> {
-    project.validate()?;
-    let mut prepared = project.clone();
-    crate::canvas::grow_all(&mut prepared)?;
-    let project = &prepared;
-    project.validate()?;
+    encode_project_with(project, all_clips, &Progress::default())
+}
+pub fn encode_project_with(
+    project: &Project,
+    all_clips: bool,
+    progress: &Progress,
+) -> Result<Vec<u8>> {
+    encode_prepared(&project::prepare_export(project)?, all_clips, progress)
+}
+/// Encode a project already passed through [`project::prepare_export`].
+pub(crate) fn encode_prepared(
+    project: &Project,
+    all_clips: bool,
+    progress: &Progress,
+) -> Result<Vec<u8>> {
     let indices: Vec<_> = if all_clips {
         (0..project.rig.clips.len()).collect()
     } else {
@@ -53,7 +68,7 @@ pub fn encode_project(project: &Project, all_clips: bool) -> Result<Vec<u8>> {
             root.x -= project.extras.canvas_origin.x;
             root.y -= project.extras.canvas_origin.y;
         }
-        return encode_indices(&rig, &indices);
+        return encode_indices(&rig, &indices, progress);
     }
     let rig = &project.rig;
     ensure!(
@@ -72,9 +87,11 @@ pub fn encode_project(project: &Project, all_clips: bool) -> Result<Vec<u8>> {
     out[35] = 1;
     let mut p = project.clone();
     let mut first = true;
+    progress.add_total(frames);
     for index in &indices {
         p.rig.active_clip = *index;
         for frame in 1..=rig.clips[*index].length {
+            progress.checkpoint()?;
             let frame_start = out.len();
             out.resize(frame_start + 16, 0);
             let mut chunks = 0;
@@ -126,6 +143,7 @@ pub fn encode_project(project: &Project, all_clips: bool) -> Result<Vec<u8>> {
                 rig.clips[*index].duration_ms(frame) as u16,
             );
             put_u32(&mut out, frame_start + 12, chunks);
+            progress.advance(1)?;
         }
     }
     let bytes = out.len() as u32;
@@ -156,7 +174,7 @@ fn append_tags(out: &mut Vec<u8>, rig: &Rig, indices: &[usize]) {
     }
     end_chunk(out, start);
 }
-fn encode_indices(rig: &Rig, indices: &[usize]) -> Result<Vec<u8>> {
+fn encode_indices(rig: &Rig, indices: &[usize], progress: &Progress) -> Result<Vec<u8>> {
     rig.validate().map_err(anyhow::Error::msg)?;
     ensure!(
         !rig.parts.is_empty(),
@@ -204,7 +222,9 @@ fn encode_indices(rig: &Rig, indices: &[usize]) -> Result<Vec<u8>> {
     out[35] = 1; // square pixels
     let mut single = rig.clone(); // Reuse geometry; never clone an entire document per cel.
 
+    progress.add_total(frames);
     for (output_frame, (clip_index, frame)) in sequence.iter().copied().enumerate() {
+        progress.checkpoint()?;
         single.active_clip = clip_index;
         let frame_start = out.len();
         out.resize(frame_start + 16, 0);
@@ -290,6 +310,7 @@ fn encode_indices(rig: &Rig, indices: &[usize]) -> Result<Vec<u8>> {
             rig.clips[clip_index].duration_ms(frame) as u16,
         );
         put_u32(&mut out, frame_start + 12, chunks);
+        progress.advance(1)?;
     }
     let file_bytes = out.len() as u32;
     put_u32(&mut out, 0, file_bytes);

@@ -99,6 +99,9 @@ impl ReboneApp {
         });
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                if self.exports.job.is_some() {
+                    self.export_progress(ui, 200.);
+                }
                 let width = (ui.available_width() - 285.).max(100.);
                 ui.add_sized(
                     [width, 20.],
@@ -164,21 +167,27 @@ impl ReboneApp {
     }
     fn export_menu(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(RichText::new("Export ↗").color(ACCENT), |ui| {
-            for (kind, label) in [
-                ("frame", "Current frame · PNG"),
-                ("indexed", "Current frame · indexed PNG"),
-                ("sheet", "Sprite sheet · PNG"),
-                ("gif", "Animation · GIF"),
-                ("aseprite", "Layered animation · Aseprite"),
-                ("aseall", "All clips · Aseprite tags"),
-            ] {
-                if ui.button(label).clicked() {
-                    self.export(kind);
+            if ui.button("Export…").clicked() {
+                self.open_export(self.exports.kind);
+                ui.close();
+            }
+            ui.separator();
+            for kind in export_ui::Kind::SINGLE {
+                if ui
+                    .add_enabled(self.exports.job.is_none(), egui::Button::new(kind.label()))
+                    .clicked()
+                {
+                    self.export_kind(kind);
                     ui.close();
                 }
             }
+            ui.separator();
             if ui.button("Batch export presets…").clicked() {
-                self.open_studio_tab(studio::Tab::Export);
+                self.open_export(export_ui::Kind::Batch);
+                ui.close();
+            }
+            if ui.button("Game engine package…").clicked() {
+                self.open_export(export_ui::Kind::Engine);
                 ui.close();
             }
             ui.horizontal(|ui| {

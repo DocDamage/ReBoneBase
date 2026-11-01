@@ -327,6 +327,7 @@ impl ReboneApp {
             Action::PixelBoxTools => self.open_production_tab(production_ui::Tab::PixelsBoxes),
             Action::GameExport => self.open_production_tab(production_ui::Tab::Export),
             Action::WorkspaceSettings => self.open_production_tab(production_ui::Tab::Workspace),
+            Action::Export => self.open_export(self.exports.kind),
             Action::Cancel => {
                 if let Some(g) = self.gesture.take() {
                     self.project = g.base;

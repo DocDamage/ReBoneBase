@@ -1,0 +1,27 @@
+{
+  "_note": "Median milliseconds per check, release build. About 5x local measurements so slower CI runners pass; tighten when a regression is fixed. See docs/PERFORMANCE.md.",
+  "large": {
+    "prepare_canvas": 250,
+    "render_active_sheet": 150,
+    "batch_sheets_all_clips": 2500,
+    "batch_frames_all_clips": 2500,
+    "batch_gifs_all_clips": 2500,
+    "aseprite_all_clips": 2500,
+    "engine_package": 2500,
+    "history_200_edits": 150,
+    "undo_redo_50": 50,
+    "cancel_latency": 250
+  },
+  "small": {
+    "prepare_canvas": 20,
+    "render_active_sheet": 50,
+    "batch_sheets_all_clips": 120,
+    "batch_frames_all_clips": 120,
+    "batch_gifs_all_clips": 120,
+    "aseprite_all_clips": 300,
+    "engine_package": 120,
+    "history_200_edits": 25,
+    "undo_redo_50": 10,
+    "cancel_latency": 25
+  }
+}

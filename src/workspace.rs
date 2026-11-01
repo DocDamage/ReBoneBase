@@ -189,9 +189,10 @@ pub enum Action {
     PixelBoxTools,
     GameExport,
     WorkspaceSettings,
+    Export,
 }
 impl Action {
-    pub const ALL: [Self; 56] = [
+    pub const ALL: [Self; 57] = [
         Self::New,
         Self::Open,
         Self::Save,
@@ -248,6 +249,7 @@ impl Action {
         Self::PixelBoxTools,
         Self::GameExport,
         Self::WorkspaceSettings,
+        Self::Export,
     ];
     pub fn label(self) -> &'static str {
         match self {
@@ -307,6 +309,7 @@ impl Action {
             Self::PixelBoxTools => "Production: Pixels and boxes",
             Self::GameExport => "Production: Game export",
             Self::WorkspaceSettings => "Workspace settings and shortcuts",
+            Self::Export => "Export…",
         }
     }
 }
@@ -370,6 +373,7 @@ pub fn default_bindings() -> Vec<Binding> {
         (CommandPalette, "P", true, false),
         (Paint, "P", false, false),
         (Boxes, "H", false, false),
+        (Export, "E", true, false),
     ]
     .into_iter()
     .map(|(action, key, ctrl, shift)| Binding {

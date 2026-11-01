@@ -2,15 +2,13 @@ use super::*;
 use rebonebase::{
     batch::ExportPreset,
     editing::{KeyClipboard, KeySelection},
+    jobs::{Job as Work, Outcome},
     motion::RetargetProfile,
     references::VideoOptions,
     storage::{LibraryEntry, Recovery, Store},
 };
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{BTreeSet, HashMap},
-    sync::mpsc,
-};
+use std::collections::{BTreeSet, HashMap};
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub(super) enum Tab {
@@ -23,13 +21,10 @@ pub(super) enum Tab {
     Files,
     Export,
 }
-pub(super) enum JobResult {
-    References(rebonebase::features::ReferenceSequence),
-    Export(usize),
-}
+/// A reference import; its result applies only to the project that started it.
 pub(super) struct Job {
-    pub receiver: mpsc::Receiver<Result<JobResult, String>>,
-    pub generation: Option<u64>,
+    pub job: rebonebase::jobs::Job<rebonebase::features::ReferenceSequence>,
+    pub generation: u64,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -106,7 +101,6 @@ pub(super) struct Studio {
     pub profiles: Vec<RetargetProfile>,
     pub batch: ExportPreset,
     pub preset_index: usize,
-    pub overwrite: bool,
     pub job: Option<Job>,
     pub generation: u64,
     pub ref_index: Option<usize>,
@@ -166,7 +160,6 @@ impl Default for Studio {
             profiles: vec![],
             batch: Default::default(),
             preset_index: 0,
-            overwrite: false,
             job: None,
             generation: 0,
             ref_index: None,
@@ -273,9 +266,9 @@ impl ReboneApp {
     }
     pub(super) fn tick_services(&mut self, ctx: &egui::Context) {
         if let Some(job) = self.studio.job.take() {
-            match job.receiver.try_recv() {
-                Ok(Ok(JobResult::References(mut seq))) => {
-                    if job.generation == Some(self.studio.generation) {
+            match job.job.poll() {
+                Some(Outcome::Finished(mut seq)) => {
+                    if job.generation == self.studio.generation {
                         let scale = (self.project.rig.width as f32 / seq.frames[0].width as f32)
                             .min(self.project.rig.height as f32 / seq.frames[0].height as f32);
                         for frame in &mut seq.frames {
@@ -290,16 +283,11 @@ impl ReboneApp {
                         self.status = "Reference import finished for the previous project".into();
                     }
                 }
-                Ok(Ok(JobResult::Export(n))) => {
-                    self.status = format!("Batch export complete · {n} files")
-                }
-                Ok(Err(e)) => self.status = e,
-                Err(mpsc::TryRecvError::Empty) => {
+                Some(Outcome::Failed(e)) => self.status = e,
+                Some(Outcome::Cancelled) => self.status = "Reference import cancelled".into(),
+                None => {
                     self.studio.job = Some(job);
                     ctx.request_repaint_after(Duration::from_millis(40));
-                }
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.status = "Background task ended unexpectedly".into()
                 }
             }
         }
@@ -327,8 +315,7 @@ impl ReboneApp {
             self.status = "Wait for the current background task".into();
             return;
         }
-        let (sender, receiver) = mpsc::channel();
-        if video {
+        let job = if video {
             let Some(path) = rfd::FileDialog::new()
                 .add_filter(
                     "Video reference",
@@ -339,12 +326,12 @@ impl ReboneApp {
                 return;
             };
             let options = self.studio.preferences.video.clone();
-            std::thread::spawn(move || {
-                let result = rebonebase::references::video_frames(&path, &options)
-                    .map(JobResult::References)
-                    .map_err(|e| format!("{e:#}"));
-                let _ = sender.send(result);
-            });
+            Work::spawn("Importing video reference", move |progress| {
+                progress.set_stage("Decoding video frames");
+                let seq = rebonebase::references::video_frames(&path, &options)?;
+                progress.checkpoint()?;
+                Ok(seq)
+            })
         } else {
             let Some(paths) = rfd::FileDialog::new()
                 .add_filter("Reference sequence", &["png", "jpg", "jpeg"])
@@ -353,42 +340,18 @@ impl ReboneApp {
                 return;
             };
             let fps = self.studio.preferences.video.fps;
-            std::thread::spawn(move || {
-                let result = rebonebase::references::load_sequence(&paths, fps)
-                    .map(JobResult::References)
-                    .map_err(|e| format!("{e:#}"));
-                let _ = sender.send(result);
-            });
-        }
+            Work::spawn("Importing reference frames", move |progress| {
+                progress.set_stage(format!("Loading {} images", paths.len()));
+                let seq = rebonebase::references::load_sequence(&paths, fps)?;
+                progress.checkpoint()?;
+                Ok(seq)
+            })
+        };
         self.studio.job = Some(Job {
-            receiver,
-            generation: Some(self.studio.generation),
+            job,
+            generation: self.studio.generation,
         });
         self.status = "Importing reference frames…".into();
-    }
-    pub(super) fn start_batch(&mut self) {
-        if self.studio.job.is_some() {
-            self.status = "Wait for the current background task".into();
-            return;
-        }
-        let Some(folder) = rfd::FileDialog::new().pick_folder() else {
-            return;
-        };
-        let project = self.project.clone();
-        let preset = self.studio.batch.clone();
-        let overwrite = self.studio.overwrite;
-        let (sender, receiver) = mpsc::channel();
-        std::thread::spawn(move || {
-            let result = rebonebase::batch::export(&project, &folder, &preset, overwrite)
-                .map(|r| JobResult::Export(r.files.len()))
-                .map_err(|e| format!("{e:#}"));
-            let _ = sender.send(result);
-        });
-        self.studio.job = Some(Job {
-            receiver,
-            generation: None,
-        });
-        self.status = "Rendering batch export…".into();
     }
     pub(super) fn studio_window(&mut self, ctx: &egui::Context) {
         if !self.studio.open {
