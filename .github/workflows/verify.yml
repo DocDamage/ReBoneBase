@@ -41,6 +41,9 @@ jobs:
         run: cargo test --locked --all-targets
       - name: Check lints
         run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Check large-project performance budgets
+        if: runner.os == 'Linux'
+        run: cargo run --release --locked --example perf_check -- --check perf/budgets.json
       - name: Verify Unreal export helper
         run: python -m unittest discover -s tests -p test_unreal_export.py
       - name: Exercise native workspace on Linux

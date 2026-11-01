@@ -1,4 +1,7 @@
-use crate::project::{self, Project};
+use crate::{
+    jobs::Progress,
+    project::{self, Project},
+};
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -11,7 +14,7 @@ pub enum ExportFormat {
     Aseprite,
     Frames,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ExportPreset {
     pub name: String,
@@ -130,11 +133,29 @@ pub fn export(
     preset: &ExportPreset,
     overwrite: bool,
 ) -> Result<ExportReport> {
-    project.validate()?;
-    let mut prepared = project.clone();
-    crate::canvas::grow_all(&mut prepared)?;
+    export_with(project, folder, preset, overwrite, &Progress::default())
+}
+pub fn export_with(
+    project: &Project,
+    folder: &Path,
+    preset: &ExportPreset,
+    overwrite: bool,
+    progress: &Progress,
+) -> Result<ExportReport> {
+    let files = plan(project, preset, progress)?;
+    progress.commit("Writing files")?;
+    let files = crate::export_transaction::publish(folder, files, overwrite)?;
+    Ok(ExportReport { files })
+}
+/// Render every planned file in memory without touching the destination.
+pub fn plan(
+    project: &Project,
+    preset: &ExportPreset,
+    progress: &Progress,
+) -> Result<Vec<(PathBuf, Vec<u8>)>> {
+    progress.set_stage("Preparing canvas");
+    let prepared = project::prepare_export(project)?;
     let project = &prepared;
-    project.validate()?;
     ensure!(
         (1..=32).contains(&preset.columns)
             && preset.prefix.len() <= 128
@@ -153,9 +174,16 @@ pub fn export(
     project::project_export_budget(project, total_frames)?;
     let mut planned = Vec::<(PathBuf, Vec<u8>)>::new();
     let mut clips = vec![];
-    for index in indices {
+    let clip_count = indices.len();
+    for (n, index) in indices.into_iter().enumerate() {
+        progress.checkpoint()?;
         let mut p = project.clone();
         p.rig.active_clip = index;
+        progress.set_stage(format!(
+            "Rendering clip {} of {clip_count} · {}",
+            n + 1,
+            p.rig.active_clip().name
+        ));
         let rig = &p.rig;
         let clip = rig.active_clip();
         let sequence = clip.frame_sequence();
@@ -178,7 +206,7 @@ pub fn export(
         let mut frames = vec![];
         match preset.format {
             ExportFormat::Sheet | ExportFormat::IndexedSheet => {
-                let img = project::sheet_project(&p, preset.columns)?;
+                let img = project::render_sheet(&p, preset.columns, progress)?;
                 let file = format!("{base}.png");
                 let cols = preset.columns.min(sequence.len() as u32).max(1);
                 for (i, f) in sequence.iter().enumerate() {
@@ -199,9 +227,9 @@ pub fn export(
                 };
                 let file = format!("{base}.{extension}");
                 let bytes = if preset.format == ExportFormat::Gif {
-                    project::gif_project(&p)?
+                    project::render_gif(&p, progress)?
                 } else {
-                    crate::aseprite::encode_project(&p, false)?
+                    crate::aseprite::encode_prepared(&p, false, progress)?
                 };
                 for f in &sequence {
                     frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
@@ -209,8 +237,10 @@ pub fn export(
                 planned.push((PathBuf::from(file), bytes));
             }
             ExportFormat::Frames => {
+                let mut renderer =
+                    crate::frame_cache::SequenceRenderer::new(&p, &sequence, progress);
                 for (i, f) in sequence.iter().enumerate() {
-                    let img = p.try_render_at(*f as f32)?;
+                    let img = renderer.frame(*f)?;
                     let file = format!("{base}-{:03}.png", i + 1);
                     frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
                     planned.push((PathBuf::from(file), png_bytes(&img)?));
@@ -231,8 +261,7 @@ pub fn export(
         planned.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
         "Export files and metadata exceed memory budget"
     );
-    let files = crate::export_transaction::publish(folder, planned, overwrite)?;
-    Ok(ExportReport { files })
+    Ok(planned)
 }
 fn frame_events(project: &Project, frame: u32) -> Vec<&crate::production::EventMarker> {
     project

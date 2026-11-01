@@ -1,10 +1,5 @@
 use super::*;
-use rebonebase::{
-    batch::{ExportFormat, ExportPreset},
-    features,
-    project::SavedPose,
-    storage,
-};
+use rebonebase::{batch::ExportPreset, features, project::SavedPose, storage};
 
 impl ReboneApp {
     pub(super) fn studio_appearance(&mut self, ui: &mut egui::Ui) {
@@ -361,9 +356,22 @@ impl ReboneApp {
                 self.studio.ref_index = None;
             }
         }
-        if self.studio.job.is_some() {
-            ui.spinner();
-            ui.label("Background task in progress…");
+        if let Some(job) = &self.studio.job {
+            let progress = job.job.progress();
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label(if progress.cancelling {
+                    "Cancelling…".to_string()
+                } else {
+                    format!("{}…", job.job.label())
+                });
+                if ui
+                    .add_enabled(!progress.cancelling, egui::Button::new("Cancel").small())
+                    .clicked()
+                {
+                    job.job.cancel();
+                }
+            });
         }
     }
     pub(super) fn studio_files(&mut self, ui: &mut egui::Ui) {
@@ -445,6 +453,25 @@ impl ReboneApp {
     }
     pub(super) fn studio_export(&mut self, ui: &mut egui::Ui) {
         ui.heading("Batch exports and reusable presets");
+        self.batch_preset_editor(ui);
+        ui.checkbox(&mut self.exports.overwrite, "Replace existing files");
+        if ui
+            .add_enabled(
+                self.exports.job.is_none(),
+                egui::Button::new("Choose folder and export"),
+            )
+            .clicked()
+        {
+            self.export_kind(super::export_ui::Kind::Batch);
+        }
+        self.export_progress(ui, 220.);
+        ui.label("Exports include atlas.json with clip names, source frames, rectangles and hold durations. Aseprite files include named animation tags. Pins and outlines are baked consistently.");
+        if ui.button("Reset to game-asset preset").clicked() {
+            self.studio.batch = ExportPreset::default();
+        }
+    }
+    /// Preset selection and fields, shared with the Export window.
+    pub(super) fn batch_preset_editor(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             egui::ComboBox::from_label("Saved preset")
                 .selected_text(
@@ -493,13 +520,7 @@ impl ReboneApp {
         egui::ComboBox::from_label("Format")
             .selected_text(format!("{:?}", preset.format))
             .show_ui(ui, |ui| {
-                for format in [
-                    ExportFormat::Sheet,
-                    ExportFormat::IndexedSheet,
-                    ExportFormat::Gif,
-                    ExportFormat::Aseprite,
-                    ExportFormat::Frames,
-                ] {
+                for format in rebonebase::export::BATCH_FORMATS {
                     ui.selectable_value(&mut preset.format, format, format!("{format:?}"));
                 }
             });
@@ -508,26 +529,12 @@ impl ReboneApp {
             ui.text_edit_singleline(&mut preset.prefix);
             ui.label("Suffix");
             ui.text_edit_singleline(&mut preset.suffix);
-            ui.add(
-                egui::DragValue::new(&mut preset.columns)
-                    .range(1..=32)
-                    .prefix("Columns "),
-            );
         });
+        ui.add(
+            egui::DragValue::new(&mut preset.columns)
+                .range(1..=32)
+                .prefix("Columns "),
+        );
         ui.checkbox(&mut preset.all_clips, "Export every clip");
-        ui.checkbox(&mut self.studio.overwrite, "Replace existing files");
-        if ui
-            .add_enabled(
-                self.studio.job.is_none(),
-                egui::Button::new("Choose folder and export"),
-            )
-            .clicked()
-        {
-            self.start_batch();
-        }
-        ui.label("Exports include atlas.json with clip names, source frames, rectangles and hold durations. Aseprite files include named animation tags. Pins and outlines are baked consistently.");
-        if ui.button("Reset to game-asset preset").clicked() {
-            self.studio.batch = ExportPreset::default();
-        }
     }
 }

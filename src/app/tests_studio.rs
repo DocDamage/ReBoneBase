@@ -1,9 +1,6 @@
 use super::*;
 use rebonebase::{editing::KeySelection, features::ReferenceSequence, project::Reference};
-use std::{
-    collections::BTreeSet,
-    sync::{Arc, mpsc},
-};
+use std::{collections::BTreeSet, sync::Arc};
 
 pub(super) fn panel(
     app: &mut ReboneApp,
@@ -403,35 +400,28 @@ fn autosave_startup_recovery_and_background_generation_are_safe() {
     app.init_services();
     assert!(app.studio.open);
     assert!(app.studio.tab == studio::Tab::Files);
-    let (sender, receiver) = mpsc::channel();
-    app.studio.job = Some(studio::Job {
-        receiver,
-        generation: Some(app.studio.generation + 1),
-    });
-    sender
-        .send(Ok(studio::JobResult::References(ReferenceSequence {
-            frames: vec![reference()],
-            fps: 12.,
-            start_ms: 0,
-            looped: true,
-        })))
-        .unwrap();
-    app.tick_services(&ctx);
+    let finish = |app: &mut ReboneApp, generation: u64| {
+        app.studio.job = Some(studio::Job {
+            job: rebonebase::jobs::Job::spawn("references", |_| {
+                Ok(ReferenceSequence {
+                    frames: vec![reference()],
+                    fps: 12.,
+                    start_ms: 0,
+                    looped: true,
+                })
+            }),
+            generation,
+        });
+        let started = Instant::now();
+        while app.studio.job.is_some() && started.elapsed() < Duration::from_secs(10) {
+            app.tick_services(&ctx);
+        }
+        assert!(app.studio.job.is_none());
+    };
+    let generation = app.studio.generation;
+    finish(&mut app, generation + 1);
     assert!(app.project.extras.references.is_none());
-    let (sender, receiver) = mpsc::channel();
-    app.studio.job = Some(studio::Job {
-        receiver,
-        generation: Some(app.studio.generation),
-    });
-    sender
-        .send(Ok(studio::JobResult::References(ReferenceSequence {
-            frames: vec![reference()],
-            fps: 12.,
-            start_ms: 0,
-            looped: true,
-        })))
-        .unwrap();
-    app.tick_services(&ctx);
+    finish(&mut app, generation);
     assert!(app.project.extras.references.is_some());
     app.undo();
     assert!(app.project.extras.references.is_none());

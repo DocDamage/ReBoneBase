@@ -515,57 +515,21 @@ impl ReboneApp {
     }
     pub(super) fn production_export(&mut self, ui: &mut egui::Ui) {
         ui.heading("Godot, Unity and generic game packages");
-        ui.horizontal(|ui| {
-            for engine in [
-                production::engine_export::EngineTarget::Godot,
-                production::engine_export::EngineTarget::Unity,
-                production::engine_export::EngineTarget::Generic,
-            ] {
-                ui.selectable_value(&mut self.production.engine, engine, format!("{engine:?}"));
-            }
-        });
-        ui.horizontal(|ui| {
-            ui.add(
-                egui::DragValue::new(&mut self.project.extras.production.pivot.x)
-                    .range(0. ..=1.)
-                    .speed(0.01)
-                    .prefix("Pivot X "),
-            );
-            ui.add(
-                egui::DragValue::new(&mut self.project.extras.production.pivot.y)
-                    .range(0. ..=1.)
-                    .speed(0.01)
-                    .prefix("Y "),
-            );
-        });
+        self.engine_options(ui);
         ui.checkbox(
-            &mut self.production.overwrite,
+            &mut self.exports.overwrite,
             "Replace existing package files",
         );
         if ui
             .add_enabled(
-                self.production.export_job.is_none(),
+                self.exports.job.is_none(),
                 egui::Button::new("Choose folder and export game package…"),
             )
             .clicked()
-            && let Some(folder) = rfd::FileDialog::new().pick_folder()
         {
-            let p = self.project.clone();
-            let engine = self.production.engine;
-            let overwrite = self.production.overwrite;
-            let (sender, receiver) = std::sync::mpsc::channel();
-            std::thread::spawn(move || {
-                let result =
-                    production::engine_export::export_package(&p, &folder, engine, overwrite)
-                        .map(|files| files.len())
-                        .map_err(|e| format!("{e:#}"));
-                let _ = sender.send(result);
-            });
-            self.production.export_job = Some(receiver);
+            self.export_kind(export_ui::Kind::Engine);
         }
-        if self.production.export_job.is_some() {
-            ui.spinner();
-        }
+        self.export_progress(ui, 220.);
         ui.label("Packages contain rendered PNG sheets, timing, pivots, event markers and animated collision regions. Godot includes a SpriteFrames loader; Unity includes a SpriteRenderer player and editor importer. All graphics/controllers are baked into the pixels. Audio WAV and its start/volume metadata are included when present.");
     }
     pub(super) fn paint_stroke(&mut self, start: Vec2, end: Vec2, record: bool) {

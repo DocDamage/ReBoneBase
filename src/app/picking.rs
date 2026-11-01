@@ -87,7 +87,7 @@ impl ReboneApp {
             self.studio.last_primary = self.selected;
         }
     }
-    pub(super) fn onion_image(&self) -> image::RgbaImage {
+    pub(super) fn onion_image(&mut self) -> image::RgbaImage {
         let r = &self.project.rig;
         let settings = &self.project.extras.onion;
         let mut result = image::RgbaImage::new(r.width, r.height);
@@ -100,7 +100,7 @@ impl ReboneApp {
                 if frame < 1. || frame > r.active_clip().length as f32 {
                     continue;
                 }
-                let img = self.project.render_at(frame);
+                let img = self.preview.image(&self.project, frame);
                 let opacity = settings.opacity / (step as f32).sqrt();
                 for (out, src) in result.pixels_mut().zip(img.pixels()) {
                     let alpha = src[3] as f32 / 255. * opacity;

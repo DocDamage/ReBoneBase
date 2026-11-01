@@ -108,8 +108,6 @@ pub(super) struct ProductionUi {
     pub last_frame: f32,
     pub last_event: Option<(usize, u32)>,
     pub engine: EngineTarget,
-    pub overwrite: bool,
-    pub export_job: Option<std::sync::mpsc::Receiver<Result<usize, String>>>,
     pub palette_open: bool,
     pub palette_query: String,
     pub palette_focus: bool,
@@ -178,8 +176,6 @@ impl Default for ProductionUi {
             last_frame: 1.,
             last_event: None,
             engine: Default::default(),
-            overwrite: false,
-            export_job: None,
             palette_open: false,
             palette_query: String::new(),
             palette_focus: false,
@@ -362,17 +358,6 @@ impl ReboneApp {
     }
     pub(super) fn production_tick(&mut self, ctx: &egui::Context) {
         self.poll_character_import(ctx);
-        if let Some(receiver) = self.production.export_job.take() {
-            match receiver.try_recv() {
-                Ok(Ok(n)) => self.status = format!("Game package exported · {n} files"),
-                Ok(Err(e)) => self.status = e,
-                Err(std::sync::mpsc::TryRecvError::Empty) => {
-                    self.production.export_job = Some(receiver);
-                    ctx.request_repaint_after(Duration::from_millis(50));
-                }
-                Err(_) => self.status = "Game export worker stopped".into(),
-            }
-        }
         let (time, reverse) = if self.playing {
             production::audio::playback_cursor(
                 self.project.rig.active_clip(),

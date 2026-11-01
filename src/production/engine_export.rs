@@ -1,4 +1,5 @@
 use super::*;
+use crate::jobs::Progress;
 use std::path::{Path, PathBuf};
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum EngineTarget {
@@ -13,11 +14,28 @@ pub fn export_package(
     engine: EngineTarget,
     overwrite: bool,
 ) -> Result<Vec<PathBuf>> {
-    project.validate()?;
-    let mut prepared = project.clone();
-    crate::canvas::grow_all(&mut prepared)?;
+    export_package_with(project, folder, engine, overwrite, &Progress::default())
+}
+pub fn export_package_with(
+    project: &Project,
+    folder: &Path,
+    engine: EngineTarget,
+    overwrite: bool,
+    progress: &Progress,
+) -> Result<Vec<PathBuf>> {
+    let files = plan_package(project, engine, progress)?;
+    progress.commit("Writing files")?;
+    crate::export_transaction::publish(folder, files, overwrite)
+}
+/// Render the whole package in memory without touching the destination.
+pub fn plan_package(
+    project: &Project,
+    engine: EngineTarget,
+    progress: &Progress,
+) -> Result<Vec<(PathBuf, Vec<u8>)>> {
+    progress.set_stage("Preparing canvas");
+    let prepared = crate::project::prepare_export(project)?;
     let project = &prepared;
-    project.validate()?;
     let total_frames: u64 = project
         .rig
         .clips
@@ -28,10 +46,17 @@ pub fn export_package(
     let mut files: Vec<(PathBuf, Vec<u8>)> = vec![];
     let mut clips = vec![];
     let mut used_names = std::collections::HashSet::new();
-    for i in 0..project.rig.clips.len() {
+    let clip_count = project.rig.clips.len();
+    for i in 0..clip_count {
+        progress.checkpoint()?;
         let mut p = project.clone();
         p.rig.active_clip = i;
         let clip = p.rig.active_clip();
+        progress.set_stage(format!(
+            "Rendering clip {} of {clip_count} · {}",
+            i + 1,
+            clip.name
+        ));
         let base = if clip.name.trim().is_empty() {
             "Animation"
         } else {
@@ -46,7 +71,7 @@ pub fn export_package(
         used_names.insert(animation.clone());
         let sequence = clip.frame_sequence();
         let columns = 8u32.min(sequence.len() as u32).max(1);
-        let sheet = crate::project::sheet_project(&p, columns)?;
+        let sheet = crate::project::render_sheet(&p, columns, progress)?;
         let file = format!("clip-{:02}.png", i + 1);
         let mut bytes = std::io::Cursor::new(Vec::new());
         sheet.write_to(&mut bytes, image::ImageFormat::Png)?;
@@ -101,7 +126,7 @@ pub fn export_package(
         files.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
         "Game package exceeds 128 MB"
     );
-    crate::export_transaction::publish(folder, files, overwrite)
+    Ok(files)
 }
 const GODOT: &str = r#"extends AnimatedSprite2D
 signal marker(name: String, payload: String)
