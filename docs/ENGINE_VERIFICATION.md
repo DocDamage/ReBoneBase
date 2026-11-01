@@ -44,13 +44,13 @@ All three check, against `package.json`:
 | Unreal | 5.8.3 | The importer runs headless in a new project. `verify_import.py` compares every imported sprite, texture and flipbook with the package. The plugin's automation tests step `ReBoneFlipbookComponent` at 1/240 s and in one long tick. |
 | Unity | 6000.4.6f1 | Batch-mode editor: `ReBoneImporter` imports both packages twice (the second time must update the same actor). `ReBoneCheck` then steps `ReBonePlayer` at 1/240 s and 1/10 s. |
 
-## Results (2026-11-01)
+## Results (2026-11-01, one run of all three engines)
 
 | Engine | Result |
 | --- | --- |
-| Godot 4.7.1 | All six runs passed: 13,792 checks. Real-time audio drift against the mixer: median 45 ms, 90th percentile 81 ms, maximum 102 ms (headless dummy audio driver). |
+| Godot 4.7.1 | All six runs passed: 13,790 checks. Real-time audio drift against the mixer, headless dummy driver: main package median 43 ms, 90th percentile 71 ms, maximum 90 ms; direction set median 58 ms, 90th percentile 78 ms, maximum 94 ms. |
 | Unreal 5.8.3 | The plugin built. Both packages imported (main: 6 clips, 21 sprites, 4 pages; directions: 4 clips, 14 sprites, 3 pages). All 47 frames matched the package, including fractional pivots. Both automation suites passed. |
-| Unity 6000.4.6f1 | **Not run.** This machine has no active Unity Editor license, so batch mode exits before opening a project. The Unity player, importer and check compile against the 6000.4.6f1 assemblies with warnings treated as errors. |
+| Unity 6000.4.6f1 | Both packages imported, and importing again updated the same actors. All 10 clips passed at 1/240 s and 1/10 s, along with placement, pause/resume/restart and direction switching: 13,217 checks. Atlas pages kept non-power-of-two sizes such as 64 × 63. |
 
 ## Problems this fixture found and fixed
 
