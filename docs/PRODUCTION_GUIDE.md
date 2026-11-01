@@ -54,7 +54,7 @@ Game packages use the same staged publication, rollback and recovery behavior as
 
 - **Godot:** copy the package into a Godot 4 project and attach `ReBonePlayer.gd` to an `AnimatedSprite2D`. Set its manifest path. It creates SpriteFrames, marker signals and collision areas. Runtime loading, timing, markers and collision creation were exercised in Godot 4.7.1.
 - **Unity:** copy `ReBonePlayer.cs`, `Editor/ReBoneImporter.cs` and the package into a Unity project. Use the import menu described in the generated README to create the player. It creates sprites with the exported pivot, handles frame timing/events and uses trigger colliders. The generated files and metadata are covered by tests; a Unity Editor session has not been run here.
-- **Generic:** consume `package.json` directly. It records clip/frame source indices, rectangles, durations, events, regions, pivot and audio timing. This is baked sprite output; it does not export an editable engine skeleton or weighted runtime mesh.
+- **Generic:** consume `package.json` directly. It uses the shared, versioned sprite format described in [EXPORT_FORMAT.md](EXPORT_FORMAT.md): pages, clip and direction identifiers, frame rectangles with trim offsets, durations, retained source time, events, regions, pivot and audio timing. This is baked sprite output; it does not export an editable engine skeleton or weighted runtime mesh.
 
 ## Workspace and shortcuts
 

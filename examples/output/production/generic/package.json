@@ -1,398 +1,613 @@
 {
-  "audio_enabled": false,
-  "audio_file": "reference.wav",
-  "audio_start_ms": 0,
-  "audio_volume": 1.0,
+  "format": "rebonebase-sprites",
+  "format_version": 2,
+  "generator": "ReBoneBase Production",
+  "name": "Production Demo",
+  "coordinates": "pixels, top-left origin, y down; angles degrees clockwise; pivot and boxes in source frame space",
+  "frame_size": {
+    "w": 166,
+    "h": 81
+  },
+  "pivot": {
+    "x": 63.999996,
+    "y": 81.0
+  },
   "canvas_origin": {
     "x": 0.0,
     "y": -1.0
   },
-  "clips": [
+  "pages": [
     {
-      "animation": "Animation",
       "file": "clip-01.png",
-      "fps": 10.0,
-      "frames": [
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 1,
-          "w": 166,
-          "x": 0,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 2,
-          "w": 166,
-          "x": 166,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 3,
-          "w": 166,
-          "x": 332,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 4,
-          "w": 166,
-          "x": 498,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 5,
-          "w": 166,
-          "x": 664,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 6,
-          "w": 166,
-          "x": 830,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 7,
-          "w": 166,
-          "x": 996,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 8,
-          "w": 166,
-          "x": 1162,
-          "y": 0
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 9,
-          "w": 166,
-          "x": 0,
-          "y": 81
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 10,
-          "w": 166,
-          "x": 166,
-          "y": 81
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 11,
-          "w": 166,
-          "x": 332,
-          "y": 81
-        },
-        {
-          "boxes": [],
-          "duration_ms": 100,
-          "events": [],
-          "h": 81,
-          "source_frame": 12,
-          "w": 166,
-          "x": 498,
-          "y": 81
-        }
-      ],
-      "id": "clip-01",
-      "looped": true,
-      "name": "Animation"
+      "kind": "atlas",
+      "w": 1328,
+      "h": 162
     },
     {
-      "animation": "Walk",
       "file": "clip-02.png",
-      "fps": 24.0,
+      "kind": "atlas",
+      "w": 1328,
+      "h": 243
+    }
+  ],
+  "clips": [
+    {
+      "id": "clip-01",
+      "animation": "Animation",
+      "name": "Animation",
+      "direction": null,
+      "fps": 10.0,
+      "looped": true,
+      "playback": "Forward",
       "frames": [
         {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 33.348453521728516
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.348453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.348453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          "page": 0,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 1,
-          "w": 166,
-          "x": 0,
-          "y": 0
+          "source_time_ms": 0,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
         },
         {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 33.28146743774414
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.28146743774414
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.28146743774414
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          "page": 0,
+          "rect": {
+            "x": 166,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 2,
-          "w": 166,
-          "x": 166,
-          "y": 0
+          "source_time_ms": 100,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
         },
         {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 33.098453521728516
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.098453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.098453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          "page": 0,
+          "rect": {
+            "x": 332,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 3,
-          "w": 166,
-          "x": 332,
-          "y": 0
+          "source_time_ms": 200,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
         },
         {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 32.848453521728516
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.848453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.848453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          "page": 0,
+          "rect": {
+            "x": 498,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 4,
-          "w": 166,
-          "x": 498,
-          "y": 0
+          "source_time_ms": 300,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
         },
         {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 32.598453521728516
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.598453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.598453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
+          "page": 0,
+          "rect": {
+            "x": 664,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 5,
+          "source_time_ms": 400,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 830,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 6,
+          "source_time_ms": 500,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 996,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 7,
+          "source_time_ms": 600,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 1162,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 8,
+          "source_time_ms": 700,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 0,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 9,
+          "source_time_ms": 800,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 166,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 10,
+          "source_time_ms": 900,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 332,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 11,
+          "source_time_ms": 1000,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        },
+        {
+          "page": 0,
+          "rect": {
+            "x": 498,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 12,
+          "source_time_ms": 1100,
+          "duration_ms": 100,
+          "events": [],
+          "boxes": []
+        }
+      ]
+    },
+    {
+      "id": "clip-02",
+      "animation": "Walk",
+      "name": "Walk",
+      "direction": null,
+      "fps": 24.0,
+      "looped": true,
+      "playback": "Forward",
+      "frames": [
+        {
+          "page": 1,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 1,
+          "source_time_ms": 0,
           "duration_ms": 42,
           "events": [],
-          "h": 81,
-          "source_frame": 5,
-          "w": 166,
-          "x": 664,
-          "y": 0
-        },
-        {
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.41543960571289
+                "y": 33.348454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.41543960571289
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.41543960571289
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.348454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.348454
+                }
+              ]
             }
-          ],
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 166,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 2,
+          "source_time_ms": 42,
+          "duration_ms": 42,
+          "events": [],
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 33.281467
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.281467
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.281467
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 332,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 3,
+          "source_time_ms": 84,
+          "duration_ms": 42,
+          "events": [],
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 33.098454
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.098454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.098454
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 498,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 4,
+          "source_time_ms": 126,
+          "duration_ms": 42,
+          "events": [],
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 32.848454
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.848454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.848454
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 664,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 5,
+          "source_time_ms": 168,
+          "duration_ms": 42,
+          "events": [],
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 32.598454
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.598454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.598454
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 830,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 6,
+          "source_time_ms": 210,
           "duration_ms": 42,
           "events": [
             {
@@ -402,520 +617,664 @@
               "payload": "left"
             }
           ],
-          "h": 81,
-          "source_frame": 6,
-          "w": 166,
-          "x": 830,
-          "y": 0
-        },
-        {
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.348453521728516
+                "y": 32.41544
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.348453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.348453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.41544
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.41544
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 996,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 7,
-          "w": 166,
-          "x": 996,
-          "y": 0
-        },
-        {
+          "source_time_ms": 252,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.41543960571289
+                "y": 32.348454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.41543960571289
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.41543960571289
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.348454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.348454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 1162,
+            "y": 0,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 8,
-          "w": 166,
-          "x": 1162,
-          "y": 0
-        },
-        {
+          "source_time_ms": 294,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.598453521728516
+                "y": 32.41544
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.598453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.598453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.41544
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.41544
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 0,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 9,
-          "w": 166,
-          "x": 0,
-          "y": 81
-        },
-        {
+          "source_time_ms": 336,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.848453521728516
+                "y": 32.598454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.848453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.848453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.598454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.598454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 166,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 10,
-          "w": 166,
-          "x": 166,
-          "y": 81
-        },
-        {
+          "source_time_ms": 378,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.098453521728516
+                "y": 32.848454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.098453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.098453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.848454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.848454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 332,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 11,
-          "w": 166,
-          "x": 332,
-          "y": 81
-        },
-        {
+          "source_time_ms": 420,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.28146743774414
+                "y": 33.098454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.28146743774414
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.28146743774414
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.098454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.098454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 498,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 12,
-          "w": 166,
-          "x": 498,
-          "y": 81
-        },
-        {
+          "source_time_ms": 462,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.348453521728516
+                "y": 33.281467
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.348453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.348453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.281467
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.281467
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 664,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 13,
-          "w": 166,
-          "x": 664,
-          "y": 81
-        },
-        {
+          "source_time_ms": 504,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.28146743774414
+                "y": 33.348454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.28146743774414
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.28146743774414
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.348454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.348454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 830,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 14,
-          "w": 166,
-          "x": 830,
-          "y": 81
-        },
-        {
+          "source_time_ms": 546,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.098453521728516
+                "y": 33.281467
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.098453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.098453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.281467
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.281467
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 996,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 15,
-          "w": 166,
-          "x": 996,
-          "y": 81
-        },
-        {
+          "source_time_ms": 588,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.848453521728516
+                "y": 33.098454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.848453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.848453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.098454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.098454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 1162,
+            "y": 81,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 16,
-          "w": 166,
-          "x": 1162,
-          "y": 81
-        },
-        {
-          "boxes": [
-            {
-              "angle": 0.0,
-              "center": {
-                "x": 32.0,
-                "y": 32.598453521728516
-              },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.598453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.598453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
-              "size": {
-                "x": 12.0,
-                "y": 22.0
-              }
-            }
-          ],
+          "source_time_ms": 630,
           "duration_ms": 42,
           "events": [],
-          "h": 81,
-          "source_frame": 17,
-          "w": 166,
-          "x": 0,
-          "y": 162
-        },
-        {
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.41543960571289
+                "y": 32.848454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.41543960571289
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.41543960571289
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.848454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.848454
+                }
+              ]
             }
-          ],
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 0,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 17,
+          "source_time_ms": 672,
+          "duration_ms": 42,
+          "events": [],
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 32.598454
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.598454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.598454
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 166,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 18,
+          "source_time_ms": 714,
           "duration_ms": 42,
           "events": [
             {
@@ -925,284 +1284,378 @@
               "payload": "right"
             }
           ],
-          "h": 81,
-          "source_frame": 18,
-          "w": 166,
-          "x": 166,
-          "y": 162
-        },
-        {
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.348453521728516
+                "y": 32.41544
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.348453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.348453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.348453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.41544
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.41544
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 332,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 19,
-          "w": 166,
-          "x": 332,
-          "y": 162
-        },
-        {
+          "source_time_ms": 756,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.41543960571289
+                "y": 32.348454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.41543960571289
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.41543960571289
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.41543960571289
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.348454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.348454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.348454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 498,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 20,
-          "w": 166,
-          "x": 498,
-          "y": 162
-        },
-        {
+          "source_time_ms": 798,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.598453521728516
+                "y": 32.41544
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.598453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.598453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.598453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.41544
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.41544
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.41544
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 664,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 21,
-          "w": 166,
-          "x": 664,
-          "y": 162
-        },
-        {
+          "source_time_ms": 840,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 32.848453521728516
+                "y": 32.598454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 21.848453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 43.848453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 43.848453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.598454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.598454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.598454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 830,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 22,
-          "w": 166,
-          "x": 830,
-          "y": 162
-        },
-        {
+          "source_time_ms": 882,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.098453521728516
+                "y": 32.848454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.098453521728516
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.098453521728516
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.098453521728516
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 21.848454
+                },
+                {
+                  "x": 38.0,
+                  "y": 43.848454
+                },
+                {
+                  "x": 26.0,
+                  "y": 43.848454
+                }
+              ]
             }
-          ],
-          "duration_ms": 42,
-          "events": [],
-          "h": 81,
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 996,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
           "source_frame": 23,
-          "w": 166,
-          "x": 996,
-          "y": 162
-        },
-        {
+          "source_time_ms": 924,
+          "duration_ms": 42,
+          "events": [],
           "boxes": [
             {
-              "angle": 0.0,
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
               "center": {
                 "x": 32.0,
-                "y": 33.28146743774414
+                "y": 33.098454
               },
-              "corners": [
-                {
-                  "x": 26.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 22.28146743774414
-                },
-                {
-                  "x": 38.0,
-                  "y": 44.28146743774414
-                },
-                {
-                  "x": 26.0,
-                  "y": 44.28146743774414
-                }
-              ],
-              "id": 9,
-              "kind": "Hurt",
-              "name": "Body hurtbox",
               "size": {
                 "x": 12.0,
                 "y": 22.0
-              }
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.098454
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.098454
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.098454
+                }
+              ]
             }
-          ],
+          ]
+        },
+        {
+          "page": 1,
+          "rect": {
+            "x": 1162,
+            "y": 162,
+            "w": 166,
+            "h": 81
+          },
+          "source_size": {
+            "w": 166,
+            "h": 81
+          },
+          "trim": {
+            "x": 0,
+            "y": 0
+          },
+          "source_frame": 24,
+          "source_time_ms": 966,
           "duration_ms": 42,
           "events": [],
-          "h": 81,
-          "source_frame": 24,
-          "w": 166,
-          "x": 1162,
-          "y": 162
+          "boxes": [
+            {
+              "id": 9,
+              "name": "Body hurtbox",
+              "kind": "Hurt",
+              "center": {
+                "x": 32.0,
+                "y": 33.281467
+              },
+              "size": {
+                "x": 12.0,
+                "y": 22.0
+              },
+              "angle": 0.0,
+              "corners": [
+                {
+                  "x": 26.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 22.281467
+                },
+                {
+                  "x": 38.0,
+                  "y": 44.281467
+                },
+                {
+                  "x": 26.0,
+                  "y": 44.281467
+                }
+              ]
+            }
+          ]
         }
-      ],
-      "id": "clip-02",
-      "looped": true,
-      "name": "Walk"
+      ]
     }
   ],
-  "coordinates": "pixels, top-left origin, y down; angles degrees clockwise",
-  "generator": "ReBoneBase Production",
-  "height": 81,
-  "name": "Production Demo",
-  "pivot": {
-    "x": 0.3855421543121338,
-    "y": 1.0
-  },
-  "version": 1,
-  "width": 166
+  "audio": {
+    "file": "reference.wav",
+    "start_ms": 0,
+    "volume": 1.0,
+    "enabled": false
+  }
 }

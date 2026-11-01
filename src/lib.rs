@@ -22,5 +22,6 @@ pub mod project;
 pub mod project_format;
 pub mod references;
 pub mod skin;
+pub mod sprite_package;
 pub mod storage;
 pub mod workspace;
