@@ -49,8 +49,28 @@ func _normalize(data: Dictionary) -> Dictionary:
         var frames = []
         for item in clip.frames:
             frames.append({"page": page, "rect": {"x": item.x, "y": item.y, "w": item.w, "h": item.h}, "source_size": {"w": data.width, "h": data.height}, "trim": {"x": 0, "y": 0}, "duration_ms": item.duration_ms, "events": item.events, "boxes": item.boxes})
-        clips.append({"id": clip.get("id", ""), "animation": clip.animation, "looped": clip.looped, "fps": clip.fps, "frames": frames})
+        clips.append({"id": clip.get("id", ""), "name": clip.get("name", ""), "animation": clip.animation, "looped": clip.looped, "fps": clip.fps, "frames": frames})
     return {"pivot": {"x": data.width * data.pivot.x, "y": data.height * data.pivot.y}, "pages": pages, "clips": clips}
+# Play `base` (the authored clip name) facing `direction` (e, se, s, ...).
+# Changing only the direction keeps the current frame and its progress.
+func play_direction(base: String, direction: String) -> bool:
+    var current = _clip(str(animation))
+    for clip in metadata.clips:
+        var facing = clip.get("direction")
+        if clip.name == base and facing is Dictionary and facing.id == direction:
+            var keep = current != null and current.name == base and current.frames.size() == clip.frames.size()
+            var keep_frame = frame
+            var keep_progress = frame_progress
+            play(StringName(clip.animation))
+            if keep:
+                set_frame_and_progress(keep_frame, keep_progress)
+            return true
+    return false
+func _clip(animation_name: String):
+    for clip in metadata.clips:
+        if clip.animation == animation_name:
+            return clip
+    return null
 func _on_frame() -> void:
     for clip in metadata.clips:
         if clip.animation == str(animation):

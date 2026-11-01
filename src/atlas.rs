@@ -397,20 +397,27 @@ pub struct Pending {
     entries: Vec<(usize, usize, usize)>,
 }
 impl Pending {
-    /// Render a clip's sequence into the packer. `clip` is the index the clip
-    /// will have in [`SpritePackage::clips`]; `project` has it active.
+    /// Render a clip's sequence into the packer, flipped horizontally when
+    /// `mirror` is set. `clip` is the index the clip will have in
+    /// [`SpritePackage::clips`]; `project` has it active.
     pub fn add_clip(
         &mut self,
         packer: &mut Packer,
         project: &Project,
         clip: usize,
         sequence: &[u32],
+        mirror: bool,
         progress: &Progress,
     ) -> Result<()> {
         let mut renderer = crate::frame_cache::SequenceRenderer::new(project, sequence, progress);
         for (j, f) in sequence.iter().enumerate() {
             let image = renderer.frame(*f)?;
-            self.entries.push((clip, j, packer.add(&image)));
+            let index = if mirror {
+                packer.add(&image::imageops::flip_horizontal(&*image))
+            } else {
+                packer.add(&image)
+            };
+            self.entries.push((clip, j, index));
         }
         Ok(())
     }

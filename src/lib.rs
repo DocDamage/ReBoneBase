@@ -7,6 +7,7 @@ pub mod atlas;
 pub mod batch;
 pub mod canvas;
 pub mod character3d;
+pub mod directions;
 pub mod editing;
 pub mod export;
 pub(crate) mod export_transaction;

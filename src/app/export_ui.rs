@@ -21,6 +21,7 @@ pub(super) enum Kind {
     AsepriteAll,
     Batch,
     Engine,
+    Directions,
 }
 impl Kind {
     pub const SINGLE: [Self; 7] = [
@@ -32,7 +33,7 @@ impl Kind {
         Self::Aseprite,
         Self::AsepriteAll,
     ];
-    pub const FOLDER: [Self; 2] = [Self::Batch, Self::Engine];
+    pub const FOLDER: [Self; 3] = [Self::Batch, Self::Engine, Self::Directions];
     pub fn label(self) -> &'static str {
         match self {
             Self::Frame => "Current frame · PNG",
@@ -44,6 +45,7 @@ impl Kind {
             Self::AsepriteAll => "All clips · Aseprite tags",
             Self::Batch => "Batch preset folder",
             Self::Engine => "Game engine package",
+            Self::Directions => "Directional set · 4 or 8 views",
         }
     }
 }
@@ -62,6 +64,7 @@ pub(super) struct Exports {
     pub job: Option<ExportJob>,
     /// Outcome of the last finished export, and whether it succeeded.
     pub last: Option<(bool, String)>,
+    pub directions: super::directions_ui::DirectionsUi,
 }
 
 impl ReboneApp {
@@ -84,6 +87,7 @@ impl ReboneApp {
             Kind::Engine => {
                 Target::Engine(self.production.engine, self.studio.preferences.engine_atlas)
             }
+            Kind::Directions => Target::Directions(Box::new(self.direction_export())),
         }
     }
     pub(super) fn open_export(&mut self, kind: Kind) {
@@ -284,6 +288,16 @@ impl ReboneApp {
                 let before = self.project.clone();
                 self.engine_options(ui);
                 self.commit_studio_edit(before);
+                ui.checkbox(
+                    &mut self.exports.overwrite,
+                    "Replace existing package files",
+                );
+            }
+            Kind::Directions => {
+                let ctx = ui.ctx().clone();
+                egui::ScrollArea::vertical()
+                    .max_height(420.)
+                    .show(ui, |ui| self.direction_options(ui, &ctx));
                 ui.checkbox(
                     &mut self.exports.overwrite,
                     "Replace existing package files",

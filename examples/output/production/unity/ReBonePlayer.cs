@@ -12,7 +12,8 @@ public sealed class ReBonePlayer : MonoBehaviour {
  [Serializable] public class Page { public string file; public int w,h; }
  // x,y,w,h, Clip.file, width/height and a normalized pivot are version 1 fields that Load upgrades.
  [Serializable] public class Frame { public int page,x,y,w,h,source_frame,duration_ms; public long source_time_ms; public Area rect; public Size source_size; public Point trim; public Marker[] events; public Region[] boxes; }
- [Serializable] public class Clip { public string name,file,id,animation; public bool looped; public float fps; public Frame[] frames; }
+ [Serializable] public class Direction { public string id; public float angle; }
+ [Serializable] public class Clip { public string name,file,id,animation; public bool looped; public float fps; public Direction direction; public Frame[] frames; }
  [Serializable] public class Manifest { public string format; public int format_version,version,width,height; public Size frame_size; public Point pivot; public Page[] pages; public Clip[] clips; }
  [Serializable] public class MarkerEvent : UnityEvent<string,string> {}
  public TextAsset manifest; public Texture2D[] sheets; public float pixelsPerUnit=16; public MarkerEvent marker=new MarkerEvent();
@@ -34,6 +35,8 @@ public sealed class ReBonePlayer : MonoBehaviour {
     sprites[c][i]=Sprite.Create(texture,new Rect(r.x,texture.height-r.y-r.h,r.w,r.h),pivot,pixelsPerUnit,0,SpriteMeshType.FullRect);}}
   ShowFrame();
  }
+ // Play the authored clip `name` facing `direction` (e, se, s, ...). Changing only the direction keeps frame and timing.
+ public bool Play(string name,string direction){if(data==null)return false;var current=data.clips[clipIndex];for(int i=0;i<data.clips.Length;i++){var c=data.clips[i];if(c.name==name&&c.direction!=null&&c.direction.id==direction){bool same=current.name==name&&current.frames.Length==c.frames.Length;clipIndex=i;if(!same){frameIndex=0;elapsed=0;}playing=true;ShowFrame();return true;}}return false;}
  public void Play(string name){if(data==null)return;for(int i=0;i<data.clips.Length;i++)if(data.clips[i].animation==name||data.clips[i].id==name){clipIndex=i;frameIndex=0;elapsed=0;playing=true;ShowFrame();return;}}
  public void Pause(){playing=false;}
  void Update(){if(!playing||data==null)return;elapsed+=Time.deltaTime*1000;var clip=data.clips[clipIndex];int guard=0;

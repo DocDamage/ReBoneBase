@@ -500,3 +500,91 @@ fn persistent_pin_drag_and_move_rig_keep_targets_consistent() {
     app.undo();
     assert_eq!(app.project, baseline);
 }
+
+fn export_window(
+    app: &mut ReboneApp,
+    ctx: &egui::Context,
+    events: Vec<egui::Event>,
+) -> egui::FullOutput {
+    ctx.run(
+        egui::RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, EVec2::new(1400., 1500.))),
+            events,
+            ..Default::default()
+        },
+        |ctx| app.export_window(ctx),
+    )
+}
+fn click_export(app: &mut ReboneApp, ctx: &egui::Context, label: &str) {
+    let out = export_window(app, ctx, vec![]);
+    let pos = out
+        .shapes
+        .iter()
+        .find_map(|s| match &s.shape {
+            egui::Shape::Text(text) if text.galley.text() == label => {
+                let center = text.pos + text.galley.size() * 0.5;
+                s.clip_rect.contains(center).then_some(center)
+            }
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("visible control missing: {label}"));
+    let press = |pressed| egui::Event::PointerButton {
+        pos,
+        button: egui::PointerButton::Primary,
+        pressed,
+        modifiers: egui::Modifiers::NONE,
+    };
+    export_window(app, ctx, vec![egui::Event::PointerMoved(pos), press(true)]);
+    export_window(app, ctx, vec![press(false)]);
+}
+
+#[test]
+fn directional_sets_are_configured_in_the_export_window_without_editing_the_project() {
+    use rebonebase::directions::{Count, Slot, Source};
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    app.init_services();
+    let before = app.project.clone();
+    app.open_export(export_ui::Kind::Directions);
+    export_window(&mut app, &ctx, vec![]);
+    // A flat project starts with a 2D clip assignment.
+    let Source::Clips { slots, .. } = &app.exports.directions.set.source else {
+        panic!("2D projects use authored clips");
+    };
+    assert_eq!(slots.len(), 4);
+    click_export(&mut app, &ctx, "8");
+    export_window(&mut app, &ctx, vec![]);
+    assert_eq!(app.exports.directions.set.count, Count::Eight);
+    let Source::Clips { slots, .. } = &mut app.exports.directions.set.source else {
+        unreachable!()
+    };
+    assert_eq!(slots.len(), 8);
+    for (i, slot) in slots.iter_mut().enumerate() {
+        *slot = if i < 4 {
+            Slot::Clip(0)
+        } else {
+            Slot::Mirror(i - 4)
+        };
+    }
+    click_export(&mut app, &ctx, "Preview orientations");
+    assert_eq!(
+        app.exports.directions.previews.len(),
+        8,
+        "{:?}",
+        app.exports.directions.preview_error
+    );
+    match app.export_target(export_ui::Kind::Directions) {
+        rebonebase::export::Target::Directions(d) => {
+            assert_eq!(d.set.count, Count::Eight);
+            assert_eq!(
+                rebonebase::directions::frame_count(&app.project, &d),
+                8 * app.project.rig.active_clip().frame_sequence().len() as u64
+            );
+        }
+        other => panic!("unexpected target {other:?}"),
+    }
+    assert_eq!(
+        app.project, before,
+        "configuring directions never edits the project"
+    );
+}

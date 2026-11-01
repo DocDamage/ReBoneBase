@@ -41,6 +41,10 @@ Pixels, top-left origin, y down; angles are degrees clockwise. A frame's **sourc
 | `fps`, `looped`, `playback` | Authored clip settings. Reverse and ping-pong are already expanded into frame order. |
 | `frames[]` | Ordered frames, below. |
 
+## Directional sets
+
+A directional export writes one clip per direction. Each has `direction: {id, angle}`, where `id` is the nearest compass point (`e`, `se`, `s`, `sw`, `w`, `nw`, `n`, `ne`) and `angle` is degrees clockwise from screen right. `name` is the shared authored name, and `animation` is `<name>_<id>`. All directions share the package's `frame_size` and `pivot`, have the same frame count and holds, and keep each frame's events. A mirrored direction's regions are reflected across the frame's vertical center.
+
 ## Frames
 
 | Field | Meaning |

@@ -4,7 +4,10 @@ use crate::{
     jobs::Progress,
     sprite_package::{self, Offset, PageKind, SpritePackage},
 };
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum EngineTarget {
     #[default]
@@ -48,43 +51,85 @@ pub fn plan_package_with(
     progress: &Progress,
 ) -> Result<Vec<(PathBuf, Vec<u8>)>> {
     progress.set_stage("Preparing canvas");
-    let prepared = crate::project::prepare_export(project)?;
-    let project = &prepared;
-    let total_frames: u64 = project
-        .rig
-        .clips
+    let prepared = Arc::new(crate::project::prepare_export(project)?);
+    let names = sprite_package::unique_names(prepared.rig.clips.iter().map(|c| c.name.as_str()));
+    let jobs = names
+        .into_iter()
+        .enumerate()
+        .map(|(i, animation)| ClipJob {
+            project: prepared.clone(),
+            clip: i,
+            id: format!("clip-{:02}", i + 1),
+            name: prepared.rig.clips[i].name.clone(),
+            animation,
+            direction: None,
+            mirror: false,
+        })
+        .collect();
+    plan_jobs(&prepared, jobs, engine, layout, progress)
+}
+/// One exported animation: a clip of an already prepared project, optionally
+/// mirrored horizontally around the canvas center.
+pub struct ClipJob {
+    pub project: Arc<Project>,
+    pub clip: usize,
+    pub id: String,
+    /// Authored name recorded with the clip.
+    pub name: String,
+    pub animation: String,
+    pub direction: Option<sprite_package::Direction>,
+    pub mirror: bool,
+}
+/// Render jobs into a package. `project` supplies the shared canvas, pivot and
+/// audio; every job's project must use the same canvas.
+pub(crate) fn plan_jobs(
+    project: &Project,
+    jobs: Vec<ClipJob>,
+    engine: EngineTarget,
+    layout: &AtlasOptions,
+    progress: &Progress,
+) -> Result<Vec<(PathBuf, Vec<u8>)>> {
+    let total_frames: u64 = jobs
         .iter()
-        .map(|c| c.frame_sequence().len() as u64)
+        .map(|j| j.project.rig.clips[j.clip].frame_sequence().len() as u64)
         .sum();
     crate::project::project_export_budget(project, total_frames)?;
     let mut files: Vec<(PathBuf, Vec<u8>)> = vec![];
     let mut packer = atlas::Packer::new(*layout)?;
     let mut pending = atlas::Pending::default();
     let mut package = SpritePackage::new(project, "ReBoneBase Production");
-    let animations =
-        sprite_package::unique_names(project.rig.clips.iter().map(|c| c.name.as_str()));
-    let clip_count = project.rig.clips.len();
-    for (i, animation) in animations.into_iter().enumerate() {
+    let job_count = jobs.len();
+    for (i, job) in jobs.into_iter().enumerate() {
         progress.checkpoint()?;
-        let mut p = project.clone();
-        p.rig.active_clip = i;
+        let mut p = (*job.project).clone();
+        p.rig.active_clip = job.clip;
+        ensure!(
+            p.rig.width == project.rig.width
+                && p.rig.height == project.rig.height
+                && p.extras.canvas_origin == project.extras.canvas_origin
+                && p.extras.production.pivot == project.extras.production.pivot,
+            "Every exported animation must share one canvas and pivot"
+        );
         let clip = p.rig.active_clip();
         progress.set_stage(format!(
-            "Rendering clip {} of {clip_count} · {}",
+            "Rendering {} of {job_count} · {}",
             i + 1,
-            clip.name
+            job.animation
         ));
         let sequence = clip.frame_sequence();
-        let frames = if layout.packed {
-            pending.add_clip(&mut packer, &p, i, &sequence, progress)?;
+        let mut frames: Vec<_> = if layout.packed {
+            pending.add_clip(&mut packer, &p, i, &sequence, job.mirror, progress)?;
             sequence
                 .iter()
                 .map(|f| atlas::unplaced_frame(&p, *f))
                 .collect()
         } else {
             let columns = 8u32.min(sequence.len() as u32).max(1);
-            let sheet = crate::project::render_sheet(&p, columns, progress)?;
-            let file = format!("clip-{:02}.png", i + 1);
+            let mut sheet = crate::project::render_sheet(&p, columns, progress)?;
+            if job.mirror {
+                mirror_cells(&mut sheet, p.rig.width, p.rig.height);
+            }
+            let file = format!("{}.png", job.id);
             let page = package.add_page(&file, PageKind::Atlas, sheet.width(), sheet.height());
             files.push((PathBuf::from(&file), png(&sheet)?));
             sequence
@@ -102,11 +147,18 @@ pub fn plan_package_with(
                 })
                 .collect()
         };
+        if job.mirror {
+            for frame in &mut frames {
+                for b in &mut frame.boxes {
+                    mirror_region(b, p.rig.width as f32);
+                }
+            }
+        }
         package.clips.push(sprite_package::Clip {
-            id: format!("clip-{:02}", i + 1),
-            animation,
-            name: clip.name.clone(),
-            direction: None,
+            id: job.id,
+            animation: job.animation,
+            name: job.name,
+            direction: job.direction,
             fps: clip.fps,
             looped: clip.looped,
             playback: clip.playback,
@@ -162,6 +214,26 @@ pub fn plan_package_with(
         "Game package exceeds 128 MB"
     );
     Ok(files)
+}
+/// Flip every `w` x `h` cell of a grid sheet horizontally in place.
+fn mirror_cells(sheet: &mut image::RgbaImage, w: u32, h: u32) {
+    for y in (0..sheet.height()).step_by(h as usize) {
+        for x in (0..sheet.width()).step_by(w as usize) {
+            let cell = image::imageops::crop_imm(sheet, x, y, w, h).to_image();
+            let flipped = image::imageops::flip_horizontal(&cell);
+            image::imageops::replace(sheet, &flipped, x as i64, y as i64);
+        }
+    }
+}
+/// Mirror a collision region across the vertical center of a `width` frame.
+pub(crate) fn mirror_region(region: &mut CollisionShape, width: f32) {
+    region.center.x = width - region.center.x;
+    region.angle = -region.angle;
+    for corner in &mut region.corners {
+        corner.x = width - corner.x;
+    }
+    // A reflection reverses winding; reversing the corners restores it.
+    region.corners.reverse();
 }
 fn png(image: &image::RgbaImage) -> Result<Vec<u8>> {
     let mut bytes = std::io::Cursor::new(Vec::new());
@@ -219,8 +291,28 @@ func _normalize(data: Dictionary) -> Dictionary:
         var frames = []
         for item in clip.frames:
             frames.append({"page": page, "rect": {"x": item.x, "y": item.y, "w": item.w, "h": item.h}, "source_size": {"w": data.width, "h": data.height}, "trim": {"x": 0, "y": 0}, "duration_ms": item.duration_ms, "events": item.events, "boxes": item.boxes})
-        clips.append({"id": clip.get("id", ""), "animation": clip.animation, "looped": clip.looped, "fps": clip.fps, "frames": frames})
+        clips.append({"id": clip.get("id", ""), "name": clip.get("name", ""), "animation": clip.animation, "looped": clip.looped, "fps": clip.fps, "frames": frames})
     return {"pivot": {"x": data.width * data.pivot.x, "y": data.height * data.pivot.y}, "pages": pages, "clips": clips}
+# Play `base` (the authored clip name) facing `direction` (e, se, s, ...).
+# Changing only the direction keeps the current frame and its progress.
+func play_direction(base: String, direction: String) -> bool:
+    var current = _clip(str(animation))
+    for clip in metadata.clips:
+        var facing = clip.get("direction")
+        if clip.name == base and facing is Dictionary and facing.id == direction:
+            var keep = current != null and current.name == base and current.frames.size() == clip.frames.size()
+            var keep_frame = frame
+            var keep_progress = frame_progress
+            play(StringName(clip.animation))
+            if keep:
+                set_frame_and_progress(keep_frame, keep_progress)
+            return true
+    return false
+func _clip(animation_name: String):
+    for clip in metadata.clips:
+        if clip.animation == animation_name:
+            return clip
+    return null
 func _on_frame() -> void:
     for clip in metadata.clips:
         if clip.animation == str(animation):
@@ -258,7 +350,8 @@ public sealed class ReBonePlayer : MonoBehaviour {
  [Serializable] public class Page { public string file; public int w,h; }
  // x,y,w,h, Clip.file, width/height and a normalized pivot are version 1 fields that Load upgrades.
  [Serializable] public class Frame { public int page,x,y,w,h,source_frame,duration_ms; public long source_time_ms; public Area rect; public Size source_size; public Point trim; public Marker[] events; public Region[] boxes; }
- [Serializable] public class Clip { public string name,file,id,animation; public bool looped; public float fps; public Frame[] frames; }
+ [Serializable] public class Direction { public string id; public float angle; }
+ [Serializable] public class Clip { public string name,file,id,animation; public bool looped; public float fps; public Direction direction; public Frame[] frames; }
  [Serializable] public class Manifest { public string format; public int format_version,version,width,height; public Size frame_size; public Point pivot; public Page[] pages; public Clip[] clips; }
  [Serializable] public class MarkerEvent : UnityEvent<string,string> {}
  public TextAsset manifest; public Texture2D[] sheets; public float pixelsPerUnit=16; public MarkerEvent marker=new MarkerEvent();
@@ -280,6 +373,8 @@ public sealed class ReBonePlayer : MonoBehaviour {
     sprites[c][i]=Sprite.Create(texture,new Rect(r.x,texture.height-r.y-r.h,r.w,r.h),pivot,pixelsPerUnit,0,SpriteMeshType.FullRect);}}
   ShowFrame();
  }
+ // Play the authored clip `name` facing `direction` (e, se, s, ...). Changing only the direction keeps frame and timing.
+ public bool Play(string name,string direction){if(data==null)return false;var current=data.clips[clipIndex];for(int i=0;i<data.clips.Length;i++){var c=data.clips[i];if(c.name==name&&c.direction!=null&&c.direction.id==direction){bool same=current.name==name&&current.frames.Length==c.frames.Length;clipIndex=i;if(!same){frameIndex=0;elapsed=0;}playing=true;ShowFrame();return true;}}return false;}
  public void Play(string name){if(data==null)return;for(int i=0;i<data.clips.Length;i++)if(data.clips[i].animation==name||data.clips[i].id==name){clipIndex=i;frameIndex=0;elapsed=0;playing=true;ShowFrame();return;}}
  public void Pause(){playing=false;}
  void Update(){if(!playing||data==null)return;elapsed+=Time.deltaTime*1000;var clip=data.clips[clipIndex];int guard=0;

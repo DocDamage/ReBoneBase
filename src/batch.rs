@@ -221,7 +221,14 @@ pub fn plan(
         let mut frames = vec![];
         match preset.format {
             _ if packed => {
-                pending.add_clip(&mut packer, &p, package.clips.len(), &sequence, progress)?;
+                pending.add_clip(
+                    &mut packer,
+                    &p,
+                    package.clips.len(),
+                    &sequence,
+                    false,
+                    progress,
+                )?;
                 frames = sequence
                     .iter()
                     .map(|f| atlas::unplaced_frame(&p, *f))
