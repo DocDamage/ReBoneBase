@@ -1,3 +1,4 @@
+use super::calibration::{Calibration3d, ReferencePose, RootScale, RootTravel};
 use super::*;
 use crate::character3d::{Animation3d, Model3d};
 fn rotation(m: Mat4) -> Result<Quat> {
@@ -50,6 +51,26 @@ impl Motion {
         mapping: &[Option<usize>],
         root_motion: bool,
     ) -> Result<Animation3d> {
+        let calibration = Calibration3d {
+            root_travel: if root_motion {
+                RootTravel::Full
+            } else {
+                RootTravel::Off
+            },
+            ..Default::default()
+        };
+        self.retarget_3d_calibrated(target, mapping, &calibration)
+    }
+    /// Retarget with a calibration's reference pose, source space, per-joint
+    /// offsets and root policies. `mapping` is the calibration resolved
+    /// against this source.
+    pub fn retarget_3d_calibrated(
+        &self,
+        target: &Model3d,
+        mapping: &[Option<usize>],
+        calibration: &Calibration3d,
+    ) -> Result<Animation3d> {
+        calibration.validate()?;
         self.validate_samples()?;
         target.validate()?;
         ensure!(
@@ -92,8 +113,14 @@ impl Motion {
             .iter()
             .map(|m| rotation(*m))
             .collect::<Result<Vec<_>>>()?;
-        let source_rot = self
-            .rest
+        let reference = match calibration.reference {
+            ReferencePose::Rest => &self.rest,
+            ReferencePose::Frame(f) => &self.frames[f.min(self.frames.len() - 1)],
+        };
+        // Source rotations are conjugated into target space, so a source delta
+        // about its up axis becomes a delta about the target's up axis.
+        let space = calibration.space();
+        let source_rot = reference
             .iter()
             .map(|m| rotation(*m))
             .collect::<Result<Vec<_>>>()?;
@@ -103,7 +130,7 @@ impl Motion {
         let mut target_max = source_max;
         for (i, s) in mapping.iter().enumerate() {
             if let Some(s) = s {
-                let a = self.rest[*s].w_axis.truncate();
+                let a = reference[*s].w_axis.truncate();
                 let b = rest[i].w_axis.truncate();
                 source_min = source_min.min(a);
                 source_max = source_max.max(a);
@@ -111,12 +138,19 @@ impl Motion {
                 target_max = target_max.max(b);
             }
         }
-        let scale = if (source_max - source_min).length() > 1e-6 {
-            ((target_max - target_min).length() / (source_max - source_min).length())
-                .clamp(0.001, 1000.)
-        } else {
-            1.
+        let scale = match calibration.root_scale {
+            RootScale::Fixed(scale) => scale,
+            RootScale::Auto if (source_max - source_min).length() > 1e-6 => {
+                ((target_max - target_min).length() / (source_max - source_min).length())
+                    .clamp(0.001, 1000.)
+            }
+            RootScale::Auto => 1.,
         };
+        let offsets: Vec<_> = target
+            .nodes
+            .iter()
+            .map(|n| calibration.offset(&n.name))
+            .collect();
         let mut root_source = BTreeMap::new();
         for (i, s) in mapping.iter().enumerate() {
             if let Some(s) = s {
@@ -142,21 +176,24 @@ impl Motion {
                     }
                     let parent = n.parent.and_then(|p| world[p]).unwrap_or(Quat::IDENTITY);
                     let local = if let Some(s) = mapping[i] {
-                        let desired =
-                            rotation(source[s])? * source_rot[s].inverse() * target_rot[i];
+                        let delta = rotation(source[s])? * source_rot[s].inverse();
+                        let desired = space * delta * space.inverse() * target_rot[i] * offsets[i];
                         (parent.inverse() * desired).normalize()
                     } else {
-                        Quat::from_array(frame[i].rotation).normalize()
+                        (Quat::from_array(frame[i].rotation).normalize() * offsets[i]).normalize()
                     };
                     frame[i].rotation = local.to_array();
                     world[i] = Some((parent * local).normalize());
-                    if root_motion
+                    if calibration.root_travel != RootTravel::Off
                         && n.parent.is_none()
                         && let Some(s) = root_source.get(&i)
                     {
-                        let delta = (source[*s].w_axis.truncate()
-                            - self.frames[0][*s].w_axis.truncate())
-                            * scale;
+                        let delta = calibration.travel(
+                            space
+                                * (source[*s].w_axis.truncate()
+                                    - self.frames[0][*s].w_axis.truncate())
+                                * scale,
+                        );
                         frame[i].translation =
                             (Vec3::from_array(frame[i].translation) + delta).to_array();
                     }

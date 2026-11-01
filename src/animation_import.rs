@@ -1,13 +1,17 @@
 //! Transactional external skeletal motion import into existing characters.
 use crate::{
     animation::Clip,
-    character3d::Playback3d,
-    motion::{Motion, Projection},
+    character3d::{Model3d, Playback3d},
+    motion::{
+        Motion, Projection,
+        calibration::{Calibration3d, CalibrationReport, RootTravel},
+    },
     project::Project,
 };
 use anyhow::{Result, ensure};
 use std::sync::Arc;
 /// Append all requested clips, or leave the complete project unchanged on error.
+/// `mapping` indexes the joints of every motion, which must share one order.
 pub fn import_character_motions(
     project: &mut Project,
     character: u64,
@@ -16,6 +20,65 @@ pub fn import_character_motions(
     root_motion: bool,
     also_2d: bool,
     projection: Projection,
+) -> Result<Vec<usize>> {
+    let calibration = Calibration3d {
+        root_travel: if root_motion {
+            RootTravel::Full
+        } else {
+            RootTravel::Off
+        },
+        ..Default::default()
+    };
+    import(
+        project,
+        character,
+        motions,
+        also_2d,
+        projection,
+        &calibration,
+        |_, _| Ok(mapping.to_vec()),
+    )
+}
+/// Import with one calibration, resolved by joint name for each motion so
+/// clips whose sources order joints differently retarget identically. Returns
+/// the new clip indexes and one resolution report per motion.
+pub fn import_calibrated(
+    project: &mut Project,
+    character: u64,
+    motions: &[Motion],
+    calibration: &Calibration3d,
+    also_2d: bool,
+    projection: Projection,
+) -> Result<(Vec<usize>, Vec<CalibrationReport>)> {
+    let mut reports = vec![];
+    let clips = import(
+        project,
+        character,
+        motions,
+        also_2d,
+        projection,
+        calibration,
+        |model, motion| {
+            let (mapping, report) = calibration.resolve(model, motion);
+            ensure!(
+                report.mapped > 0,
+                "{}: no calibrated joints match this source",
+                motion.name
+            );
+            reports.push(report);
+            Ok(mapping)
+        },
+    )?;
+    Ok((clips, reports))
+}
+fn import(
+    project: &mut Project,
+    character: u64,
+    motions: &[Motion],
+    also_2d: bool,
+    projection: Projection,
+    calibration: &Calibration3d,
+    mut resolve: impl FnMut(&Model3d, &Motion) -> Result<Vec<Option<usize>>>,
 ) -> Result<Vec<usize>> {
     project.validate()?;
     ensure!(
@@ -39,11 +102,9 @@ pub fn import_character_motions(
     );
     let mut indexes = Vec::new();
     for motion in motions {
-        let animation = motion.retarget_3d(
-            &next.extras.characters3d[target].model,
-            mapping,
-            root_motion,
-        )?;
+        let model = &next.extras.characters3d[target].model;
+        let mapping = resolve(model, motion)?;
+        let animation = motion.retarget_3d_calibrated(model, &mapping, calibration)?;
         let duration = animation.duration;
         let length = animation.frames.len() as u32;
         let fps = if length > 1 && duration > 0. {

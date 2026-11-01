@@ -1,5 +1,8 @@
 use super::*;
 use rebonebase::character3d::Model3d;
+use rebonebase::motion::calibration::{
+    Calibration3d, CalibrationReport, ReferencePose, RootScale, RootTravel, UpAxis,
+};
 use std::sync::{Arc, mpsc};
 type Source = (PathBuf, Vec<String>, Motion);
 pub(super) struct SourceJob {
@@ -20,8 +23,10 @@ pub(super) struct AnimationDialog {
     index: usize,
     character: u64,
     model: Arc<Model3d>,
-    mapping: Vec<Option<usize>>,
-    root_motion: bool,
+    calibration: Calibration3d,
+    /// Target joint whose calibration offset is being edited.
+    offset_joint: usize,
+    saved: Option<usize>,
     also_2d: bool,
     projection: Projection,
     frame: f32,
@@ -91,7 +96,7 @@ impl ReboneApp {
                         .iter()
                         .find(|c| c.id == job.character)
                     {
-                        let mapping = motion.mapping_3d(&c.model);
+                        let calibration = Calibration3d::automatic(&c.model, &motion);
                         let mut selected = vec![false; names.len()];
                         selected[0] = true;
                         self.production.animation_dialog = Some(AnimationDialog {
@@ -102,8 +107,9 @@ impl ReboneApp {
                             index: 0,
                             character: c.id,
                             model: c.model.clone(),
-                            mapping,
-                            root_motion: false,
+                            calibration,
+                            offset_joint: 0,
+                            saved: None,
                             also_2d: false,
                             projection: Projection::Front,
                             frame: 1.,
@@ -161,38 +167,46 @@ impl ReboneApp {
             }
         }
         let mut open = true;
-        egui::Window::new("Import animation onto 3D character").open(&mut open).default_size([680.,650.]).max_height((ctx.content_rect().height()-40.).max(240.)).show(ctx,|ui|{
+        egui::Window::new("Import animation onto 3D character").open(&mut open).default_size([680.,760.]).max_height((ctx.content_rect().height()-40.).max(240.)).show(ctx,|ui|{
             egui::ScrollArea::vertical().id_salt("external-animation").show(ui,|ui|{
                 ui.heading(&d.motion.name);
                 ui.label("Retarget motion to the existing model. Its mesh, textures and joint attachments stay in place.");
-                let previous_options=(d.mapping.clone(),d.root_motion,d.also_2d,d.projection);
+                let previous_options=(d.calibration.clone(),d.also_2d,d.projection);
+                let (_, report) = d.calibration.resolve(&d.model, &d.motion);
                 ui.add_enabled_ui(d.pending.is_none(),|ui|{
                     let old=d.index;
                     egui::ComboBox::from_label("Source animation").selected_text(&d.names[d.index]).show_ui(ui,|ui|{
                         for(i,name)in d.names.iter().enumerate(){ui.selectable_value(&mut d.index,i,name);}
                     });
                     if old!=d.index {
+                        // The calibration names its joints, so it carries over unchanged.
                         match Motion::load_animation(&d.source,d.index) {
-                            Ok(m)=>{let old_names=d.motion.joint_names();let names=m.joint_names();d.mapping=d.mapping.iter().map(|n|n.and_then(|i|old_names.get(i)).and_then(|name|names.iter().position(|s|s==name))).collect();d.motion=m;d.preview=None;d.texture=None;d.error=None;}
+                            Ok(m)=>{d.motion=m;d.preview=None;d.texture=None;d.error=None;}
                             Err(e)=>{d.index=old;d.error=Some(e.to_string());}
                         }
                     }
-                    ui.checkbox(&mut d.root_motion,"Include source root travel for 3D");
+                    self.calibration_controls(ui,&mut d);
                     ui.checkbox(&mut d.also_2d,"Also animate my 2D rig in the same clips (automatic joint mapping)");
                     if d.also_2d {
                         egui::ComboBox::from_label("2D projection").selected_text(format!("{:?}",d.projection)).show_ui(ui,|ui|{for p in [Projection::Front,Projection::Side,Projection::ThreeQuarter]{ui.selectable_value(&mut d.projection,p,format!("{p:?}"));}});
                         ui.label("For custom 2D joint mapping, use File → Import animation for 2D rig.");
                     }
-                    ui.label(format!("{} / {} target joints matched",d.mapping.iter().flatten().count(),d.mapping.len()));
+                    report_ui(ui,&report);
                     egui::CollapsingHeader::new("Joint mapping").show(ui,|ui|{
                         let names=d.motion.joint_names();
                         egui::ScrollArea::vertical().id_salt("3d-joint-mapping").max_height(160.).show_rows(ui,22.,d.model.nodes.len(),|ui,range|{
-                            for i in range {ui.horizontal(|ui|{ui.label(&d.model.nodes[i].name);egui::ComboBox::from_id_salt(("external-joint",i)).selected_text(d.mapping[i].and_then(|n|names.get(n)).map_or("Unmapped",String::as_str)).show_ui(ui,|ui|{ui.selectable_value(&mut d.mapping[i],None,"Unmapped");for(n,name)in names.iter().enumerate(){ui.selectable_value(&mut d.mapping[i],Some(n),name);}});});}
+                            for i in range {
+                                let target=d.model.nodes[i].name.clone();
+                                let mut chosen=d.calibration.mapping.get(&target).cloned();
+                                let old=chosen.clone();
+                                ui.horizontal(|ui|{ui.label(&target);egui::ComboBox::from_id_salt(("external-joint",i)).selected_text(chosen.as_deref().unwrap_or("Unmapped")).show_ui(ui,|ui|{ui.selectable_value(&mut chosen,None,"Unmapped");for name in &names{ui.selectable_value(&mut chosen,Some(name.clone()),name);}});});
+                                if chosen!=old {d.calibration.set_source(&target,chosen.as_deref());}
+                            }
                         });
                     });
                     if ui.button("Preview mapped animation").clicked() {
                         let mut preview=self.project.clone();
-                        match rebonebase::animation_import::import_character_motions(&mut preview,d.character,std::slice::from_ref(&d.motion),&d.mapping,d.root_motion,d.also_2d,d.projection){Ok(_)=>{d.preview=Some(preview);d.texture=None;d.frame=1.;d.error=None;},Err(e)=>d.error=Some(e.to_string())}
+                        match rebonebase::animation_import::import_calibrated(&mut preview,d.character,std::slice::from_ref(&d.motion),&d.calibration,d.also_2d,d.projection){Ok(_)=>{d.preview=Some(preview);d.texture=None;d.frame=1.;d.error=None;},Err(e)=>d.error=Some(e.to_string())}
                     }
                     if let Some(preview)=&d.preview {
                         let changed=ui.add(egui::Slider::new(&mut d.frame,1. ..=preview.rig.active_clip().length as f32).text("Preview frame")).changed();
@@ -210,17 +224,17 @@ impl ReboneApp {
                         }
                         if let Some(t)=&d.texture {ui.add(egui::Image::new(t).fit_to_exact_size(EVec2::new(220.,220.)));}
                     }
-                    ui.separator();ui.label("Clips to import");
+                    ui.separator();ui.label("Clips to import · each uses the same calibration");
                     ui.horizontal(|ui|{if ui.small_button("Select all").clicked(){d.selected.fill(true);}
 if ui.small_button("Only previewed").clicked(){d.selected.fill(false);d.selected[d.index]=true;}});
                     egui::ScrollArea::vertical().id_salt("3d-animation-choices").max_height(95.).show(ui,|ui|{for(i,name)in d.names.iter().enumerate(){ui.checkbox(&mut d.selected[i],name);}});
                     if ui.add_enabled(d.selected.iter().any(|b|*b),egui::Button::new("Import selected animation clips")).clicked(){
-                        let base=self.project.clone();let mut candidate=base.clone();let path=d.source.clone();let indices:Vec<_>=d.selected.iter().enumerate().filter_map(|(i,b)|b.then_some(i)).collect();let mapping=d.mapping.clone();let id=d.character;let root=d.root_motion;let both=d.also_2d;let projection=d.projection;
-                        let(tx,receiver)=mpsc::channel();std::thread::spawn(move||{let result=(||{let motions:Result<Vec<_>,_>=indices.into_iter().map(|i|Motion::load_animation(&path,i).map_err(|e|e.to_string())).collect();rebonebase::animation_import::import_character_motions(&mut candidate,id,&motions?,&mapping,root,both,projection).map_err(|e|e.to_string())?;Ok(candidate)})();let _=tx.send(result);});
+                        let base=self.project.clone();let mut candidate=base.clone();let path=d.source.clone();let indices:Vec<_>=d.selected.iter().enumerate().filter_map(|(i,b)|b.then_some(i)).collect();let calibration=d.calibration.clone();let id=d.character;let both=d.also_2d;let projection=d.projection;
+                        let(tx,receiver)=mpsc::channel();std::thread::spawn(move||{let result=(||{let motions:Result<Vec<_>,_>=indices.into_iter().map(|i|Motion::load_animation(&path,i).map_err(|e|e.to_string())).collect();rebonebase::animation_import::import_calibrated(&mut candidate,id,&motions?,&calibration,both,projection).map_err(|e|e.to_string())?;Ok(candidate)})();let _=tx.send(result);});
                         d.pending=Some(ApplyJob{generation:self.studio.generation,base,receiver});d.error=None;
                     }
                 });
-                if previous_options!=(d.mapping.clone(),d.root_motion,d.also_2d,d.projection){d.preview=None;d.texture=None;}
+                if previous_options!=(d.calibration.clone(),d.also_2d,d.projection){d.preview=None;d.texture=None;}
                 if d.pending.is_some(){ui.spinner();ui.label("Preparing all clips before changing the project…");}
                 if let Some(e)=&d.error {ui.colored_label(Color32::YELLOW,e);}
                 for warning in &d.motion.warnings {ui.label(warning);}
@@ -230,6 +244,202 @@ if ui.small_button("Only previewed").clicked(){d.selected.fill(false);d.selected
             self.production.animation_dialog = Some(d);
         }
     }
+}
+fn report_ui(ui: &mut egui::Ui, report: &CalibrationReport) {
+    let lines = report.lines();
+    let problems = report.missing.len() + report.ambiguous.len() + report.stale.len();
+    let summary = format!(
+        "{} · {} unmapped · {} missing · {} ambiguous",
+        lines[0],
+        report.unmapped.len(),
+        report.missing.len(),
+        report.ambiguous.len()
+    );
+    if problems > 0 {
+        ui.colored_label(Color32::YELLOW, summary);
+    } else {
+        ui.label(summary);
+    }
+    if lines.len() > 1 {
+        egui::CollapsingHeader::new("Joint report").show(ui, |ui| {
+            for line in &lines[1..] {
+                ui.label(line);
+            }
+        });
+    }
+}
+impl ReboneApp {
+    fn calibration_controls(&mut self, ui: &mut egui::Ui, d: &mut AnimationDialog) {
+        {
+            {
+                let old = d.saved;
+                egui::ComboBox::from_label("Saved calibration")
+                    .selected_text(
+                        d.saved
+                            .and_then(|i| self.studio.calibrations.get(i))
+                            .map_or("Automatic name matching", |c| c.name.as_str()),
+                    )
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut d.saved, None, "Automatic name matching");
+                        for (i, c) in self.studio.calibrations.iter().enumerate() {
+                            ui.selectable_value(&mut d.saved, Some(i), &c.name);
+                        }
+                    });
+                if old != d.saved {
+                    d.calibration = match d.saved.and_then(|i| self.studio.calibrations.get(i)) {
+                        Some(c) => c.clone(),
+                        None => Calibration3d::automatic(&d.model, &d.motion),
+                    };
+                }
+                ui.horizontal(|ui| {
+                    ui.add(
+                        egui::TextEdit::singleline(&mut d.calibration.name)
+                            .hint_text("Calibration name")
+                            .desired_width(190.),
+                    );
+                    if ui
+                        .add_enabled(
+                            self.studio.calibrations.len() < 256,
+                            egui::Button::new("Save calibration"),
+                        )
+                        .clicked()
+                    {
+                        match save_calibration(&d.calibration, &self.studio.store) {
+                            Ok(()) => {
+                                self.studio.calibrations.push(d.calibration.clone());
+                                d.saved = Some(self.studio.calibrations.len() - 1);
+                                self.status = "Calibration saved for future imports".into();
+                            }
+                            Err(e) => self.status = format!("Calibration was not saved: {e}"),
+                        }
+                    }
+                });
+            }
+        }
+        egui::CollapsingHeader::new("Calibration settings").show(ui, |ui| {
+            {
+                let c = &mut d.calibration;
+                ui.horizontal_wrapped(|ui| {
+                    let mut frame = matches!(c.reference, ReferencePose::Frame(_));
+                    ui.label("Source reference pose");
+                    ui.selectable_value(&mut frame, false, "Rest pose");
+                    ui.selectable_value(&mut frame, true, "Clip frame");
+                    let mut n = match c.reference {
+                        ReferencePose::Frame(n) => n + 1,
+                        ReferencePose::Rest => 1,
+                    };
+                    if frame {
+                        ui.add(egui::DragValue::new(&mut n).range(1..=240).prefix("Frame "));
+                    }
+                    c.reference = if frame {
+                        ReferencePose::Frame(n - 1)
+                    } else {
+                        ReferencePose::Rest
+                    };
+                })
+                .response
+                .on_hover_text(
+                    "The source pose that matches the target model's rest pose, such as a leading T-pose frame.",
+                );
+                ui.horizontal_wrapped(|ui| {
+                    ui.label("Source up axis");
+                    ui.selectable_value(&mut c.up, UpAxis::Y, "Y up");
+                    ui.selectable_value(&mut c.up, UpAxis::Z, "Z up");
+                    ui.add(
+                        egui::Slider::new(&mut c.facing, -180. ..=180.)
+                            .step_by(1.)
+                            .text("Facing °"),
+                    );
+                });
+                ui.horizontal_wrapped(|ui| {
+                    egui::ComboBox::from_label("Root travel")
+                        .selected_text(format!("{:?}", c.root_travel))
+                        .show_ui(ui, |ui| {
+                            for v in [
+                                RootTravel::Off,
+                                RootTravel::Ground,
+                                RootTravel::Vertical,
+                                RootTravel::Full,
+                            ] {
+                                ui.selectable_value(&mut c.root_travel, v, format!("{v:?}"));
+                            }
+                        });
+                    let mut fixed = matches!(c.root_scale, RootScale::Fixed(_));
+                    ui.checkbox(&mut fixed, "Fixed root scale");
+                    if fixed {
+                        let mut v = match c.root_scale {
+                            RootScale::Fixed(v) => v,
+                            RootScale::Auto => 1.,
+                        };
+                        ui.add(
+                            egui::DragValue::new(&mut v)
+                                .range(0.001..=1000.)
+                                .speed(0.01)
+                                .suffix(" × source"),
+                        );
+                        c.root_scale = RootScale::Fixed(v);
+                    } else {
+                        c.root_scale = RootScale::Auto;
+                    }
+                });
+                d.offset_joint = d.offset_joint.min(d.model.nodes.len().saturating_sub(1));
+                if let Some(joint) = d.model.nodes.get(d.offset_joint).map(|n| n.name.clone()) {
+                    ui.horizontal_wrapped(|ui| {
+                        egui::ComboBox::from_id_salt("calibration-offset-joint")
+                            .selected_text(&joint)
+                            .show_ui(ui, |ui| {
+                                for (i, n) in d.model.nodes.iter().enumerate() {
+                                    ui.selectable_value(&mut d.offset_joint, i, &n.name);
+                                }
+                            });
+                        let mut r = c.offsets.get(&joint).copied().unwrap_or([0.; 3]);
+                        let old = r;
+                        for (i, label) in ["Offset X° ", "Offset Y° ", "Offset Z° "]
+                            .into_iter()
+                            .enumerate()
+                        {
+                            ui.add(
+                                egui::DragValue::new(&mut r[i])
+                                    .range(-180. ..=180.)
+                                    .prefix(label),
+                            );
+                        }
+                        if r != old {
+                            if r == [0.; 3] {
+                                c.offsets.remove(&joint);
+                            } else {
+                                c.offsets.insert(joint.clone(), r);
+                            }
+                        }
+                    });
+                }
+                ui.label("Calibration changes rotations and root travel only; the model's limb lengths and attachments stay as they are.");
+            }
+        });
+    }
+}
+fn save_calibration(
+    calibration: &Calibration3d,
+    store: &rebonebase::storage::Store,
+) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        !calibration.name.trim().is_empty(),
+        "Give the calibration a name"
+    );
+    calibration.validate()?;
+    let bytes = serde_json::to_vec_pretty(calibration)?;
+    anyhow::ensure!(
+        bytes.len() <= 1024 * 1024,
+        "Calibration exceeds the metadata size limit"
+    );
+    let folder = store.folder("calibrations")?;
+    rebonebase::project::atomic_write(
+        &folder.join(format!(
+            "calibration-{}.json",
+            rebonebase::storage::unique()
+        )),
+        &bytes,
+    )
 }
 #[cfg(test)]
 mod tests {
@@ -348,5 +558,35 @@ mod tests {
             app.commit_character_animation(&base, base.clone(), app.studio.generation - 1)
                 .is_err()
         );
+    }
+    #[test]
+    fn saved_calibration_applies_to_the_dialog_and_reloads() {
+        let ctx = egui::Context::default();
+        let mut app = app_with_character(&ctx);
+        source_job(&mut app);
+        frame(&mut app, &ctx, vec![]);
+        let d = app.production.animation_dialog.as_mut().unwrap();
+        let automatic = d.calibration.clone();
+        assert!(!automatic.mapping.is_empty());
+        d.calibration.name = "Studio walk".into();
+        d.calibration.facing = 45.;
+        d.calibration.root_travel = RootTravel::Ground;
+        click(&mut app, &ctx, "Save calibration");
+        assert_eq!(app.studio.calibrations.len(), 1, "{}", app.status);
+        let saved = app.studio.calibrations[0].clone();
+        let stored: Vec<Calibration3d> = app.studio.store.read_records("calibrations").unwrap();
+        assert_eq!(stored, std::slice::from_ref(&saved));
+        // Switching back to automatic matching drops the edits; choosing the
+        // saved calibration restores them.
+        let d = app.production.animation_dialog.as_mut().unwrap();
+        d.saved = None;
+        d.calibration = automatic.clone();
+        assert_ne!(d.calibration, saved);
+        d.calibration = saved.clone();
+        d.saved = Some(0);
+        click(&mut app, &ctx, "Preview mapped animation");
+        let d = app.production.animation_dialog.as_ref().unwrap();
+        assert!(d.preview.is_some(), "{:?}", d.error);
+        assert_eq!(d.calibration, saved);
     }
 }
