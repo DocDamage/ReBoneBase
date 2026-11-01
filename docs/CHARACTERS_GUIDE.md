@@ -40,6 +40,15 @@ Rendering uses an orthographic camera, nearest texture sampling, material colors
 
 Use the supplied `CharactersDemo.rebone` or import `Mannequin.obj` together with its `.mtl` for a local example. Import budgets and the canvas-dependent rendering budget prevent excessively heavy scenes; reduce the canvas resolution or simplify a model when an import reports a work limit.
 
+## Four- and eight-direction export
+
+Choose **Export → Directional set · 4 or 8 views**. Pick 4 or 8 directions and a starting angle (0° puts the first direction at screen right; 45° gives a diagonal four-direction set).
+
+- **3D camera views** render the chosen clips from every direction by rotating each enabled 3D character's camera yaw. Set **Characters currently face** to the direction the character faces at its present yaw (normally s, toward the viewer). Camera pitch is kept. 2D artwork is not rotated.
+- **2D clips per direction** assign an authored clip to each direction, or **Mirror of** another direction. A flat drawing has no unseen side or back, so nothing is invented. Every assigned clip must have the same frame count, holds and looping. Mirroring centers the canvas on the pivot (snapped to the nearest half pixel) so the flipped frames keep their anchor.
+
+**Preview orientations** renders the current frame from each direction. Every direction uses one canvas envelope and pivot, so switching direction in a game never moves the character. The export uses the selected engine and atlas options, runs in the background with progress and Cancel, and never changes the project. The Godot helper adds `play_direction(name, direction)` and Unity's player adds `Play(name, direction)`. Switching only the direction keeps the current frame and timing.
+
 ## Import separate animations
 
 The latest build also imports external FBX, BVH, GLB/glTF and text Unity .anim skeletal clips onto existing 3D characters or 2D rigs. The [Animation import guide](ANIMATION_IMPORT_GUIDE.md) covers joint mapping, simultaneous 2D/3D clips and Unity/Unreal export steps. Unreal .uasset and binary/Humanoid-only Unity clips require baking/export in the owning engine project.

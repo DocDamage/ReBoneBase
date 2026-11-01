@@ -465,7 +465,7 @@ impl ReboneApp {
             self.export_kind(super::export_ui::Kind::Batch);
         }
         self.export_progress(ui, 220.);
-        ui.label("Exports include atlas.json with clip names, source frames, rectangles and hold durations. Aseprite files include named animation tags. Pins and outlines are baked consistently.");
+        ui.label("Exports include atlas.json with clip names, source frames, page rectangles, trim offsets and hold durations. Aseprite files include named animation tags. Pins and outlines are baked consistently.");
         if ui.button("Reset to game-asset preset").clicked() {
             self.studio.batch = ExportPreset::default();
         }
@@ -530,11 +530,20 @@ impl ReboneApp {
             ui.label("Suffix");
             ui.text_edit_singleline(&mut preset.suffix);
         });
-        ui.add(
-            egui::DragValue::new(&mut preset.columns)
-                .range(1..=32)
-                .prefix("Columns "),
+        let sheet = matches!(
+            preset.format,
+            rebonebase::batch::ExportFormat::Sheet | rebonebase::batch::ExportFormat::IndexedSheet
         );
+        if sheet {
+            super::export_ui::atlas_options(ui, &mut preset.atlas);
+        }
+        if !(sheet && preset.atlas.packed) {
+            ui.add(
+                egui::DragValue::new(&mut preset.columns)
+                    .range(1..=32)
+                    .prefix("Columns "),
+            );
+        }
         ui.checkbox(&mut preset.all_clips, "Export every clip");
     }
 }

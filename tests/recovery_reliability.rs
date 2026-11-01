@@ -11,10 +11,13 @@ use std::{
 struct TestDir(PathBuf);
 impl TestDir {
     fn new() -> Self {
+        // A timestamp alone can repeat across parallel tests on coarse clocks.
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let path = std::env::temp_dir().join(format!(
-            "rebone-recovery-{}-{}",
+            "rebone-recovery-{}-{}-{}",
             std::process::id(),
-            rebonebase::storage::unique()
+            rebonebase::storage::unique(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         fs::create_dir(&path).unwrap();
         Self(path)

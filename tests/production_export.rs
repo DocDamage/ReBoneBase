@@ -85,3 +85,77 @@ fn game_packages_include_timing_events_collision_and_engine_loaders() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn unreal_packages_ship_the_importer_and_plugin_sources() {
+    use rebonebase::{jobs::Progress, production::engine_export::plan_package};
+    let p = Project::new(Rig::new("Unreal", 8, 8));
+    let files: std::collections::HashMap<_, _> =
+        plan_package(&p, EngineTarget::Unreal, &Progress::default())
+            .unwrap()
+            .into_iter()
+            .collect();
+    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("integrations/unreal");
+    let shipped = |path: &str| &files[&std::path::PathBuf::from(path)];
+    assert_eq!(
+        shipped("ReBoneImport.py"),
+        &std::fs::read(repo.join("ReBoneImport.py")).unwrap()
+    );
+    let mut sources = 0;
+    for entry in walk(&repo.join("ReBoneBase")) {
+        let relative = entry
+            .strip_prefix(&repo)
+            .unwrap()
+            .to_string_lossy()
+            .replace(std::path::MAIN_SEPARATOR, "/");
+        assert_eq!(
+            shipped(&format!("Plugin/{relative}")),
+            &std::fs::read(&entry).unwrap(),
+            "{relative} is shipped unchanged"
+        );
+        sources += 1;
+    }
+    assert!(sources >= 12, "every plugin file is shipped ({sources})");
+    let readme = String::from_utf8(shipped("README.txt").clone()).unwrap();
+    assert!(readme.contains("5.8") && readme.contains("ReBoneImport.py"));
+    assert!(files.contains_key(&std::path::PathBuf::from("package.json")));
+}
+fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = vec![];
+    for entry in std::fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            if !["Binaries", "Intermediate"]
+                .iter()
+                .any(|d| path.ends_with(d))
+            {
+                out.extend(walk(&path));
+            }
+        } else {
+            out.push(path);
+        }
+    }
+    out
+}
+
+#[test]
+fn unity_packages_ship_the_repository_scripts() {
+    use rebonebase::{jobs::Progress, production::engine_export::plan_package};
+    let p = Project::new(Rig::new("Unity", 8, 8));
+    let files: std::collections::HashMap<_, _> =
+        plan_package(&p, EngineTarget::Unity, &Progress::default())
+            .unwrap()
+            .into_iter()
+            .collect();
+    let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("integrations/unity");
+    for (shipped, source) in [
+        ("ReBonePlayer.cs", "ReBonePlayer.cs"),
+        ("Editor/ReBoneImporter.cs", "Editor/ReBoneImporter.cs"),
+    ] {
+        assert_eq!(
+            files[&std::path::PathBuf::from(shipped)],
+            std::fs::read(repo.join(source)).unwrap(),
+            "{shipped}"
+        );
+    }
+}

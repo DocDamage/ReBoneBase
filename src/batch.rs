@@ -1,6 +1,8 @@
 use crate::{
+    atlas::{self, AtlasOptions},
     jobs::Progress,
     project::{self, Project},
+    sprite_package::{self, Offset, PageKind, SpritePackage},
 };
 use anyhow::{Result, ensure};
 use serde::{Deserialize, Serialize};
@@ -23,6 +25,8 @@ pub struct ExportPreset {
     pub prefix: String,
     pub suffix: String,
     pub all_clips: bool,
+    /// Sheet formats only: packed, trimmed pages instead of per-clip grids.
+    pub atlas: AtlasOptions,
 }
 impl Default for ExportPreset {
     fn default() -> Self {
@@ -33,6 +37,7 @@ impl Default for ExportPreset {
             prefix: String::new(),
             suffix: String::new(),
             all_clips: true,
+            atlas: AtlasOptions::default(),
         }
     }
 }
@@ -172,10 +177,19 @@ pub fn plan(
         .map(|i| project.rig.clips[*i].frame_sequence().len() as u64)
         .sum();
     project::project_export_budget(project, total_frames)?;
+    let sheet = matches!(
+        preset.format,
+        ExportFormat::Sheet | ExportFormat::IndexedSheet
+    );
+    let packed = sheet && preset.atlas.packed;
+    let mut packer = atlas::Packer::new(preset.atlas)?;
+    let mut pending = atlas::Pending::default();
     let mut planned = Vec::<(PathBuf, Vec<u8>)>::new();
-    let mut clips = vec![];
+    let mut package = SpritePackage::new(project, "ReBoneBase Batch");
+    let animations =
+        sprite_package::unique_names(indices.iter().map(|i| project.rig.clips[*i].name.as_str()));
     let clip_count = indices.len();
-    for (n, index) in indices.into_iter().enumerate() {
+    for (n, (index, animation)) in indices.into_iter().zip(animations).enumerate() {
         progress.checkpoint()?;
         let mut p = project.clone();
         p.rig.active_clip = index;
@@ -203,14 +217,37 @@ pub fn plan(
         } else {
             base
         };
+        let full = Offset::default();
         let mut frames = vec![];
         match preset.format {
+            _ if packed => {
+                pending.add_clip(
+                    &mut packer,
+                    &p,
+                    package.clips.len(),
+                    &sequence,
+                    false,
+                    progress,
+                )?;
+                frames = sequence
+                    .iter()
+                    .map(|f| atlas::unplaced_frame(&p, *f))
+                    .collect();
+            }
             ExportFormat::Sheet | ExportFormat::IndexedSheet => {
                 let img = project::render_sheet(&p, preset.columns, progress)?;
                 let file = format!("{base}.png");
+                let page = package.add_page(&file, PageKind::Atlas, img.width(), img.height());
                 let cols = preset.columns.min(sequence.len() as u32).max(1);
                 for (i, f) in sequence.iter().enumerate() {
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"frame":{"x":i as u32%cols*rig.width,"y":i as u32/cols*rig.height,"w":rig.width,"h":rig.height},"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    let rect = sprite_package::grid_rect(i, cols, rig.width, rig.height);
+                    frames.push(sprite_package::frame_in_active(
+                        &p,
+                        *f,
+                        page,
+                        Some(rect),
+                        full,
+                    ));
                 }
                 let bytes = if preset.format == ExportFormat::IndexedSheet {
                     indexed_png(&img, &p.extras.palette)?
@@ -231,8 +268,9 @@ pub fn plan(
                 } else {
                     crate::aseprite::encode_prepared(&p, false, progress)?
                 };
+                let page = package.add_page(&file, PageKind::Animation, rig.width, rig.height);
                 for f in &sequence {
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    frames.push(sprite_package::frame_in_active(&p, *f, page, None, full));
                 }
                 planned.push((PathBuf::from(file), bytes));
             }
@@ -242,33 +280,57 @@ pub fn plan(
                 for (i, f) in sequence.iter().enumerate() {
                     let img = renderer.frame(*f)?;
                     let file = format!("{base}-{:03}.png", i + 1);
-                    frames.push(serde_json::json!({"file":file,"source_frame":f,"source_time_ms":clip.source_time_ms(*f as f32),"duration":clip.duration_ms(*f),"events":frame_events(&p,*f),"boxes":crate::production::collision_pixels(&p,*f as f32)}));
+                    let page = package.add_page(&file, PageKind::Atlas, img.width(), img.height());
+                    let rect = sprite_package::grid_rect(0, 1, rig.width, rig.height);
+                    frames.push(sprite_package::frame_in_active(
+                        &p,
+                        *f,
+                        page,
+                        Some(rect),
+                        full,
+                    ));
                     planned.push((PathBuf::from(file), png_bytes(&img)?));
                 }
             }
         }
-        clips.push(serde_json::json!({"name":clip.name,"width":rig.width,"height":rig.height,"fps":clip.fps,"loop":clip.looped,"playback":clip.playback,"frames":frames}));
+        package.clips.push(sprite_package::Clip {
+            id: format!("clip-{:02}", index + 1),
+            animation,
+            name: clip.name.clone(),
+            direction: None,
+            fps: clip.fps,
+            looped: clip.looped,
+            playback: clip.playback,
+            frames,
+        });
         ensure!(
             planned.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
             "Export files exceed memory budget"
         );
     }
-    planned.push((
-        PathBuf::from("atlas.json"),
-        serde_json::to_vec_pretty(&serde_json::json!({"app":"ReBoneBase","clips":clips}))?,
-    ));
+    if packed {
+        let affix = |s: &str| if s.is_empty() { String::new() } else { name(s) };
+        let (prefix, suffix) = (affix(&preset.prefix), affix(&preset.suffix));
+        let palette = &project.extras.palette;
+        planned.extend(pending.place(
+            packer,
+            &mut package,
+            |i| format!("{prefix}atlas-{:02}{suffix}.png", i + 1),
+            |page| {
+                if preset.format == ExportFormat::IndexedSheet {
+                    indexed_png(page, palette)
+                } else {
+                    png_bytes(page)
+                }
+            },
+            progress,
+        )?);
+    }
+    package.validate()?;
+    planned.push((PathBuf::from("atlas.json"), package.to_json()?));
     ensure!(
         planned.iter().map(|(_, b)| b.len()).sum::<usize>() <= 128 * 1024 * 1024,
         "Export files and metadata exceed memory budget"
     );
     Ok(planned)
-}
-fn frame_events(project: &Project, frame: u32) -> Vec<&crate::production::EventMarker> {
-    project
-        .extras
-        .production
-        .events
-        .iter()
-        .filter(|e| e.clip == project.rig.active_clip && (e.frame - frame as f32).abs() < 0.5)
-        .collect()
 }

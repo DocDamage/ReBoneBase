@@ -14,6 +14,7 @@ use std::{
 mod animation_import_ui;
 mod canvas_ui;
 mod characters_ui;
+mod directions_ui;
 mod editor_panels;
 mod export_ui;
 mod import_ui;

@@ -765,7 +765,7 @@ pub fn paint_pixels(
     *project = candidate;
     Ok(())
 }
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CollisionShape {
     pub id: u64,
     pub name: String,

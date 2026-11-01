@@ -3,6 +3,7 @@
 //! Cancel button cover every export.
 use super::*;
 use rebonebase::{
+    atlas::{self, AtlasOptions},
     export::{self, ExportRequest, ExportSummary, Target},
     jobs::{Job, Outcome},
     production::engine_export::EngineTarget,
@@ -20,6 +21,7 @@ pub(super) enum Kind {
     AsepriteAll,
     Batch,
     Engine,
+    Directions,
 }
 impl Kind {
     pub const SINGLE: [Self; 7] = [
@@ -31,7 +33,7 @@ impl Kind {
         Self::Aseprite,
         Self::AsepriteAll,
     ];
-    pub const FOLDER: [Self; 2] = [Self::Batch, Self::Engine];
+    pub const FOLDER: [Self; 3] = [Self::Batch, Self::Engine, Self::Directions];
     pub fn label(self) -> &'static str {
         match self {
             Self::Frame => "Current frame · PNG",
@@ -43,6 +45,7 @@ impl Kind {
             Self::AsepriteAll => "All clips · Aseprite tags",
             Self::Batch => "Batch preset folder",
             Self::Engine => "Game engine package",
+            Self::Directions => "Directional set · 4 or 8 views",
         }
     }
 }
@@ -61,6 +64,7 @@ pub(super) struct Exports {
     pub job: Option<ExportJob>,
     /// Outcome of the last finished export, and whether it succeeded.
     pub last: Option<(bool, String)>,
+    pub directions: super::directions_ui::DirectionsUi,
 }
 
 impl ReboneApp {
@@ -80,7 +84,10 @@ impl ReboneApp {
             Kind::Aseprite => Target::Aseprite { all_clips: false },
             Kind::AsepriteAll => Target::Aseprite { all_clips: true },
             Kind::Batch => Target::Batch(self.studio.batch.clone()),
-            Kind::Engine => Target::Engine(self.production.engine),
+            Kind::Engine => {
+                Target::Engine(self.production.engine, self.studio.preferences.engine_atlas)
+            }
+            Kind::Directions => Target::Directions(Box::new(self.direction_export())),
         }
     }
     pub(super) fn open_export(&mut self, kind: Kind) {
@@ -286,15 +293,27 @@ impl ReboneApp {
                     "Replace existing package files",
                 );
             }
+            Kind::Directions => {
+                let ctx = ui.ctx().clone();
+                egui::ScrollArea::vertical()
+                    .max_height(420.)
+                    .show(ui, |ui| self.direction_options(ui, &ctx));
+                ui.checkbox(
+                    &mut self.exports.overwrite,
+                    "Replace existing package files",
+                );
+            }
             Kind::Frame | Kind::Gif | Kind::Aseprite | Kind::AsepriteAll => {}
         }
     }
-    /// Engine choice and sprite pivot. Callers commit the pivot edit to history.
+    /// Engine choice, sprite pivot and page layout. Callers commit the pivot
+    /// edit to history; the layout is saved with the preferences.
     pub(super) fn engine_options(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             for engine in [
                 EngineTarget::Godot,
                 EngineTarget::Unity,
+                EngineTarget::Unreal,
                 EngineTarget::Generic,
             ] {
                 ui.selectable_value(&mut self.production.engine, engine, format!("{engine:?}"));
@@ -314,5 +333,51 @@ impl ReboneApp {
                     .prefix("Y "),
             );
         });
+        if atlas_options(ui, &mut self.studio.preferences.engine_atlas) {
+            self.save_preferences();
+        }
     }
+}
+
+/// Packing controls shared by batch presets and engine packages. Returns
+/// whether anything changed.
+pub(super) fn atlas_options(ui: &mut egui::Ui, options: &mut AtlasOptions) -> bool {
+    let before = *options;
+    ui.checkbox(&mut options.packed, "Pack frames into atlas pages")
+        .on_hover_text("Trim, reuse and pack frames instead of one full-frame grid per clip");
+    if options.packed {
+        ui.indent("atlas", |ui| {
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut options.trim, "Trim transparent borders");
+                ui.checkbox(&mut options.reuse, "Reuse identical frames")
+                    .on_hover_text("Identical images share pixels; each frame keeps its own timing, events and regions");
+            });
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::new(&mut options.padding)
+                        .range(0..=atlas::MAX_PADDING)
+                        .prefix("Padding "),
+                );
+                ui.add(
+                    egui::DragValue::new(&mut options.extrude)
+                        .range(0..=atlas::MAX_EXTRUDE)
+                        .prefix("Extrude "),
+                )
+                .on_hover_text("Repeat edge pixels to prevent filtering seams");
+            });
+            egui::ComboBox::from_label("Maximum texture size")
+                .selected_text(format!("{0} × {0}", options.max_size))
+                .show_ui(ui, |ui| {
+                    for size in [256, 512, 1024, 2048, 4096] {
+                        ui.selectable_value(&mut options.max_size, size, format!("{size} × {size}"));
+                    }
+                });
+            ui.label(
+                RichText::new("Frames that do not fit continue on additional pages.")
+                    .small()
+                    .color(DIM),
+            );
+        });
+    }
+    *options != before
 }

@@ -35,6 +35,8 @@ pub(super) struct Preferences {
     pub autosave_seconds: u64,
     pub video: VideoOptions,
     pub presets: Vec<ExportPreset>,
+    /// Page layout for game engine packages.
+    pub engine_atlas: rebonebase::atlas::AtlasOptions,
 }
 impl Default for Preferences {
     fn default() -> Self {
@@ -45,6 +47,7 @@ impl Default for Preferences {
             autosave_seconds: 30,
             video: Default::default(),
             presets: vec![Default::default()],
+            engine_atlas: Default::default(),
         }
     }
 }
