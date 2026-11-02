@@ -94,6 +94,7 @@ pub(super) struct ProductionUi {
     pub mesh_size: Vec2,
     pub mesh_vertex: usize,
     pub mesh_animate: bool,
+    pub weights: super::weight_paint_ui::WeightPaintUi,
     pub pixel_color: [u8; 4],
     pub brush: u32,
     pub paint_mode: PaintMode,
@@ -164,6 +165,7 @@ impl Default for ProductionUi {
             mesh_size: Vec2::new(32., 32.),
             mesh_vertex: 0,
             mesh_animate: false,
+            weights: Default::default(),
             pixel_color: [255, 255, 255, 255],
             brush: 1,
             paint_mode: Default::default(),
@@ -224,7 +226,10 @@ impl ReboneApp {
         if self.project != before {
             match self.project.validate() {
                 Ok(()) => {
-                    self.history.record(&before);
+                    // A weight stroke records its own single undo step.
+                    if !self.production.weights.stroking() {
+                        self.history.record(&before);
+                    }
                     self.changed();
                 }
                 Err(e) => {

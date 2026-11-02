@@ -552,3 +552,65 @@ fn motion_cleanup_previews_before_applying_as_one_undo_step() {
     assert!(app.history.undo(&mut app.project));
     assert_eq!(app.project, before);
 }
+#[test]
+fn a_weight_brush_stroke_is_one_undo_step_and_bulk_tools_rebind_and_assign() {
+    let ctx = egui::Context::default();
+    let mut app = ReboneApp::with_context(&ctx);
+    seed_art(&mut app);
+    select(&mut app, "forearm_L");
+    app.production.tab = production_ui::Tab::Meshes;
+    click(&mut app, &ctx, "Create weighted mesh from artwork");
+    let head = app
+        .project
+        .rig
+        .bones
+        .iter()
+        .find(|b| b.name == "head")
+        .unwrap()
+        .id;
+    let before = app.project.clone();
+    let points = production::mesh_vertices(
+        &app.project.rig,
+        Some(&app.project.pose_at(app.frame)),
+        &app.project.extras.production.meshes[0],
+        app.project.rig.active_clip().evaluation_frame(app.frame),
+    );
+    app.production.weights.bone = Some(head);
+    app.production.weights.brush.radius = 1.;
+    app.begin_weight_stroke();
+    app.weight_dab(points[0]);
+    app.weight_dab(points[1]);
+    app.weight_dab(points[2]);
+    app.end_weight_stroke();
+    let mesh = &app.project.extras.production.meshes[0];
+    for i in 0..3 {
+        assert!(production::weights::weight_of(&mesh.vertices[i], head) > 0.);
+    }
+    assert!(mesh.bind.contains_key(&head));
+    app.project.validate().unwrap();
+    app.undo();
+    assert_eq!(app.project, before);
+    // Bulk assignment and rebinding are each one undo step from the panel.
+    app.production.weights.selection = [0, 1].into();
+    app.production.weights.value = 0.5;
+    click(&mut app, &ctx, "Set weight on selected");
+    let mesh = &app.project.extras.production.meshes[0];
+    assert!((production::weights::weight_of(&mesh.vertices[1], head) - 0.5).abs() < 1e-5);
+    app.project
+        .rig
+        .bones
+        .iter_mut()
+        .find(|b| b.id == head)
+        .unwrap()
+        .x += 3.;
+    let moved = app.project.clone();
+    click(&mut app, &ctx, "Rebind to current rest pose");
+    let rest = app.project.rig.world(None);
+    let head_rest = rest.iter().find(|w| w.id == head).unwrap().head;
+    assert_eq!(
+        app.project.extras.production.meshes[0].bind[&head].head,
+        head_rest
+    );
+    app.undo();
+    assert_eq!(app.project, moved);
+}
