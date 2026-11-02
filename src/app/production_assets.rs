@@ -434,6 +434,7 @@ impl ReboneApp {
                 self.production.mesh = None;
             }
         }
+        self.weight_paint_panel(ui);
         let rect = self.art_preview(ui);
         if let Some(m) = self.production.mesh.and_then(|id| {
             self.project
@@ -449,6 +450,14 @@ impl ReboneApp {
                 m,
                 self.project.rig.active_clip().evaluation_frame(self.frame),
             );
+            let response = ui.interact(
+                rect,
+                egui::Id::new("mesh_vertex_pick"),
+                egui::Sense::click_and_drag(),
+            );
+            if self.weight_preview_overlay(ui, rect, &points, &response) {
+                return;
+            }
             let painter = ui.painter_at(rect);
             let scale = rect.width() / self.project.rig.width as f32;
             for (i, point) in points.iter().enumerate() {
@@ -468,11 +477,6 @@ impl ReboneApp {
                     },
                 );
             }
-            let response = ui.interact(
-                rect,
-                egui::Id::new("mesh_vertex_pick"),
-                egui::Sense::click(),
-            );
             if response.clicked()
                 && let Some(at) = response.interact_pointer_pos()
                 && let Some((i, _)) = points
@@ -485,6 +489,14 @@ impl ReboneApp {
                     .filter(|(_, d)| *d < 12.)
                     .min_by(|a, b| a.1.total_cmp(&b.1))
             {
+                let selection = &mut self.production.weights.selection;
+                if ui.input(|i| i.modifiers.shift) {
+                    if !selection.remove(&i) {
+                        selection.insert(i);
+                    }
+                } else {
+                    selection.clear();
+                }
                 self.production.mesh_vertex = i;
             }
         }

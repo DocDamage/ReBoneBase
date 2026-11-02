@@ -3,6 +3,7 @@ pub mod audio;
 pub mod clip_edit;
 pub mod engine_export;
 pub(crate) mod render;
+pub mod weights;
 use crate::{
     model::{Rig, Vec2},
     project::{Project, Reference},
@@ -109,6 +110,8 @@ pub struct Mesh {
     pub replace_part: Option<u32>,
     pub bind: BTreeMap<u32, BindTransform>,
     pub clip_keys: BTreeMap<usize, Vec<MeshKey>>,
+    /// Influences that weight painting and normalization leave unchanged.
+    pub locked: Vec<u32>,
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -487,6 +490,12 @@ impl Production {
                         && (0.0001..=65536.).contains(&b.length)),
                 "Invalid mesh bind transform"
             );
+            ensure!(
+                m.locked.len() <= 2048
+                    && m.locked.iter().all(|id| bone(Some(*id)))
+                    && m.locked.iter().collect::<HashSet<_>>().len() == m.locked.len(),
+                "Invalid locked mesh influence"
+            );
             mesh_work += m.triangles.len() as u64 * rig.width as u64 * rig.height as u64;
             for v in &m.vertices {
                 ensure!(
@@ -726,6 +735,7 @@ impl Production {
         });
         for m in &mut self.meshes {
             m.bind.retain(|id, _| valid(*id));
+            m.locked.retain(|id| valid(*id));
         }
         self.motion.chains.retain(|c| {
             c.bones.len() >= 2

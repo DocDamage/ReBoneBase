@@ -33,6 +33,7 @@ mod studio_animation;
 mod studio_assets;
 mod studio_rig;
 mod timeline;
+mod weight_paint_ui;
 mod workspaces;
 use studio::Studio;
 #[cfg(test)]
