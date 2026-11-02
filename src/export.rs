@@ -117,9 +117,19 @@ pub struct ExportRequest {
 pub struct ExportSummary {
     pub files: Vec<PathBuf>,
     pub bytes: u64,
+    /// Things the user should know about the result, such as merged layers.
+    pub notes: Vec<String>,
 }
 impl ExportSummary {
     pub fn describe(&self, destination: &Path) -> String {
+        let mut text = self.describe_files(destination);
+        for note in &self.notes {
+            text.push_str(" · ");
+            text.push_str(note);
+        }
+        text
+    }
+    fn describe_files(&self, destination: &Path) -> String {
         match self.files.as_slice() {
             [one] if one == destination => format!("Exported {}", one.display()),
             files => format!(
@@ -146,13 +156,26 @@ pub fn render(
     request: &ExportRequest,
     progress: &Progress,
 ) -> Result<Vec<(PathBuf, Vec<u8>)>> {
-    let single = |bytes: Vec<u8>| Ok(vec![(request.destination.clone(), bytes)]);
+    Ok(render_with_notes(project, request, progress)?.0)
+}
+
+/// Rendered files and their destinations.
+pub type Files = Vec<(PathBuf, Vec<u8>)>;
+
+/// [`render`], also returning notes for the [`ExportSummary`].
+pub fn render_with_notes(
+    project: &Project,
+    request: &ExportRequest,
+    progress: &Progress,
+) -> Result<(Files, Vec<String>)> {
+    let single = |bytes: Vec<u8>| Ok((vec![(request.destination.clone(), bytes)], vec![]));
     match &request.target {
-        Target::Batch(preset) => batch::plan(project, preset, progress),
-        Target::Directions(d) => directions::plan(project, d, progress),
-        Target::Engine(engine, layout) => {
-            engine_export::plan_package_with(project, *engine, layout, progress)
-        }
+        Target::Batch(preset) => Ok((batch::plan(project, preset, progress)?, vec![])),
+        Target::Directions(d) => Ok((directions::plan(project, d, progress)?, vec![])),
+        Target::Engine(engine, layout) => Ok((
+            engine_export::plan_package_with(project, *engine, layout, progress)?,
+            vec![],
+        )),
         target => {
             progress.set_stage("Preparing canvas");
             let mut prepared = project::prepare_export(project)?;
@@ -174,9 +197,11 @@ pub fn render(
                     single(image_bytes(&image, *indexed, &prepared)?)
                 }
                 Target::Gif => single(project::render_gif(&prepared, progress)?),
-                Target::Aseprite { all_clips } => single(crate::aseprite::encode_prepared(
-                    &prepared, *all_clips, progress,
-                )?),
+                Target::Aseprite { all_clips } => {
+                    let (bytes, report) =
+                        crate::aseprite::encode_prepared_report(&prepared, *all_clips, progress)?;
+                    Ok((vec![(request.destination.clone(), bytes)], report.flattened))
+                }
                 Target::Batch(_) | Target::Engine(..) | Target::Directions(_) => {
                     unreachable!("handled above")
                 }
@@ -191,7 +216,7 @@ pub fn run(
     request: &ExportRequest,
     progress: &Progress,
 ) -> Result<ExportSummary> {
-    let files = render(project, request, progress)?;
+    let (files, notes) = render_with_notes(project, request, progress)?;
     progress.commit("Writing files")?;
     let bytes = files.iter().map(|(_, b)| b.len() as u64).sum();
     let files = if request.target.writes_folder() {
@@ -204,7 +229,11 @@ pub fn run(
         }
         written
     };
-    Ok(ExportSummary { files, bytes })
+    Ok(ExportSummary {
+        files,
+        bytes,
+        notes,
+    })
 }
 
 fn image_bytes(image: &image::RgbaImage, indexed: bool, project: &Project) -> Result<Vec<u8>> {
