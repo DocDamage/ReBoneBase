@@ -33,33 +33,121 @@ pub(crate) fn try_render_project(
     pose: Option<&Pose>,
     scene: bool,
 ) -> Result<RgbaImage> {
-    let requested_frame = frame;
-    let frame = project.rig.active_clip().evaluation_frame(frame);
-    let p = &project.extras.production;
-    let mut rig = project.rig.clone();
-    let look = p.active_look.and_then(|i| p.looks.get(i));
-    if let Some(look) = look {
-        for part in &mut rig.parts {
-            if let Some(c) = look.colors.get(&part.id) {
-                part.color = *c;
+    let mut out = RgbaImage::new(
+        project.rig.width.clamp(1, 4096),
+        project.rig.height.clamp(1, 4096),
+    );
+    let correction = render_scene(project, frame, pose, scene, &mut Sink::Flat(&mut out))?;
+    if let Some(c) = correction {
+        for (index, color) in &c.pixels {
+            if *index < out.width() * out.height() {
+                out.put_pixel(index % out.width(), index / out.width(), Rgba(*color));
             }
         }
     }
-    let origin = project.extras.canvas_origin;
-    let world = rig.world(pose);
-    let rest = rig.world(None);
-    let mut out = RgbaImage::new(rig.width.clamp(1, 4096), rig.height.clamp(1, 4096));
-    enum Layer<'a> {
-        Character(&'a crate::character3d::Character),
-        Part(&'a crate::model::Part),
-        Prop(&'a Attachment),
-        Mesh(&'a Mesh),
-        Face(&'a FaceTrack),
-        Actor(&'a SceneActor),
+    Ok(out)
+}
+
+/// One independently drawn scene component.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum LayerKey {
+    Part(u32),
+    Prop(u64),
+    Mesh(u64),
+    Face(u64),
+    Actor(u64),
+    Character(u64),
+}
+
+/// A frame drawn component by component, bottom first. Each image holds only
+/// its component, so compositing them in order and then replacing the
+/// corrected pixels reproduces [`try_render_project`] exactly.
+pub(crate) struct SceneLayers {
+    pub layers: Vec<(LayerKey, RgbaImage)>,
+    pub corrections: BTreeMap<u32, [u8; 4]>,
+}
+
+pub(crate) fn try_render_layers(
+    project: &Project,
+    frame: f32,
+    pose: Option<&Pose>,
+) -> Result<SceneLayers> {
+    let mut layers = vec![];
+    let size = (
+        project.rig.width.clamp(1, 4096),
+        project.rig.height.clamp(1, 4096),
+    );
+    let correction = render_scene(
+        project,
+        frame,
+        pose,
+        true,
+        &mut Sink::Layers(&mut layers, size),
+    )?;
+    Ok(SceneLayers {
+        layers,
+        corrections: correction.map(|c| c.pixels.clone()).unwrap_or_default(),
+    })
+}
+
+enum Sink<'s> {
+    Flat(&'s mut RgbaImage),
+    Layers(&'s mut Vec<(LayerKey, RgbaImage)>, (u32, u32)),
+}
+impl Sink<'_> {
+    fn canvas(&mut self, key: LayerKey) -> &mut RgbaImage {
+        match self {
+            Self::Flat(out) => out,
+            Self::Layers(layers, (width, height)) => {
+                layers.push((key, RgbaImage::new(*width, *height)));
+                &mut layers.last_mut().expect("layer was just pushed").1
+            }
+        }
     }
+}
+
+enum Layer<'a> {
+    Character(&'a crate::character3d::Character),
+    Part(&'a crate::model::Part),
+    Prop(&'a Attachment),
+    Mesh(&'a Mesh),
+    Face(&'a FaceTrack),
+    Actor(&'a SceneActor),
+}
+impl Layer<'_> {
+    fn key(&self) -> LayerKey {
+        match self {
+            Self::Character(c) => LayerKey::Character(c.id),
+            Self::Part(p) => LayerKey::Part(p.id),
+            Self::Prop(a) => LayerKey::Prop(a.id),
+            Self::Mesh(m) => LayerKey::Mesh(m.id),
+            Self::Face(f) => LayerKey::Face(f.id),
+            Self::Actor(a) => LayerKey::Actor(a.id),
+        }
+    }
+    fn name(&self) -> String {
+        match self {
+            Self::Character(c) => format!("3D: {}", c.name),
+            Self::Part(p) => p.name.clone(),
+            Self::Prop(a) => format!("Prop: {}", a.name),
+            Self::Mesh(m) => format!("Mesh: {}", m.name),
+            Self::Face(f) => format!("Face: {}", f.name),
+            Self::Actor(a) => format!("Actor: {}", a.name),
+        }
+    }
+}
+/// Components drawn in `clip`, bottom first. `parts` may carry outfit colors.
+fn components<'a>(
+    project: &'a Project,
+    parts: &'a [crate::model::Part],
+    clip: usize,
+    pose: Option<&Pose>,
+    scene: bool,
+) -> Vec<(f32, Layer<'a>)> {
+    let p = &project.extras.production;
+    let look = p.active_look.and_then(|i| p.looks.get(i));
     let mesh_visible = |m: &Mesh| m.enabled && look.is_none_or(|l| l.meshes.contains(&m.id));
-    let mut layers: Vec<(f32, Layer<'_>)> = rig
-        .parts
+    let mut layers: Vec<(f32, Layer<'_>)> = parts
         .iter()
         .filter(|part| {
             project.extras.show_2d
@@ -92,7 +180,7 @@ pub(crate) fn try_render_project(
     layers.extend(
         p.faces
             .iter()
-            .filter(|f| f.enabled && f.clip == rig.active_clip)
+            .filter(|f| f.enabled && f.clip == clip)
             .map(|f| (f.z as f32, Layer::Face(f))),
     );
     if scene {
@@ -112,35 +200,93 @@ pub(crate) fn try_render_project(
             .map(|c| (c.z as f32, Layer::Character(c))),
     );
     layers.sort_by(|a, b| a.0.total_cmp(&b.0));
+    layers
+}
+
+/// Every component that any of `clips` can draw, named, in the order a frame
+/// without animated draw order stacks them.
+pub(crate) fn layer_catalog(project: &Project, clips: &[usize]) -> Vec<(LayerKey, String)> {
+    let mut all: Vec<(f32, usize, usize, LayerKey, String)> = vec![];
+    for clip in clips {
+        // Construction order (kind, then position) breaks ties between equal z.
+        for (position, (z, layer)) in components(project, &project.rig.parts, *clip, None, true)
+            .into_iter()
+            .enumerate()
+        {
+            let key = layer.key();
+            if all.iter().all(|v| v.3 != key) {
+                let kind = match key {
+                    LayerKey::Part(_) => 0,
+                    LayerKey::Prop(_) => 1,
+                    LayerKey::Mesh(_) => 2,
+                    LayerKey::Face(_) => 3,
+                    LayerKey::Actor(_) => 4,
+                    LayerKey::Character(_) => 5,
+                };
+                all.push((z, kind, position, key, layer.name()));
+            }
+        }
+    }
+    all.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)));
+    all.into_iter().map(|v| (v.3, v.4)).collect()
+}
+
+/// Draw every component through `sink` and return the frame's pixel
+/// correction, which callers apply last.
+fn render_scene<'p>(
+    project: &'p Project,
+    frame: f32,
+    pose: Option<&Pose>,
+    scene: bool,
+    sink: &mut Sink<'_>,
+) -> Result<Option<&'p Correction>> {
+    let requested_frame = frame;
+    let frame = project.rig.active_clip().evaluation_frame(frame);
+    let p = &project.extras.production;
+    let mut rig = project.rig.clone();
+    let look = p.active_look.and_then(|i| p.looks.get(i));
+    if let Some(look) = look {
+        for part in &mut rig.parts {
+            if let Some(c) = look.colors.get(&part.id) {
+                part.color = *c;
+            }
+        }
+    }
+    let origin = project.extras.canvas_origin;
+    let world = rig.world(pose);
+    let rest = rig.world(None);
+    let (width, height) = (rig.width.clamp(1, 4096), rig.height.clamp(1, 4096));
+    let layers = components(project, &rig.parts, rig.active_clip, pose, scene);
     for (_, layer) in layers {
         match layer {
             Layer::Character(c) => {
+                let out = sink.canvas(LayerKey::Character(c.id));
                 let (c, time) = c.for_clip(
                     rig.active_clip,
                     rig.active_clip().evaluation_frame(frame),
                     timeline_ms(&rig, frame) as f64,
                 );
-                let image = c
-                    .render(out.width(), out.height(), origin, time)
-                    .with_context(|| {
-                        format!(
-                            "Could not render 3D character {:?} (id {}) in clip {:?} (#{}) at frame {}",
-                            c.name,
-                            c.id,
-                            rig.active_clip().name,
-                            rig.active_clip + 1,
-                            requested_frame
-                        )
-                    })?;
-                composite_image(&mut out, &image, Vec2::default(), 1.);
+                let image = c.render(width, height, origin, time).with_context(|| {
+                    format!(
+                        "Could not render 3D character {:?} (id {}) in clip {:?} (#{}) at frame {}",
+                        c.name,
+                        c.id,
+                        rig.active_clip().name,
+                        rig.active_clip + 1,
+                        requested_frame
+                    )
+                })?;
+                composite_image(out, &image, Vec2::default(), 1.);
             }
             Layer::Part(part) => {
+                let out = sink.canvas(LayerKey::Part(part.id));
                 let mut single = rig.clone();
                 single.parts = vec![part.clone()];
                 let img = crate::skin::render_region(&single, pose, origin);
-                composite_image(&mut out, &img, Vec2::default(), 1.);
+                composite_image(out, &img, Vec2::default(), 1.);
             }
             Layer::Prop(a) => {
+                let out = sink.canvas(LayerKey::Prop(a.id));
                 let state = attachment_state(a, frame, rig.active_clip);
                 if state.visible {
                     let asset =
@@ -158,7 +304,7 @@ pub(crate) fn try_render_project(
                             })?;
                     let (position, angle) = anchor(&world, state.bone, state.offset, state.angle);
                     draw_sprite(
-                        &mut out,
+                        out,
                         &asset.image,
                         position - origin,
                         angle,
@@ -168,6 +314,7 @@ pub(crate) fn try_render_project(
                 }
             }
             Layer::Mesh(m) => {
+                let out = sink.canvas(LayerKey::Mesh(m.id));
                 let asset = p.assets.iter().find(|a| a.id == m.asset).with_context(|| {
                     format!(
                         "Missing asset {} for mesh {} in clip {:?} at frame {}",
@@ -181,9 +328,10 @@ pub(crate) fn try_render_project(
                     .into_iter()
                     .map(|p| p - origin)
                     .collect::<Vec<_>>();
-                draw_mesh(&mut out, &asset.image, m, &points);
+                draw_mesh(out, &asset.image, m, &points);
             }
             Layer::Face(f) => {
+                let out = sink.canvas(LayerKey::Face(f.id));
                 if let Some(k) = f
                     .keys
                     .iter()
@@ -202,7 +350,7 @@ pub(crate) fn try_render_project(
                     })?;
                     let (position, angle) = anchor(&world, f.bone, f.offset + k.offset, f.angle);
                     draw_sprite(
-                        &mut out,
+                        out,
                         &asset.image,
                         position - origin,
                         angle,
@@ -212,6 +360,7 @@ pub(crate) fn try_render_project(
                 }
             }
             Layer::Actor(a) => {
+                let out = sink.canvas(LayerKey::Actor(a.id));
                 let placement = actor_placement(a, rig.active_clip, frame);
                 if !placement.visible {
                     continue;
@@ -236,7 +385,7 @@ pub(crate) fn try_render_project(
                         )
                     })?;
                 composite_image(
-                    &mut out,
+                    out,
                     &img,
                     placement.offset + a.project.extras.canvas_origin * placement.scale - origin,
                     placement.scale,
@@ -244,18 +393,9 @@ pub(crate) fn try_render_project(
             }
         }
     }
-    if let Some(c) = p
-        .corrections
+    Ok(p.corrections
         .iter()
-        .find(|c| c.clip == rig.active_clip && c.frame == frame.floor().max(1.) as u32)
-    {
-        for (index, color) in &c.pixels {
-            if *index < out.width() * out.height() {
-                out.put_pixel(index % out.width(), index / out.width(), Rgba(*color));
-            }
-        }
-    }
-    Ok(out)
+        .find(|c| c.clip == rig.active_clip && c.frame == frame.floor().max(1.) as u32))
 }
 pub fn timeline_ms(rig: &Rig, frame: f32) -> u64 {
     let frame = rig.active_clip().evaluation_frame(frame);

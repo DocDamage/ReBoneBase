@@ -157,8 +157,8 @@ fn aseprite_scene_layer_preserves_every_rendered_feature_and_frame_hold() {
     let mut p = scene();
     rebonebase::canvas::grow_all(&mut p).unwrap();
     let file = parse(&p, false);
-    assert_eq!(file.num_layers(), 1);
-    assert_eq!(file.layer(0).name(), "Composited scene");
+    assert_eq!(file.num_layers(), 7);
+    assert_eq!(file.layer(0).name(), "Body");
     assert_eq!(file.num_frames(), 3);
     for f in 0..3 {
         assert_eq!(
@@ -249,7 +249,7 @@ fn scene_export_does_not_require_a_skin_group_and_rejects_aggregate_work() {
     }
     p.extras.production.looks.clear();
     p.extras.production.active_look = None;
-    assert_eq!(parse(&p, false).num_layers(), 1);
+    assert_eq!(parse(&p, false).num_layers(), 5);
     p.rig.width = 512;
     p.rig.height = 512;
     while p.rig.clips.len() < 32 {
@@ -334,4 +334,280 @@ fn batch_all_clips_checks_the_aggregate_budget_before_writing_files() {
     if dir.exists() {
         std::fs::remove_dir_all(dir).unwrap();
     }
+}
+
+/// A cel as stored, with its frame z-index.
+struct RawCel {
+    layer: usize,
+    x: i16,
+    y: i16,
+    z: i16,
+    width: u32,
+    height: u32,
+    pixels: Vec<u8>,
+}
+struct RawFile {
+    layers: Vec<String>,
+    notes: Vec<(usize, String)>,
+    frames: Vec<(u16, Vec<RawCel>)>,
+}
+/// Minimal independent reader for the parts asefile ignores: cel z-index,
+/// cel position and layer user data.
+fn read_raw(bytes: &[u8]) -> RawFile {
+    let u16_at = |at: usize| u16::from_le_bytes([bytes[at], bytes[at + 1]]);
+    let i16_at = |at: usize| i16::from_le_bytes([bytes[at], bytes[at + 1]]);
+    let u32_at = |at: usize| u32::from_le_bytes(bytes[at..at + 4].try_into().unwrap());
+    let mut file = RawFile {
+        layers: vec![],
+        notes: vec![],
+        frames: vec![],
+    };
+    let mut at = 128;
+    for _ in 0..u16_at(6) {
+        let size = u32_at(at) as usize;
+        let chunks = u32_at(at + 12);
+        let duration = u16_at(at + 8);
+        let mut chunk = at + 16;
+        let mut cels = vec![];
+        for _ in 0..chunks {
+            let length = u32_at(chunk) as usize;
+            let data = chunk + 6;
+            match u16_at(chunk + 4) {
+                0x2004 => {
+                    let n = u16_at(data + 16) as usize;
+                    file.layers
+                        .push(String::from_utf8(bytes[data + 18..data + 18 + n].to_vec()).unwrap());
+                }
+                0x2020 => {
+                    let n = u16_at(data + 4) as usize;
+                    file.notes.push((
+                        file.layers.len() - 1,
+                        String::from_utf8(bytes[data + 6..data + 6 + n].to_vec()).unwrap(),
+                    ));
+                }
+                0x2005 => {
+                    assert_eq!(u16_at(data + 7), 2);
+                    assert_eq!(bytes[data + 6], 255);
+                    let mut pixels = vec![];
+                    std::io::Read::read_to_end(
+                        &mut flate2::read::ZlibDecoder::new(&bytes[data + 20..chunk + length]),
+                        &mut pixels,
+                    )
+                    .unwrap();
+                    let cel = RawCel {
+                        layer: u16_at(data) as usize,
+                        x: i16_at(data + 2),
+                        y: i16_at(data + 4),
+                        z: i16_at(data + 9),
+                        width: u16_at(data + 16) as u32,
+                        height: u16_at(data + 18) as u32,
+                        pixels,
+                    };
+                    assert_eq!(cel.pixels.len() as u32, cel.width * cel.height * 4);
+                    cels.push(cel);
+                }
+                _ => {}
+            }
+            chunk += length;
+        }
+        assert_eq!(chunk, at + size);
+        file.frames.push((duration, cels));
+        at += size;
+    }
+    file
+}
+/// Straight-alpha "over", as the native renderer composites.
+fn over(dst: &mut image::Rgba<u8>, src: [u8; 4]) {
+    if src[3] == 0 {
+        return;
+    }
+    let a = src[3] as f32 / 255.;
+    let b = dst[3] as f32 / 255.;
+    let alpha = a + b * (1. - a);
+    for i in 0..3 {
+        dst[i] = ((src[i] as f32 * a + dst[i] as f32 * b * (1. - a)) / alpha).round() as u8;
+    }
+    dst[3] = (alpha * 255.).round() as u8;
+}
+/// Flatten one frame the way Aseprite orders cels: layer index plus z-index.
+fn flatten(file: &RawFile, frame: usize, width: u32, height: u32) -> image::RgbaImage {
+    let mut cels: Vec<&RawCel> = file.frames[frame].1.iter().collect();
+    cels.sort_by_key(|c| (c.layer as i32 + c.z as i32, c.z));
+    let mut out = image::RgbaImage::new(width, height);
+    for c in cels {
+        for y in 0..c.height {
+            for x in 0..c.width {
+                let i = ((y * c.width + x) * 4) as usize;
+                over(
+                    out.get_pixel_mut(c.x as u32 + x, c.y as u32 + y),
+                    c.pixels[i..i + 4].try_into().unwrap(),
+                );
+            }
+        }
+    }
+    out
+}
+fn assert_flattens_to_native(p: &Project, all: bool) -> RawFile {
+    let mut prepared = p.clone();
+    rebonebase::canvas::grow_all(&mut prepared).unwrap();
+    let file = read_raw(&aseprite::encode_project(p, all).unwrap());
+    let clips: Vec<usize> = if all {
+        (0..p.rig.clips.len()).collect()
+    } else {
+        vec![p.rig.active_clip]
+    };
+    let mut q = prepared.clone();
+    let mut index = 0;
+    for clip in clips {
+        q.rig.active_clip = clip;
+        for frame in 1..=q.rig.clips[clip].length {
+            assert_eq!(
+                file.frames[index].0 as u32,
+                q.rig.active_clip().duration_ms(frame)
+            );
+            same_pixels(
+                &flatten(&file, index, q.rig.width, q.rig.height),
+                &q.render_at(frame as f32),
+            );
+            index += 1;
+        }
+    }
+    assert_eq!(index, file.frames.len());
+    file
+}
+
+#[test]
+fn production_scenes_export_one_layer_per_component_and_flatten_to_native_frames() {
+    let mut p = scene();
+    p.rig.active_clip = 0;
+    let file = assert_flattens_to_native(&p, true);
+    assert_eq!(
+        file.layers,
+        [
+            "Body",
+            "Mesh: Deformable artwork",
+            "Actor: Actor",
+            "Arm",
+            "Prop: Prop",
+            "Face: Eyes / mouth",
+            "Pixel corrections"
+        ]
+    );
+    // The actor is the only merged component, and the file says so.
+    assert_eq!(file.notes.len(), 1);
+    assert_eq!(file.notes[0].0, 2);
+    let (_, report) = aseprite::encode_project_report(&p, true).unwrap();
+    assert_eq!(report.layers, file.layers);
+    assert_eq!(report.flattened, [file.notes[0].1.clone()]);
+    // Cels are cropped and the face track appears only in its own clip.
+    assert!(
+        file.frames[0]
+            .1
+            .iter()
+            .all(|c| c.width < p.rig.width || c.height < p.rig.height)
+    );
+    assert!(
+        file.frames[3..]
+            .iter()
+            .all(|f| f.1.iter().all(|c| c.layer != 5))
+    );
+    // An independent reader agrees on layers, frames and tags.
+    let ase = parse(&p, true);
+    assert_eq!(ase.num_layers(), 7);
+    assert_eq!(ase.num_frames(), 6);
+    assert_eq!(ase.num_tags(), 2);
+    assert_eq!(ase.tag(1).name(), "Back");
+}
+
+#[test]
+fn animated_draw_order_semi_transparent_art_and_erased_pixels_flatten_exactly() {
+    let mut p = scene();
+    let (body, arm) = (p.rig.parts[0].id, p.rig.parts[1].id);
+    p.rig.parts[0].z = 0;
+    p.rig.parts[1].z = 1;
+    // The arm passes behind the body on frame 2 and in front again on 3.
+    for (frame, z) in [(1., 1.), (2., -1.), (3., 1.)] {
+        p.rig.clips[0].set_key(arm, Channel::Z, frame, z).unwrap();
+    }
+    p.rig.clips[0].set_key(body, Channel::Z, 1., 0.).unwrap();
+    Arc::make_mut(&mut p.extras.production.assets[0].image.pixels)
+        .chunks_mut(4)
+        .for_each(|px| px[3] = 128);
+    // Erase a pixel and paint a translucent one over the art.
+    p.extras.production.corrections[0]
+        .pixels
+        .extend([(30, [0, 0, 0, 0]), (31, [10, 200, 10, 90])]);
+    p.validate().unwrap();
+    let file = assert_flattens_to_native(&p, false);
+    assert!(file.frames[1].1.iter().any(|c| c.z != 0));
+}
+
+#[test]
+fn scenes_over_the_layered_budget_merge_into_one_reported_layer() {
+    let mut p = scene();
+    p.rig.width = 2300;
+    p.rig.height = 2300;
+    let prop = p.extras.production.attachments[0].clone();
+    for id in 20..26 {
+        p.extras
+            .production
+            .attachments
+            .push(Attachment { id, ..prop.clone() });
+        p.extras.production.looks[0].attachments.push(id);
+    }
+    p.validate().unwrap();
+    let (bytes, report) = aseprite::encode_project_report(&p, false).unwrap();
+    assert_eq!(report.layers, ["Composited scene"]);
+    assert!(report.flattened[0].starts_with("Whole scene"));
+    assert_eq!(read_raw(&bytes).layers, ["Composited scene"]);
+}
+
+#[test]
+fn the_export_job_reports_merged_components_in_its_summary() {
+    use rebonebase::export::{self, ExportRequest, ExportSummary, Target};
+    let p = scene();
+    let request = ExportRequest {
+        target: Target::Aseprite { all_clips: false },
+        destination: "scene.aseprite".into(),
+        overwrite: false,
+        frame: 1.,
+        pose: None,
+    };
+    let (files, notes) =
+        export::render_with_notes(&p, &request, &rebonebase::jobs::Progress::default()).unwrap();
+    assert_eq!(files.len(), 1);
+    assert_eq!(notes.len(), 1);
+    assert!(notes[0].starts_with("Actor: Actor"));
+    let summary = ExportSummary {
+        files: vec!["scene.aseprite".into()],
+        bytes: 1,
+        notes,
+    };
+    assert!(
+        summary
+            .describe(std::path::Path::new("scene.aseprite"))
+            .contains("merged into this layer")
+    );
+}
+
+#[test]
+fn rendered_3d_characters_get_their_own_layer_beside_2d_artwork() {
+    let mut p = scene();
+    let mut c = rebonebase::character3d::load(std::path::Path::new(
+        "src/character3d/fixtures/textured_skin.glb",
+    ))
+    .unwrap();
+    c.name = "Hero".into();
+    c.z = 50;
+    p.extras.characters3d.push(c);
+    rebonebase::canvas::grow_all(&mut p).unwrap();
+    p.validate().unwrap();
+    let file = assert_flattens_to_native(&p, false);
+    assert_eq!(file.layers[file.layers.len() - 2], "3D: Hero");
+    let layer = file.layers.len() - 2;
+    assert!(
+        file.frames
+            .iter()
+            .any(|f| f.1.iter().any(|c| c.layer == layer))
+    );
 }

@@ -340,6 +340,18 @@ impl Project {
         );
         self.try_render_pose(frame, Some(&self.pose_at(frame)))
     }
+    /// The frame drawn component by component for layered exports.
+    pub(crate) fn try_render_layers_at(
+        &self,
+        frame: f32,
+    ) -> Result<crate::production::render::SceneLayers> {
+        ensure!(frame.is_finite(), "Render frame must be finite");
+        ensure!(
+            self.rig.active_clip < self.rig.clips.len(),
+            "Render references an invalid active timeline clip"
+        );
+        crate::production::render::try_render_layers(self, frame, Some(&self.pose_at(frame)))
+    }
     pub fn complete_pose_at(&self, frame: f32) -> crate::animation::Pose {
         let mut pose = self.pose_at(frame);
         for b in &self.rig.bones {
